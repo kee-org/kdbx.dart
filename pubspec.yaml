@@ -12,7 +12,7 @@ dependencies:
 #  path: ^1.6.0
   logging: '>=0.11.3+2 <1.0.0'
   crypto: '>=2.0.0 <3.0.0'
-  pointycastle: '>=1.0.1 <2.0.0'
+  pointycastle: '2.0.0'
   cryptography: ^0.1.2
   xml: '>=4.4.0 <5.0.0'
   uuid: '>=2.0.0 <3.0.0'
