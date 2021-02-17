@@ -41,7 +41,7 @@ void main() {
       final createTime = firstEntry.times.creationTime.get();
       expect(createTime, DateTime.utc(2020, 2, 26, 13, 40, 48));
       final modTime = firstEntry.times.lastModificationTime.get();
-      expect(modTime, DateTime.utc(2020, 2, 26, 13, 40, 54));
+      expect(modTime, DateTime.utc(2021, 2, 17, 15, 58, 13));
     });
     test('Change kdbx4 modification time', () async {
       final file = await TestUtil.readKdbxFile('test/kdbx4_keeweb.kdbx');
@@ -76,6 +76,24 @@ void main() {
           data, Credentials(ProtectedValue.fromString('asdf')));
       expect(file.body.rootGroup.entries, hasLength(1));
     }, skip: 'Takes tooo long, too many iterations.');
+  });
+  group('Entries', () {
+    test('Tags', () async {
+      final file = await TestUtil.readKdbxFile('test/kdbx4_keeweb.kdbx');
+      final firstEntry = file.body.rootGroup.entries.first;
+      expect(file.dirtyObjects, hasLength(0));
+      expect(firstEntry.history, hasLength(2));
+      expect(firstEntry.tags.get(), ['tag1', 'tag2', 'tag3', 'tag4']);
+      firstEntry.tags.set(['tag1', 'tag2']);
+      expect(file.dirtyObjects, hasLength(1));
+      expect(firstEntry.history, hasLength(3));
+      final saved = await file.save();
+      {
+        final file2 = await TestUtil.readKdbxFileBytes(saved);
+        final firstEntry = file2.body.rootGroup.entries.first;
+        expect(firstEntry.tags.get(), ['tag1', 'tag2']);
+      }
+    });
   });
   group('Writing', () {
     test('Create and save', () async {

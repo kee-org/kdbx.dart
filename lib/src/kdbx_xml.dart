@@ -160,6 +160,20 @@ class StringNode extends KdbxSubTextNode<String> {
   String encode(String value) => value;
 }
 
+class StringListNode extends KdbxSubTextNode<List<String>> {
+  StringListNode(KdbxNode node, String name) : super(node, name);
+
+  @override
+  List<String> decode(String value) {
+    return value.split(RegExp(r'[,;:]'));
+  }
+
+  @override
+  String encode(List<String> value) {
+    return value.join(',');
+  }
+}
+
 class Base64Node extends KdbxSubTextNode<ByteBuffer> {
   Base64Node(KdbxNode node, String name) : super(node, name);
 
