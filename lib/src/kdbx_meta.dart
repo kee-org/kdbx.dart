@@ -182,8 +182,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
   }
 
   // Merge in changes in [other] into this meta data.
-  void merge(KdbxMeta other) {
-    // FIXME make sure this is finished
+  void merge(KdbxMeta other, MergeContext ctx) {
     if (other.databaseNameChanged.isAfter(databaseNameChanged)) {
       databaseName.set(other.databaseName.get());
       databaseNameChanged.set(other.databaseNameChanged.get());
@@ -210,15 +209,29 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
 
     // merge custom data
     for (final otherCustomDataEntry in other.customData.entries) {
-      if (otherIsNewer || !customData.containsKey(otherCustomDataEntry.key)) {
+      if ((otherIsNewer || !customData.containsKey(otherCustomDataEntry.key)) &&
+          !ctx.deletedObjects.containsKey(otherCustomDataEntry.key)) {
         customData[otherCustomDataEntry.key] = otherCustomDataEntry.value;
       }
     }
+
     // merge custom icons
+    // Unused icons will be cleaned up later
     for (final otherCustomIcon in other._customIcons.values) {
       _customIcons[otherCustomIcon.uuid] ??= otherCustomIcon;
     }
 
+    if (other.entryTemplatesGroupChanged.isAfter(entryTemplatesGroupChanged)) {
+      entryTemplatesGroup.set(other.entryTemplatesGroup.get());
+      entryTemplatesGroupChanged.set(other.entryTemplatesGroupChanged.get());
+    }
+
+    if (otherIsNewer) {
+      historyMaxItems.set(other.historyMaxItems.get());
+      historyMaxItems.set(other.historyMaxSize.get());
+      historyMaxItems.set(other.maintenanceHistoryDays.get());
+      //TODO: keyChangeRec and keyChangeForce and color
+    }
     settingsChanged.set(other.settingsChanged.get());
   }
 }

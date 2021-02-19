@@ -331,7 +331,7 @@ class KdbxBody extends KdbxNode {
             debug: 'adding new binary ${binary.value.length}');
       }
     }
-    meta.merge(other.meta);
+    meta.merge(other.meta, mergeContext);
     rootGroup.merge(mergeContext, other.rootGroup);
 
     // remove deleted objects
@@ -350,6 +350,7 @@ class KdbxBody extends KdbxNode {
 
     // sanity checks
     if (mergeContext.merged.keys.length != mergeContext.objectIndex.length) {
+      //throw Exception('WTF merge failure');
       // TODO figure out what went wrong.
     }
     return mergeContext;
@@ -517,6 +518,24 @@ class KdbxFormat {
     }
   }
 
+  Future<List<KdbxFile>> readTwice(
+      Uint8List input, Credentials credentials) async {
+    final reader = ReaderHelper(input);
+    final header = KdbxHeader.read(reader);
+    if (header.version.major == KdbxVersion.V4.major) {
+      final decrypted = await _loadV4PreDecryption(header, reader, credentials);
+      final first = await _loadV4PostDecryption(header, credentials, decrypted);
+      final second = await _loadV4PostDecryption(
+          KdbxHeader.read(reader), credentials, decrypted);
+      return [first, second];
+    } else {
+      _logger.finer('Unsupported version for $header');
+      throw KdbxUnsupportedException('Unsupported kdbx version '
+          '${header.version}.'
+          ' Only 4.x is supported.');
+    }
+  }
+
   /// Saves the given file.
   Future<Uint8List> save(KdbxFile file) async {
     _logger.finer('Saving ${file.body.rootGroup.uuid} '
@@ -578,6 +597,52 @@ class KdbxFormat {
       return KdbxFile(ctx, this, credentials, header,
           _loadXml(ctx, header, utf8.decode(blocks)));
     }
+  }
+
+  Future<Uint8List> _loadV4PreDecryption(
+      KdbxHeader header, ReaderHelper reader, Credentials credentials) async {
+    final headerBytes = reader.byteData.sublist(0, header.endPos);
+    final hash = crypto.sha256.convert(headerBytes).bytes;
+    final actualHash = reader.readBytes(hash.length);
+    if (!ByteUtils.eq(hash, actualHash)) {
+      _logger.fine('Does not match ${ByteUtils.toHexList(hash)} '
+          'vs ${ByteUtils.toHexList(actualHash)}');
+      throw KdbxCorruptedFileException('Header hash does not match.');
+    }
+//    _logger
+//        .finest('KdfParameters: ${header.readKdfParameters.toDebugString()}');
+    _logger.finest('Header hash matches.');
+    final keys = await _computeKeysV4(header, credentials);
+    final headerHmac =
+        _getHeaderHmac(reader.byteData.sublist(0, header.endPos), keys.hmacKey);
+    final expectedHmac = reader.readBytes(headerHmac.bytes.length);
+//    _logger.fine('Expected: ${ByteUtils.toHexList(expectedHmac)}');
+//    _logger.fine('Actual  : ${ByteUtils.toHexList(headerHmac.bytes)}');
+    if (!ByteUtils.eq(headerHmac.bytes, expectedHmac)) {
+      throw KdbxInvalidKeyException();
+    }
+//    final hmacTransformer = crypto.Hmac(crypto.sha256, hmacKey.bytes);
+//    final blockreader.readBytes(32);
+    final bodyContent = hmacBlockTransformer(keys.hmacKey, reader);
+    final decrypted = decrypt(header, bodyContent, keys.cipherKey);
+    _logger.finer('compression: ${header.compression}');
+    if (header.compression == Compression.gzip) {
+      final content = KdbxFormat._gzipDecode(decrypted);
+      return content;
+    }
+    throw StateError('Kdbx4 without compression is not yet supported.');
+  }
+
+  Future<KdbxFile> _loadV4PostDecryption(
+      KdbxHeader header, Credentials credentials, Uint8List content) async {
+    final contentReader = ReaderHelper(content);
+    final innerHeader =
+        KdbxHeader.readInnerHeaderFields(contentReader, header.version);
+    header.innerHeader.updateFrom(innerHeader);
+    final xml = utf8.decode(contentReader.readRemaining());
+    final context = KdbxReadWriteContext(binaries: [], header: header);
+    return KdbxFile(
+        context, this, credentials, header, _loadXml(context, header, xml));
   }
 
   Future<KdbxFile> _loadV4(
