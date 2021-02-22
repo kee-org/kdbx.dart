@@ -128,7 +128,6 @@ class KdbxFile {
 
   /// Merges the given file into this file.
   /// Both files must have the same origin (ie. same root group UUID).
-  /// FIXME: THiS iS NOT YET FINISHED, DO NOT USE.
   MergeContext merge(KdbxFile other) {
     if (other.body.rootGroup.uuid != body.rootGroup.uuid) {
       throw KdbxUnsupportedException(

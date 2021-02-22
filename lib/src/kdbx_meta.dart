@@ -196,9 +196,8 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
       defaultUserNameChanged.set(other.defaultUserNameChanged.get());
     }
     if (other.masterKeyChanged.isAfter(masterKeyChanged)) {
-      // throw UnimplementedError(
-      //     'Other database changed master key. not supported.');
-      _logger.shout('MasterKey was changed? We will not merge this (yet).');
+      masterKeyChanged.set(other.masterKeyChanged.get());
+      _logger.info('MasterKey was changed.');
     }
     if (other.recycleBinChanged.isAfter(recycleBinChanged)) {
       recycleBinEnabled.set(other.recycleBinEnabled.get());

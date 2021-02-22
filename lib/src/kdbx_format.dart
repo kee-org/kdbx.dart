@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -340,7 +341,7 @@ class KdbxBody extends KdbxNode {
       mergeContext.trackChange(object, debug: 'was deleted.');
     }
 
-    // FIXME do some cleanup.
+    cleanup();
 
     _logger.info('Finished merging:\n${mergeContext.debugChanges()}');
     final incomingObjects = other._createObjectIndex();
@@ -354,6 +355,48 @@ class KdbxBody extends KdbxNode {
       // TODO figure out what went wrong.
     }
     return mergeContext;
+  }
+
+  void cleanup() {
+    final now = DateTime.now();
+    final historyMaxItems = (meta.historyMaxItems.get() ?? 0) > 0
+        ? meta.historyMaxItems.get()
+        : double.maxFinite as int;
+    final usedCustomIcons = HashSet<KdbxUuid>();
+    final usedBinaries = HashSet<KdbxKey>();
+
+    void _trackEntryForCleanup(KdbxEntry e) {
+      e.binaryEntries.toList().forEach((b) {
+        usedBinaries.add(b.key);
+      });
+      if (e.customIcon != null) {
+        usedCustomIcons.add(e.customIcon.uuid);
+      }
+    }
+
+    rootGroup.getAllEntries().forEach((e) {
+      if (e.history.length > historyMaxItems) {
+        e.history.removeRange(0, e.history.length - historyMaxItems);
+      }
+      _trackEntryForCleanup(e);
+      e.history.toList().forEach((he) {
+        _trackEntryForCleanup(he);
+      });
+    });
+    rootGroup.getAllGroups().forEach((g) {
+      if (g.customIcon != null) {
+        usedCustomIcons.add(g.customIcon.uuid);
+      }
+    });
+
+    meta.customIcons.forEach((key, value) {
+      if (!usedCustomIcons.contains(key)) {
+        ctx._deletedObjects
+            .add(KdbxDeletedObject.create(ctx, key, deletionTime: now));
+        meta.customIcons.remove(key);
+      }
+    });
+    //TODO: Work out how to remove binaries from the header when they are no longer referenced by any entry
   }
 
   xml.XmlDocument generateXml(ProtectedSaltGenerator saltGenerator) {

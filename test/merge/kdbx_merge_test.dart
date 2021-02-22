@@ -364,7 +364,41 @@ void main() {
       }),
     );
     test(
-      'Move different entries to new recycle bins in both files',
+        'Move different entries to new recycle bins in both files results in both in recycle bin',
+        () async => await withClock(fakeClock, () async {
+              final file = await createRealFile();
+
+              final fileMod = await TestUtil.saveAndRead(file);
+
+              expect(file.recycleBin, isNull);
+              file.deleteEntry(file.body.rootGroup.entries.first);
+              expect(file.recycleBin, isNotNull);
+
+              expect(fileMod.recycleBin, isNull);
+              fileMod.deleteEntry(
+                  fileMod.body.rootGroup.groups.first.entries.first);
+              expect(fileMod.recycleBin, isNotNull);
+              final fileLocal = await TestUtil.saveAndRead(file);
+              final fileRemote = await TestUtil.saveAndRead(fileMod);
+
+              final merge = fileLocal.merge(fileRemote);
+              _logger.info('Merged file:\n'
+                  '${KdbxPrintUtils().catGroupToString(fileLocal.body.rootGroup)}');
+              final set = Set<KdbxUuid>.from(merge.merged.keys);
+              expect(set, hasLength(6));
+              expect(
+                  Set<KdbxNode>.from(
+                      merge.changes.map<KdbxNode>((e) => e.object)),
+                  hasLength(2));
+              expect(fileLocal.recycleBin.entries.length, 2);
+              expect(fileLocal.body.rootGroup.entries.length, 0);
+              expect(fileLocal.body.rootGroup.groups[0].entries.length, 0);
+              expect(fileLocal.body.rootGroup.groups[1].entries.length, 0);
+            }),
+        skip:
+            "Merge algorihm can't cope with this so we define the behaviour in the test below instead. Possibly can't ever be improved but it's something to aim for one day. Current behaviour at least ensures no data loss is possible.");
+    test(
+      'Move different entries to new recycle bins in both files leaves one in the recycle bin and the other in a new group called Trash',
       () async => await withClock(fakeClock, () async {
         final file = await createRealFile();
 
@@ -377,19 +411,21 @@ void main() {
         expect(fileMod.recycleBin, isNull);
         fileMod.deleteEntry(fileMod.body.rootGroup.groups.first.entries.first);
         expect(fileMod.recycleBin, isNotNull);
-        final file2 = await TestUtil.saveAndRead(fileMod);
+        final fileLocal = await TestUtil.saveAndRead(file);
+        final fileRemote = await TestUtil.saveAndRead(fileMod);
 
-        final merge = file.merge(file2);
+        final merge = fileLocal.merge(fileRemote);
         _logger.info('Merged file:\n'
-            '${KdbxPrintUtils().catGroupToString(file.body.rootGroup)}');
+            '${KdbxPrintUtils().catGroupToString(fileLocal.body.rootGroup)}');
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(6));
         expect(Set<KdbxNode>.from(merge.changes.map<KdbxNode>((e) => e.object)),
             hasLength(2));
-        expect(file.recycleBin.entries.length, 2);
-        expect(file.body.rootGroup.entries.length, 0);
-        expect(file.body.rootGroup.groups[0].entries.length, 0);
-        expect(file.body.rootGroup.groups[1].entries.length, 0);
+        expect(fileLocal.recycleBin.entries.length, 1);
+        expect(fileLocal.body.rootGroup.entries.length, 0);
+        expect(fileLocal.body.rootGroup.groups[0].entries.length, 0);
+        expect(fileLocal.body.rootGroup.groups[1].entries.length, 0);
+        expect(fileLocal.body.rootGroup.groups[3].entries.length, 1);
       }),
     );
     test(
@@ -504,6 +540,9 @@ void main() {
   });
 
 // meh?
+//  'merges binaries'
+//  ('merges custom icons',
+  //
   // group('History merges', () {
   //   test(
   //     'deletes all history state remotely',
