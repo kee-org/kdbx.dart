@@ -13,3 +13,6 @@ dependencies:
 
 dev_dependencies:
   pedantic: ^1.9.2
+
+dependency_overrides:
+  logging: '>=1.0.0'

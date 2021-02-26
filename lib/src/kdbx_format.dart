@@ -10,7 +10,6 @@ import 'package:supercharged_dart/supercharged_dart.dart';
 import 'package:argon2_ffi_base/argon2_ffi_base.dart';
 import 'package:convert/convert.dart' as convert;
 import 'package:crypto/crypto.dart' as crypto;
-import 'package:cryptography/cryptography.dart' as cryptography;
 import 'package:kdbx/kdbx.dart';
 import 'package:kdbx/src/crypto/key_encrypter_kdf.dart';
 import 'package:kdbx/src/crypto/protected_salt_generator.dart';
@@ -30,7 +29,6 @@ import 'package:kdbx/src/kdbx_xml.dart';
 import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:pointycastle/export.dart';
-import 'package:quiver/iterables.dart';
 import 'package:xml/xml.dart' as xml;
 
 final _logger = Logger('kdbx.format');
@@ -300,9 +298,10 @@ class KdbxBody extends KdbxNode {
 
   KdbxReadWriteContext get ctx => rootGroup.ctx;
 
-  Map<KdbxUuid, KdbxObject> _createObjectIndex() => Map.fromEntries(
-      concat([rootGroup.getAllGroups(), rootGroup.getAllEntries()])
-          .map((e) => MapEntry(e.uuid, e)));
+  Map<KdbxUuid, KdbxObject> _createObjectIndex() => Map.fromEntries({
+        ...rootGroup.getAllGroups(),
+        ...rootGroup.getAllEntries()
+      }.map((k, e) => MapEntry(e.uuid, e)).entries);
 
   MergeContext merge(KdbxBody other) {
     // sync deleted objects.
@@ -374,7 +373,7 @@ class KdbxBody extends KdbxNode {
       }
     }
 
-    rootGroup.getAllEntries().forEach((e) {
+    rootGroup.getAllEntries().values.forEach((e) {
       if (e.history.length > historyMaxItems) {
         e.history.removeRange(0, e.history.length - historyMaxItems);
       }
@@ -383,7 +382,7 @@ class KdbxBody extends KdbxNode {
         _trackEntryForCleanup(he);
       });
     });
-    rootGroup.getAllGroups().forEach((g) {
+    rootGroup.getAllGroups().values.forEach((g) {
       if (g.customIcon != null) {
         usedCustomIcons.add(g.customIcon.uuid);
       }
@@ -565,11 +564,13 @@ class KdbxFormat {
       Uint8List input, Credentials credentials) async {
     final reader = ReaderHelper(input);
     final header = KdbxHeader.read(reader);
+    reader.pos = 0;
+    final header2 = KdbxHeader.read(reader);
     if (header.version.major == KdbxVersion.V4.major) {
       final decrypted = await _loadV4PreDecryption(header, reader, credentials);
       final first = await _loadV4PostDecryption(header, credentials, decrypted);
-      final second = await _loadV4PostDecryption(
-          KdbxHeader.read(reader), credentials, decrypted);
+      final second =
+          await _loadV4PostDecryption(header2, credentials, decrypted);
       return [first, second];
     } else {
       _logger.finer('Unsupported version for $header');
@@ -814,9 +815,9 @@ class KdbxFormat {
   Uint8List transformContentV4ChaCha20(
       KdbxHeader header, Uint8List encrypted, Uint8List cipherKey) {
     final encryptionIv = header.fields[HeaderFields.EncryptionIV].bytes;
-    final key = cryptography.SecretKey(cipherKey);
-    final nonce = cryptography.SecretKey(encryptionIv);
-    return cryptography.chacha20.decrypt(encrypted, key, nonce: nonce);
+    final engine = ChaCha7539Engine()
+      ..init(false, ParametersWithIV(KeyParameter(cipherKey), encryptionIv));
+    return engine.process(encrypted);
   }
 
 //  Uint8List _transformDataV4Aes() {

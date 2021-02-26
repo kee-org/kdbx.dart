@@ -17,13 +17,13 @@ class KdbxPrintUtils {
   void catGroup(StringBuffer buf, KdbxGroup group, {int depth = 0}) {
     final indent = '  ' * depth;
     buf.writeln('$indent + ${group.name.get()} (${group.uuid})');
-    for (final group in group.groups) {
+    for (final group in group.groups.values) {
       catGroup(buf, group, depth: depth + 1);
     }
     final valueToSting = (StringValue value) =>
         forceDecrypt ? value?.getText() : value?.toString();
 
-    for (final entry in group.entries) {
+    for (final entry in group.entries.values) {
       final value = entry.getString(KdbxKeyCommon.PASSWORD);
       buf.writeln('$indent `- ${entry.debugLabel()}: '
           '${valueToSting(value)}');

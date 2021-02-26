@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -109,9 +110,23 @@ abstract class KdbxNode with Changeable<KdbxNode> {
   }
 }
 
-extension IterableKdbxObject<T extends KdbxObject> on Iterable<T> {
-  T findByUuid(KdbxUuid uuid) =>
-      firstWhere((element) => element.uuid == uuid, orElse: () => null);
+extension IterableKdbxObject<K extends String, V extends KdbxObject>
+    on LinkedHashMap<K, V> {
+  V findByUuid(KdbxUuid uuid) {
+    return this[uuid.uuid];
+  }
+
+  void add(KdbxObject obj) {
+    // ignore: unnecessary_cast
+    (this as LinkedHashMap<String, KdbxObject>)[obj.uuid.uuid] = obj;
+  }
+}
+
+extension UnmodifiableMapViewKdbxObject<K extends String, V extends KdbxObject>
+    on UnmodifiableMapView<K, V> {
+  V get first {
+    return values.first;
+  }
 }
 
 extension KdbxObjectInternal on KdbxObject {
@@ -229,8 +244,7 @@ abstract class KdbxObject extends KdbxNode {
 class KdbxUuid {
   const KdbxUuid(this.uuid);
 
-  KdbxUuid.random()
-      : this(base64.encode(uuidGenerator.parse(uuidGenerator.v4())));
+  KdbxUuid.random() : this(base64.encode(Uuid.parse(uuidGenerator.v4())));
 
   KdbxUuid.fromBytes(Uint8List bytes) : this(base64.encode(bytes));
 

@@ -141,7 +141,7 @@ void main() {
     test('check deleting item', () async {
       final file = await TestUtil.readKdbxFile('test/keepass2test.kdbx');
       expect(file.recycleBin, isNull);
-      final entry = file.body.rootGroup.getAllEntries().first;
+      final entry = file.body.rootGroup.getAllEntries().values.first;
       file.deleteEntry(entry);
       expect(file.recycleBin, isNotNull);
       expect(entry.parent, equals(file.recycleBin));

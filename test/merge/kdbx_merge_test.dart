@@ -166,15 +166,15 @@ void main() {
         final file = await createRealFile();
 
         final fileMod = await TestUtil.saveAndRead(file);
-        file.move(
-            file.body.rootGroup.entries.first, file.body.rootGroup.groups[1]);
+        file.move(file.body.rootGroup.entries.first,
+            file.body.rootGroup.groups.values.toList()[1]);
 
         final file2 = await TestUtil.saveAndRead(fileMod);
         final merge = file.merge(file2);
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(5));
         expect(file.body.rootGroup.entries.length, 0);
-        expect(file.body.rootGroup.groups[1].entries.length, 1);
+        expect(file.body.rootGroup.groups.values.toList()[1].entries.length, 1);
       }),
     );
 
@@ -185,14 +185,14 @@ void main() {
 
         final fileMod = await TestUtil.saveAndRead(file);
         fileMod.move(fileMod.body.rootGroup.entries.first,
-            fileMod.body.rootGroup.groups[1]);
+            fileMod.body.rootGroup.groups.values.toList()[1]);
 
         final file2 = await TestUtil.saveAndRead(fileMod);
         final merge = file.merge(file2);
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(5));
         expect(file.body.rootGroup.entries.length, 0);
-        expect(file.body.rootGroup.groups[1].entries.length, 1);
+        expect(file.body.rootGroup.groups.values.toList()[1].entries.length, 1);
       }),
     );
 
@@ -202,17 +202,17 @@ void main() {
         final file = await createRealFile();
 
         final fileMod = await TestUtil.saveAndRead(file);
-        file.move(
-            file.body.rootGroup.entries.first, file.body.rootGroup.groups[1]);
+        file.move(file.body.rootGroup.entries.first,
+            file.body.rootGroup.groups.values.toList()[1]);
         fileMod.move(fileMod.body.rootGroup.entries.first,
-            fileMod.body.rootGroup.groups[1]);
+            fileMod.body.rootGroup.groups.values.toList()[1]);
 
         final file2 = await TestUtil.saveAndRead(fileMod);
         final merge = file.merge(file2);
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(5));
         expect(file.body.rootGroup.entries.length, 0);
-        expect(file.body.rootGroup.groups[1].entries.length, 1);
+        expect(file.body.rootGroup.groups.values.toList()[1].entries.length, 1);
       }),
     );
 
@@ -222,18 +222,18 @@ void main() {
         final file = await createRealFile();
 
         final fileMod = await TestUtil.saveAndRead(file);
-        file.move(
-            file.body.rootGroup.entries.first, file.body.rootGroup.groups[0]);
+        file.move(file.body.rootGroup.entries.first,
+            file.body.rootGroup.groups.values.toList()[0]);
         fileMod.move(fileMod.body.rootGroup.entries.first,
-            fileMod.body.rootGroup.groups[1]);
+            fileMod.body.rootGroup.groups.values.toList()[1]);
 
         final file2 = await TestUtil.saveAndRead(fileMod);
         final merge = file.merge(file2);
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(5));
         expect(file.body.rootGroup.entries.length, 0);
-        expect(file.body.rootGroup.groups[0].entries.length, 2);
-        expect(file.body.rootGroup.groups[1].entries.length, 0);
+        expect(file.body.rootGroup.groups.values.toList()[0].entries.length, 2);
+        expect(file.body.rootGroup.groups.values.toList()[1].entries.length, 0);
       }),
     );
 
@@ -252,7 +252,7 @@ void main() {
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(5));
         expect(file.body.rootGroup.entries.length, 0);
-        expect(file.body.rootGroup.groups[2].entries.length, 1);
+        expect(file.body.rootGroup.groups.values.toList()[2].entries.length, 1);
       }),
     );
 
@@ -271,7 +271,7 @@ void main() {
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(6));
         expect(file.body.rootGroup.entries.length, 0);
-        expect(file.body.rootGroup.groups[2].entries.length, 1);
+        expect(file.body.rootGroup.groups.values.toList()[2].entries.length, 1);
       }),
     );
 
@@ -293,7 +293,7 @@ void main() {
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(6));
         expect(file.body.rootGroup.entries.length, 0);
-        expect(file.body.rootGroup.groups[2].entries.length, 1);
+        expect(file.body.rootGroup.groups.values.toList()[2].entries.length, 1);
       }),
     );
   });
@@ -392,8 +392,18 @@ void main() {
                   hasLength(2));
               expect(fileLocal.recycleBin.entries.length, 2);
               expect(fileLocal.body.rootGroup.entries.length, 0);
-              expect(fileLocal.body.rootGroup.groups[0].entries.length, 0);
-              expect(fileLocal.body.rootGroup.groups[1].entries.length, 0);
+              expect(
+                  fileLocal.body.rootGroup.groups.values
+                      .toList()[0]
+                      .entries
+                      .length,
+                  0);
+              expect(
+                  fileLocal.body.rootGroup.groups.values
+                      .toList()[1]
+                      .entries
+                      .length,
+                  0);
             }),
         skip:
             "Merge algorihm can't cope with this so we define the behaviour in the test below instead. Possibly can't ever be improved but it's something to aim for one day. Current behaviour at least ensures no data loss is possible.");
@@ -423,9 +433,15 @@ void main() {
             hasLength(2));
         expect(fileLocal.recycleBin.entries.length, 1);
         expect(fileLocal.body.rootGroup.entries.length, 0);
-        expect(fileLocal.body.rootGroup.groups[0].entries.length, 0);
-        expect(fileLocal.body.rootGroup.groups[1].entries.length, 0);
-        expect(fileLocal.body.rootGroup.groups[3].entries.length, 1);
+        expect(
+            fileLocal.body.rootGroup.groups.values.toList()[0].entries.length,
+            0);
+        expect(
+            fileLocal.body.rootGroup.groups.values.toList()[1].entries.length,
+            0);
+        expect(
+            fileLocal.body.rootGroup.groups.values.toList()[3].entries.length,
+            1);
       }),
     );
     test(
@@ -477,7 +493,7 @@ void main() {
         final file = await createRealFile();
 
         final fileMod = await TestUtil.saveAndRead(file);
-        fileMod.deleteGroup(fileMod.body.rootGroup.groups[1]);
+        fileMod.deleteGroup(fileMod.body.rootGroup.groups.values.toList()[1]);
 
         final file2 = await TestUtil.saveAndRead(fileMod);
         final merge = file.merge(file2);
@@ -493,7 +509,7 @@ void main() {
         final file = await createRealFile();
 
         final fileMod = await TestUtil.saveAndRead(file);
-        fileMod.deleteGroup(fileMod.body.rootGroup.groups[1]);
+        fileMod.deleteGroup(fileMod.body.rootGroup.groups.values.toList()[1]);
 
         final file2 = await TestUtil.saveAndRead(fileMod);
         final merge = file2.merge(file);
@@ -509,15 +525,16 @@ void main() {
         final fileLocal = await createGroupMergeFile();
 
         final fileRemote = await TestUtil.saveAndRead(fileLocal);
-        fileRemote.move(fileRemote.body.rootGroup.groups[1],
-            fileRemote.body.rootGroup.groups[2]);
-        fileLocal.move(fileLocal.body.rootGroup.groups[2],
-            fileLocal.body.rootGroup.groups[0]);
+        fileRemote.move(fileRemote.body.rootGroup.groups.values.toList()[1],
+            fileRemote.body.rootGroup.groups.values.toList()[2]);
+        fileLocal.move(fileLocal.body.rootGroup.groups.values.toList()[2],
+            fileLocal.body.rootGroup.groups.values.toList()[0]);
         final merge = fileLocal.merge(fileRemote);
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(6));
         expect(fileLocal.body.rootGroup.groups.length, 1);
-        expect(fileLocal.body.rootGroup.groups[0].groups.length, 1);
+        expect(fileLocal.body.rootGroup.groups.values.toList()[0].groups.length,
+            1);
       }),
     );
     test(
@@ -526,15 +543,16 @@ void main() {
         final fileRemote = await createGroupMergeFile();
 
         final fileLocal = await TestUtil.saveAndRead(fileRemote);
-        fileLocal.move(fileLocal.body.rootGroup.groups[1],
-            fileLocal.body.rootGroup.groups[2]);
-        fileRemote.move(fileRemote.body.rootGroup.groups[2],
-            fileRemote.body.rootGroup.groups[0]);
+        fileLocal.move(fileLocal.body.rootGroup.groups.values.toList()[1],
+            fileLocal.body.rootGroup.groups.values.toList()[2]);
+        fileRemote.move(fileRemote.body.rootGroup.groups.values.toList()[2],
+            fileRemote.body.rootGroup.groups.values.toList()[0]);
         final merge = fileLocal.merge(fileRemote);
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(6));
         expect(fileLocal.body.rootGroup.groups.length, 1);
-        expect(fileLocal.body.rootGroup.groups[0].groups.length, 1);
+        expect(fileLocal.body.rootGroup.groups.values.toList()[0].groups.length,
+            1);
       }),
     );
   });

@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:kdbx/kdbx.dart';
 import 'package:kdbx/src/internal/extension_utils.dart';
 import 'package:kdbx/src/kdbx_consts.dart';
@@ -45,25 +47,45 @@ class KdbxGroup extends KdbxObject {
     final el = super.toXml();
     XmlUtils.removeChildrenByName(el, 'Group');
     XmlUtils.removeChildrenByName(el, 'Entry');
-    el.children.addAll(groups.map((g) => g.toXml()));
-    el.children.addAll(_entries.map((e) => e.toXml()));
+    el.children.addAll(groups.values.map((g) => g.toXml()));
+    el.children.addAll(_entries.values.map((e) => e.toXml()));
     return el;
   }
 
   /// Returns all groups plus this group itself.
-  List<KdbxGroup> getAllGroups() => groups
-      .expand((g) => g.getAllGroups())
-      .followedBy([this]).toList(growable: false);
+  LinkedHashMap<String, KdbxGroup> getAllGroups() {
+    // ignore: prefer_collection_literals
+    final flattenedGroups = LinkedHashMap<String, KdbxGroup>();
+
+    groups.forEach((key, value) {
+      flattenedGroups.addAll(value.getAllGroups());
+    });
+    return flattenedGroups..add(this);
+  }
 
   /// Returns all entries of this group and all sub groups.
-  List<KdbxEntry> getAllEntries() =>
-      getAllGroups().expand((g) => g.entries).toList(growable: false);
+  LinkedHashMap<String, KdbxEntry> getAllEntries() {
+    // ignore: prefer_collection_literals
+    final flattenedEntries = LinkedHashMap<String, KdbxEntry>();
 
-  List<KdbxGroup> get groups => List.unmodifiable(_groups);
-  final List<KdbxGroup> _groups = [];
+    groups.forEach((key, value) {
+      flattenedEntries.addAll(value.getAllEntries());
+    });
+    return flattenedEntries..addAll(entries);
+  }
 
-  List<KdbxEntry> get entries => List.unmodifiable(_entries);
-  final List<KdbxEntry> _entries = [];
+  // LinkedHashMap<String, KdbxEntry> getAllEntries() =>
+  //     getAllGroups().expand((g) => g.entries).findByUuid(uuid)(growable: false);
+
+  UnmodifiableMapView<String, KdbxGroup> get groups =>
+      UnmodifiableMapView(_groups);
+  final LinkedHashMap<String, KdbxGroup> _groups =
+      LinkedHashMap<String, KdbxGroup>();
+
+  UnmodifiableMapView<String, KdbxEntry> get entries =>
+      UnmodifiableMapView(_entries);
+  final LinkedHashMap<String, KdbxEntry> _entries =
+      LinkedHashMap<String, KdbxEntry>();
 
   void addEntry(KdbxEntry entry) {
     if (entry.parent != this) {
@@ -129,8 +151,8 @@ class KdbxGroup extends KdbxObject {
     mergeContext.markAsMerged(this);
   }
 
-  void _mergeSubObjects<T extends KdbxObject>(
-      MergeContext mergeContext, List<T> me, List<T> other,
+  void _mergeSubObjects<T extends KdbxObject>(MergeContext mergeContext,
+      LinkedHashMap<String, T> me, LinkedHashMap<String, T> other,
       {@required T Function(T obj) importToHere}) {
     // possibilities:
     // 1. Not changed at all 👍
@@ -141,7 +163,7 @@ class KdbxGroup extends KdbxObject {
     // 6. Moved in other
     // 7. Moved in this
 
-    for (final otherObj in other) {
+    for (final otherObj in other.values) {
       final meObj = me.findByUuid(otherObj.uuid);
       if (meObj == null) {
         // moved or deleted.
@@ -197,7 +219,7 @@ class KdbxGroup extends KdbxObject {
 extension KdbxGroupInternal on KdbxGroup {
   void internalRemoveGroup(KdbxGroup group) {
     modify(() {
-      if (!_groups.remove(group)) {
+      if (_groups.remove(group.uuid.uuid) == null) {
         throw StateError('Unable to remove $group from $this (Not found)');
       }
     });
@@ -205,7 +227,7 @@ extension KdbxGroupInternal on KdbxGroup {
 
   void internalRemoveEntry(KdbxEntry entry) {
     modify(() {
-      if (!_entries.remove(entry)) {
+      if (_entries.remove(entry.uuid.uuid) == null) {
         throw StateError('Unable to remove $entry from $this (Not found)');
       }
     });

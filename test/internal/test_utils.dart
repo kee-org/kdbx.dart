@@ -1,4 +1,5 @@
 //typedef HashStuff = Pointer<Utf8> Function(Pointer<Utf8> str);
+import 'dart:collection';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -64,4 +65,18 @@ class TestUtil {
 
     return file;
   }
+}
+
+extension UnmodifiableMapViewKdbxObject<K extends String, V extends KdbxObject>
+    on UnmodifiableMapView<K, V> {
+  V get first {
+    return values.first;
+  }
+
+  V get last {
+    return values.last;
+  }
+
+  V firstWhere(bool Function(V) test, {V Function() orElse}) =>
+      values.firstWhere(test, orElse: orElse);
 }

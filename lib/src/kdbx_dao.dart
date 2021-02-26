@@ -17,10 +17,13 @@ extension KdbxDao on KdbxFile {
     return newGroup;
   }
 
-  KdbxGroup findGroupByUuid(KdbxUuid uuid) =>
-      body.rootGroup.getAllGroups().firstWhere((group) => group.uuid == uuid,
-          orElse: () =>
-              throw StateError('Unable to find group with uuid $uuid'));
+  KdbxGroup findGroupByUuid(KdbxUuid uuid) {
+    final group = body.rootGroup.getAllGroups()[uuid.uuid];
+    if (group != null) {
+      return group;
+    }
+    throw StateError('Unable to find group with uuid $uuid');
+  }
 
   void deleteGroup(KdbxGroup group) {
     move(group, getRecycleBinOrCreate());

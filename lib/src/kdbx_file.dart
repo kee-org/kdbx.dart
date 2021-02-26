@@ -65,8 +65,9 @@ class KdbxFile {
 
   Iterable<KdbxObject> get _allObjects => body.rootGroup
       .getAllGroups()
+      .values
       .cast<KdbxObject>()
-      .followedBy(body.rootGroup.getAllEntries());
+      .followedBy(body.rootGroup.getAllEntries().values);
 
   void dirtyObject(KdbxObject kdbxObject) {
     dirtyObjects.add(kdbxObject);
@@ -93,6 +94,7 @@ class KdbxFile {
       _logger.warning(() {
         final groupDebug = body.rootGroup
             .getAllGroups()
+            .values
             .map((g) => '${g.uuid}: ${g.name}')
             .join('\n');
         return 'All Groups: $groupDebug';
