@@ -10,7 +10,8 @@ final _logger = Logger('protected_salt_generator');
 class ProtectedSaltGenerator {
   factory ProtectedSaltGenerator(Uint8List key) {
     final hash = sha256.convert(key).bytes as Uint8List;
-    final cipher = Salsa20Engine()..init(false, ParametersWithIV(KeyParameter(hash), salsaNonce));
+    final cipher = Salsa20Engine()
+      ..init(false, ParametersWithIV(KeyParameter(hash), salsaNonce));
     return ProtectedSaltGenerator._(cipher);
   }
   factory ProtectedSaltGenerator.chacha20(Uint8List key) {
@@ -19,7 +20,8 @@ class ProtectedSaltGenerator {
 
   ProtectedSaltGenerator._(this._cipher);
 
-  static final salsaNonce = Uint8List.fromList([0xE8, 0x30, 0x09, 0x4B, 0x97, 0x20, 0x5D, 0x2A]);
+  static final salsaNonce =
+      Uint8List.fromList([0xE8, 0x30, 0x09, 0x4B, 0x97, 0x20, 0x5D, 0x2A]);
   final StreamCipher _cipher;
 
   String decryptBase64(String protectedValue) {
@@ -47,8 +49,11 @@ class ChachaProtectedSaltGenerator extends ProtectedSaltGenerator {
     final secretKey = hash.bytes.sublist(0, 32);
     final nonce = hash.bytes.sublist(32, 32 + 12);
 
-    final chacha20 = ChaCha7539Engine();
-    chacha20.init(null, ParametersWithIV(KeyParameter(secretKey as Uint8List), nonce as Uint8List));
-    return ChachaProtectedSaltGenerator._(chacha20);
+    final chaCha = ChaCha7539Engine();
+    chaCha.init(
+        true,
+        ParametersWithIV(
+            KeyParameter(secretKey as Uint8List), nonce as Uint8List));
+    return ChachaProtectedSaltGenerator._(chaCha);
   }
 }

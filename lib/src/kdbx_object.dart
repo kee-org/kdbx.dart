@@ -105,8 +105,7 @@ abstract class KdbxNode with Changeable<KdbxNode> {
   @mustCallSuper
   XmlElement toXml() {
     clean();
-    final el = node.copy() as XmlElement;
-    return el;
+    return node.copy();
   }
 }
 
@@ -253,7 +252,7 @@ class KdbxUuid {
   ///   128 bits set to zero.
   static const NIL = KdbxUuid('AAAAAAAAAAAAAAAAAAAAAA==');
 
-  static final Uuid uuidGenerator =
+  static const Uuid uuidGenerator =
       Uuid(options: <String, dynamic>{'grng': UuidUtil.cryptoRNG});
 
   /// base64 representation of uuid.
