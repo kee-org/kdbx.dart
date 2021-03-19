@@ -30,6 +30,7 @@ import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:pointycastle/export.dart';
 import 'package:xml/xml.dart' as xml;
+import 'package:xml/xml.dart';
 
 final _logger = Logger('kdbx.format');
 
@@ -560,22 +561,49 @@ class KdbxFormat {
     }
   }
 
+//TODO: perf:
+/*
+1. we do the XML parsing twice. This takes a long time. I think this is now resolved.
+
+2. The XML parsing happens in one big chunk - this occupies the microtask loop for hundreds or thousands of ms and thus causes immense UI jank. 
+
+https://github.com/renggli/dart-xml says that import 'package:xml/xml_events.dart'; can be  used to get a stream API for handling large XML files. There is no documentation on how to use this to avoid long-running microtasks but perhaps the examples in the readme and these files might give some clues.
+
+parseEvents(bookshelfXml)
+    .whereType<XmlTextEvent>()
+    .map((event) => event.text.trim())
+    .where((text) => text.isNotEmpty)
+    .forEach(print);
+ 
+https://github.com/renggli/dart-xml/blob/50f4ee4aec6eac8225b5d3e710f98a9f1c16560e/example/ip_api.dart
+https://github.com/renggli/dart-xml/blob/main/example/xml_flatten.dart
+*/
   Future<List<KdbxFile>> readTwice(
       Uint8List input, Credentials credentials) async {
     final reader = ReaderHelper(input);
-    final header = KdbxHeader.read(reader);
+    final header1 = KdbxHeader.read(reader);
     reader.pos = 0;
     final header2 = KdbxHeader.read(reader);
-    if (header.version.major == KdbxVersion.V4.major) {
-      final decrypted = await _loadV4PreDecryption(header, reader, credentials);
-      final first = await _loadV4PostDecryption(header, credentials, decrypted);
-      final second =
-          await _loadV4PostDecryption(header2, credentials, decrypted);
+    if (header1.version.major == KdbxVersion.V4.major) {
+      final decrypted =
+          await _loadV4PreDecryption(header1, reader, credentials);
+      final contentReader1 = ReaderHelper(decrypted);
+      final contentReader2 = ReaderHelper(decrypted);
+      await _loadV4PostDecryptionInnerHeader(
+          header1, decrypted, contentReader1);
+      final firstDocument = await _loadV4PostDecryptionDocument(
+          header1, decrypted, contentReader1);
+      final first = await _loadV4PostDecryptionKdbxFile(
+          header1, credentials, firstDocument);
+      await _loadV4PostDecryptionInnerHeader(
+          header2, decrypted, contentReader2);
+      final second = await _loadV4PostDecryptionKdbxFile(
+          header2, credentials, firstDocument.copy());
       return [first, second];
     } else {
-      _logger.finer('Unsupported version for $header');
+      _logger.finer('Unsupported version for $header1');
       throw KdbxUnsupportedException('Unsupported kdbx version '
-          '${header.version}.'
+          '${header1.version}.'
           ' Only 4.x is supported.');
     }
   }
@@ -677,16 +705,38 @@ class KdbxFormat {
     throw StateError('Kdbx4 without compression is not yet supported.');
   }
 
-  Future<KdbxFile> _loadV4PostDecryption(
-      KdbxHeader header, Credentials credentials, Uint8List content) async {
-    final contentReader = ReaderHelper(content);
+  Future<void> _loadV4PostDecryptionInnerHeader(
+      KdbxHeader header, Uint8List content, ReaderHelper reader) async {
     final innerHeader =
-        KdbxHeader.readInnerHeaderFields(contentReader, header.version);
+        KdbxHeader.readInnerHeaderFields(reader, header.version);
     header.innerHeader.updateFrom(innerHeader);
-    final xml = utf8.decode(contentReader.readRemaining());
+    return;
+  }
+
+  Future<XmlDocument> _loadV4PostDecryptionDocument(
+      KdbxHeader header, Uint8List content, ReaderHelper reader) async {
+    final xml = utf8.decode(reader.readRemaining());
+    return XmlDocument.parse(xml);
+  }
+
+  // Future<KdbxFile> _loadV4PostDecryptionTwice(
+  //     KdbxHeader header, Credentials credentials, Uint8List content) async {
+  //   final contentReader = ReaderHelper(content);
+  //   final innerHeader =
+  //       KdbxHeader.readInnerHeaderFields(contentReader, header.version);
+  //   header.innerHeader.updateFrom(innerHeader);
+  //   final xml = utf8.decode(contentReader.readRemaining());
+  //   final document = XmlDocument.parse(xml);
+  //   final context = KdbxReadWriteContext(binaries: [], header: header);
+  //   final body = _processParsedXml(context, header, document);
+  //   return KdbxFile(context, this, credentials, header, body);
+  // }
+
+  Future<KdbxFile> _loadV4PostDecryptionKdbxFile(
+      KdbxHeader header, Credentials credentials, XmlDocument document) async {
     final context = KdbxReadWriteContext(binaries: [], header: header);
-    return KdbxFile(
-        context, this, credentials, header, _loadXml(context, header, xml));
+    final body = _processParsedXml(context, header, document);
+    return KdbxFile(context, this, credentials, header, body);
   }
 
   Future<KdbxFile> _loadV4(
@@ -874,11 +924,18 @@ class KdbxFormat {
 
   KdbxBody _loadXml(
       KdbxReadWriteContext ctx, KdbxHeader header, String xmlString) {
+    final document = XmlDocument.parse(xmlString);
+    return _processParsedXml(ctx, header, document);
+  }
+
+  KdbxBody _processParsedXml(
+      KdbxReadWriteContext ctx, KdbxHeader header, XmlDocument document) {
     final gen = _createProtectedSaltGenerator(header);
 
-    final document = xml.XmlDocument.parse(xmlString);
     KdbxReadWriteContext.setKdbxContextForNode(document, ctx);
 
+//TODO: perf: 300ms. Solutions: Enable lazy decryption; Stop Protecting JSONRPC contents; Look for Protected attribute in KdbxGroup.read() process instead of through this independent "moveNext" for loop across the entire XML structure.
+//NB: Figures for my phone in profiling mode while running the entire process twice.
     for (final el in document
         .findAllElements(KdbxXml.NODE_VALUE)
         .where((el) => el.getAttributeBool(KdbxXml.ATTR_PROTECTED))) {
