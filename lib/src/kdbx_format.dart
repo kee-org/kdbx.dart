@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:collection/collection.dart';
 
 import 'package:archive/archive.dart';
 import 'package:kdbx/src/kdbx_entry.dart';
@@ -159,20 +160,20 @@ class KeyFileCredentials implements CredentialsPart {
     try {
       final keyFileAsString = utf8.decode(keyFileContents);
       if (_hexValuePattern.hasMatch(keyFileAsString)) {
-        return KeyFileCredentials._(ProtectedValue.fromBinary(
-            convert.hex.decode(keyFileAsString) as Uint8List));
+        return KeyFileCredentials._(
+            convert.hex.decode(keyFileAsString) as Uint8List);
       }
       final xmlContent = xml.XmlDocument.parse(keyFileAsString);
       final key = xmlContent.findAllElements('Key').single;
       final dataString = key.findElements('Data').single;
       final dataBytes = base64.decode(dataString.text);
       _logger.finer('Decoded base64 of keyfile.');
-      return KeyFileCredentials._(ProtectedValue.fromBinary(dataBytes));
+      return KeyFileCredentials._(dataBytes);
     } catch (e, stackTrace) {
       _logger.warning(
           'Unable to parse key file as hex or XML, use as is.', e, stackTrace);
       final bytes = crypto.sha256.convert(keyFileContents).bytes as Uint8List;
-      return KeyFileCredentials._(ProtectedValue.fromBinary(bytes));
+      return KeyFileCredentials._(bytes);
     }
   }
 
@@ -181,11 +182,11 @@ class KeyFileCredentials implements CredentialsPart {
   static final RegExp _hexValuePattern =
       RegExp(r'^[a-f\d]{64}', caseSensitive: false);
 
-  final ProtectedValue _keyFileValue;
+  final Uint8List _keyFileValue;
 
   @override
   Uint8List getBinary() {
-    return _keyFileValue.binaryValue;
+    return _keyFileValue;
 //    return crypto.sha256.convert(_keyFileValue.binaryValue).bytes as Uint8List;
   }
 }

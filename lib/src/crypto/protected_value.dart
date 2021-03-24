@@ -36,9 +36,6 @@ class ProtectedValue extends PlainValue {
     return ProtectedValue(value);
   }
 
-  factory ProtectedValue.fromBinary(Uint8List value) {
-    return ProtectedValue.fromString(utf8.decode(value));
-  }
   Uint8List get binaryValue => utf8.encode(text) as Uint8List;
 
   Uint8List get hash => sha256.convert(binaryValue).bytes as Uint8List;

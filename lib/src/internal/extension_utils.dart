@@ -53,6 +53,6 @@ extension StringExt on String {
   }
 }
 
-extension IterableExt<T> on Iterable<T> {
-  T get singleOrNull => singleWhere((element) => true, orElse: () => null);
-}
+// extension IterableExt<T> on Iterable<T> {
+//   T get singleOrNull => singleWhere((element) => true, orElse: () => null);
+// }

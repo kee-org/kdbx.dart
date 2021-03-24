@@ -2,19 +2,21 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
-import 'package:kdbx/src/internal/extension_utils.dart';
-import 'package:kdbx/src/kdbx_binary.dart';
-import 'package:kdbx/src/kdbx_custom_data.dart';
-import 'package:kdbx/src/kdbx_format.dart';
-import 'package:kdbx/src/kdbx_header.dart';
-import 'package:kdbx/src/kdbx_object.dart';
-import 'package:kdbx/src/kdbx_xml.dart';
+import 'package:flutter/foundation.dart';
+import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:quiver/iterables.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:xml/xml.dart';
 
-import 'package:logging/logging.dart';
+import 'package:kdbx/src/internal/extension_utils.dart';
+import 'package:kdbx/src/kdbx_binary.dart';
+import 'package:kdbx/src/kdbx_custom_data.dart';
+import 'package:kdbx/src/kdbx_entry.dart';
+import 'package:kdbx/src/kdbx_format.dart';
+import 'package:kdbx/src/kdbx_header.dart';
+import 'package:kdbx/src/kdbx_object.dart';
+import 'package:kdbx/src/kdbx_xml.dart';
 
 final _logger = Logger('kdbx_meta');
 
@@ -150,6 +152,46 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
 
 //  void addCustomIcon
 
+  BrowserDbSettings _browserSettings;
+  BrowserDbSettings get browserSettings {
+    if (_browserSettings == null) {
+      final tempJson = customData['KeePassRPC.Config'];
+
+      if (tempJson != null) {
+        _browserSettings = BrowserDbSettings.fromJson(tempJson);
+      }
+
+      // We now require the DB to have a browser settings JSON string, even if just the default.
+      _browserSettings ??= BrowserDbSettings();
+    }
+    return _browserSettings;
+  }
+
+  set browserSettings(BrowserDbSettings settings) {
+    //TODO: can/should we mark the kdbx file as dirty
+    customData['KeePassRPC.Config'] = settings.toJson();
+  }
+
+  KeeVaultEmbeddedConfig _keeVaultSettings;
+  KeeVaultEmbeddedConfig get keeVaultSettings {
+    if (_keeVaultSettings == null) {
+      final tempJson = customData['KeeVault.Config'];
+
+      if (tempJson != null) {
+        _keeVaultSettings = KeeVaultEmbeddedConfig.fromJson(tempJson);
+      }
+
+      // We now require the DB to have a Kee Vault settings JSON string, even if just the default.
+      _keeVaultSettings ??= KeeVaultEmbeddedConfig();
+    }
+    return _keeVaultSettings;
+  }
+
+  set keeVaultSettings(KeeVaultEmbeddedConfig settings) {
+    //TODO: can/should we mark the kdbx file as dirty
+    customData['KeeVault.Config'] = settings.toJson();
+  }
+
   @override
   xml.XmlElement toXml() {
     final ret = super.toXml()..replaceSingle(customData.toXml());
@@ -232,6 +274,131 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
       //TODO: keyChangeRec and keyChangeForce and color
     }
     settingsChanged.set(other.settingsChanged.get());
+  }
+}
+
+class KeeVaultEmbeddedConfig {
+  int version = 1;
+  Map<String, dynamic>
+      addon; // <String, dynamic>{ "prefs": <String, dynamic>{}, "version": -1 };
+  Map<String, dynamic> vault; // <String, dynamic>{ prefs: {} },
+  String randomId; //: new uuid()
+
+//TODO: Move to keevault repo and implement
+  //     settingsToSync: ['theme', 'locale', 'expandGroups', 'clipboardSeconds', 'autoSave',
+  // 'rememberKeyFiles', 'idleMinutes', 'colorfulIcons', 'lockOnCopy', 'helpTipCopyShown',
+  // 'templateHelpShown', 'hideEmptyFields', 'generatorPresets'],
+
+  // this.settingsToSync.forEach(setting => {
+  //     this.listenTo(AppSettingsModel.instance, 'change:' + setting, (obj) => {
+  //         this.updateSetting('vault', setting, obj.changed[setting]);
+  //     });
+  // });
+}
+
+class BrowserDbSettings {
+  BrowserDbSettings({
+    this.version,
+    this.rootUUID,
+    this.defaultMatchAccuracy,
+    this.defaultPlaceholderHandling,
+    this.displayPriorityField,
+    this.displayGlobalPlaceholderOption,
+  });
+
+  factory BrowserDbSettings.fromMap(Map<String, dynamic> map) {
+    if (map == null) {
+      return null;
+    }
+
+    return BrowserDbSettings(
+      version: map['version'] as int,
+      rootUUID: map['rootUUID'] as String,
+      defaultMatchAccuracy: MatchAccuracy.values
+              .singleWhereOrNull((val) => val == map['defaultMatchAccuracy']) ??
+          MatchAccuracy.Domain,
+      defaultPlaceholderHandling:
+          map['defaultPlaceholderHandling'] as String ?? 'Default',
+      displayPriorityField: map['displayPriorityField'] as bool ?? false,
+      displayGlobalPlaceholderOption:
+          map['displayGlobalPlaceholderOption'] as bool ?? false,
+    );
+  }
+
+  factory BrowserDbSettings.fromJson(String source) =>
+      BrowserDbSettings.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  int version = 3;
+  String rootUUID;
+  // enum
+  MatchAccuracy defaultMatchAccuracy = MatchAccuracy.Domain;
+  String defaultPlaceholderHandling = 'Default';
+  Map<String, String> matchedURLAccuracyOverrides = <String, String>{};
+  bool displayPriorityField = false;
+  bool displayGlobalPlaceholderOption = false;
+
+  BrowserDbSettings copyWith({
+    int version,
+    String rootUUID,
+    MatchAccuracy defaultMatchAccuracy,
+    String defaultPlaceholderHandling,
+    bool displayPriorityField,
+    bool displayGlobalPlaceholderOption,
+  }) {
+    return BrowserDbSettings(
+      version: version ?? this.version,
+      rootUUID: rootUUID ?? this.rootUUID,
+      defaultMatchAccuracy: defaultMatchAccuracy ?? this.defaultMatchAccuracy,
+      defaultPlaceholderHandling:
+          defaultPlaceholderHandling ?? this.defaultPlaceholderHandling,
+      displayPriorityField: displayPriorityField ?? this.displayPriorityField,
+      displayGlobalPlaceholderOption:
+          displayGlobalPlaceholderOption ?? this.displayGlobalPlaceholderOption,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'version': version,
+      'rootUUID': rootUUID,
+      'defaultMatchAccuracy': defaultMatchAccuracy,
+      'defaultPlaceholderHandling': defaultPlaceholderHandling,
+      'displayPriorityField': displayPriorityField,
+      'displayGlobalPlaceholderOption': displayGlobalPlaceholderOption,
+    };
+  }
+
+  String toJson() => json.encode(toMap());
+
+  @override
+  String toString() {
+    return 'BrowserDbSettings(version: $version, rootUUID: $rootUUID, defaultMatchAccuracy: $defaultMatchAccuracy, defaultPlaceholderHandling: $defaultPlaceholderHandling, displayPriorityField: $displayPriorityField, displayGlobalPlaceholderOption: $displayGlobalPlaceholderOption)';
+  }
+
+  @override
+  // ignore: avoid_renaming_method_parameters
+  bool operator ==(Object o) {
+    if (identical(this, o)) {
+      return true;
+    }
+
+    return o is BrowserDbSettings &&
+        o.version == version &&
+        o.rootUUID == rootUUID &&
+        o.defaultMatchAccuracy == defaultMatchAccuracy &&
+        o.defaultPlaceholderHandling == defaultPlaceholderHandling &&
+        o.displayPriorityField == displayPriorityField &&
+        o.displayGlobalPlaceholderOption == displayGlobalPlaceholderOption;
+  }
+
+  @override
+  int get hashCode {
+    return version.hashCode ^
+        rootUUID.hashCode ^
+        defaultMatchAccuracy.hashCode ^
+        defaultPlaceholderHandling.hashCode ^
+        displayPriorityField.hashCode ^
+        displayGlobalPlaceholderOption.hashCode;
   }
 }
 
