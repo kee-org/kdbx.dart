@@ -18,6 +18,7 @@ import 'package:path/path.dart' as path;
 import 'package:quiver/check.dart';
 import 'package:xml/xml.dart';
 
+import '../kdbx.dart';
 import 'field.dart';
 
 final _logger = Logger('kdbx.kdbx_entry');
@@ -456,7 +457,8 @@ class KdbxEntry extends KdbxObject {
     KdbxFile file,
     KdbxGroup parent, {
     this.isHistoryEntry = false,
-  })  : history = [],
+  })  : customData = KdbxCustomData.create(),
+        history = [],
         super.create(file.ctx, file, 'Entry', parent) {
     icon.set(KdbxIcon.Key);
     _browserSettings = BrowserEntrySettings();
@@ -464,7 +466,11 @@ class KdbxEntry extends KdbxObject {
 
   KdbxEntry.read(KdbxReadWriteContext ctx, KdbxGroup parent, XmlElement node,
       {this.isHistoryEntry = false})
-      : history = [],
+      : customData = node
+                .singleElement('CustomData')
+                ?.let((e) => KdbxCustomData.read(e)) ??
+            KdbxCustomData.create(),
+        history = [],
         super.read(ctx, parent, node) {
     _strings.addEntries(node.findElements(KdbxXml.NODE_STRING).map((el) {
       final key = KdbxKey(el.findElements(KdbxXml.NODE_KEY).single.text);
@@ -502,6 +508,20 @@ class KdbxEntry extends KdbxObject {
         []);
   }
 
+  List<String> get androidPackageNames {
+    final tempJson = customData['KeeVault.AndroidPackageNames'];
+
+    if (tempJson != null) {
+      return (json.decode(tempJson) as List<dynamic>).cast<String>();
+    }
+
+    return [];
+  }
+
+  set androidPackageNames(List<String> names) {
+    customData['KeeVault.AndroidPackageNames'] = json.encode(names);
+  }
+
   BrowserEntrySettings _browserSettings;
   BrowserEntrySettings get browserSettings {
     if (_browserSettings == null) {
@@ -524,6 +544,8 @@ class KdbxEntry extends KdbxObject {
         KdbxKey('KPRPC JSON'), ProtectedValue.fromString(settings.toJson()));
   }
 
+  final KdbxCustomData customData;
+
   final bool isHistoryEntry;
 
   final List<KdbxEntry> history;
@@ -541,6 +563,29 @@ class KdbxEntry extends KdbxObject {
     for (final historyEntry in history) {
       historyEntry.file = file;
     }
+  }
+
+  void addAutofillUrl(String webDomain, String scheme) {
+    final newUrl = '${scheme ?? "http"}://$webDomain';
+    final currentUrl = stringEntries
+        .firstWhere((s) => s.key == KdbxKeyCommon.URL, orElse: () => null)
+        ?.value;
+    if (currentUrl == null) {
+      setString(KdbxKeyCommon.URL, PlainValue(newUrl));
+    } else {
+      browserSettings.includeUrls.add(newUrl);
+    }
+    browserSettings.hide = false;
+    browserSettings = browserSettings;
+    return;
+  }
+
+  void addAndroidPackageName(String name) {
+    androidPackageNames.add(name);
+    androidPackageNames = androidPackageNames;
+    browserSettings.hide = false;
+    browserSettings = browserSettings;
+    return;
   }
 
   @override

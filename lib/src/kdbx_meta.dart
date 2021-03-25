@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
-import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:quiver/iterables.dart';
+import 'package:uuid/uuid.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:xml/xml.dart';
 
@@ -168,7 +168,6 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
   }
 
   set browserSettings(BrowserDbSettings settings) {
-    //TODO: can/should we mark the kdbx file as dirty
     customData['KeePassRPC.Config'] = settings.toJson();
   }
 
@@ -188,7 +187,6 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
   }
 
   set keeVaultSettings(KeeVaultEmbeddedConfig settings) {
-    //TODO: can/should we mark the kdbx file as dirty
     customData['KeeVault.Config'] = settings.toJson();
   }
 
@@ -273,16 +271,95 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
       historyMaxItems.set(other.maintenanceHistoryDays.get());
       //TODO: keyChangeRec and keyChangeForce and color
     }
+
+    // Remove the cached versions of these so they have to be regenerated from the latest JSON when next requested
+    _browserSettings = null;
+    _keeVaultSettings = null;
+
     settingsChanged.set(other.settingsChanged.get());
   }
 }
 
 class KeeVaultEmbeddedConfig {
+  KeeVaultEmbeddedConfig({
+    this.version,
+    this.randomId,
+    this.addon,
+    this.vault,
+  });
+
+  factory KeeVaultEmbeddedConfig.fromMap(Map<String, dynamic> map) {
+    if (map == null) {
+      return null;
+    }
+
+    return KeeVaultEmbeddedConfig(
+      version: map['version'] as int,
+      randomId: map['randomId'] as String,
+      addon: Map<String, dynamic>.from(map['addon'] as Map<String, dynamic>),
+      vault: Map<String, dynamic>.from(map['vault'] as Map<String, dynamic>),
+    );
+  }
+
+  factory KeeVaultEmbeddedConfig.fromJson(String source) =>
+      KeeVaultEmbeddedConfig.fromMap(
+          json.decode(source) as Map<String, dynamic>);
+
   int version = 1;
-  Map<String, dynamic>
-      addon; // <String, dynamic>{ "prefs": <String, dynamic>{}, "version": -1 };
-  Map<String, dynamic> vault; // <String, dynamic>{ prefs: {} },
-  String randomId; //: new uuid()
+  String randomId = const Uuid().v4();
+  Map<String, dynamic> addon; // { "prefs": {}, "version": -1 };
+  Map<String, dynamic> vault; // { prefs: {} },
+
+  KeeVaultEmbeddedConfig copyWith({
+    int version,
+    String randomId,
+    Map<String, dynamic> addon,
+    Map<String, dynamic> vault,
+  }) {
+    return KeeVaultEmbeddedConfig(
+      version: version ?? this.version,
+      randomId: randomId ?? this.randomId,
+      addon: addon ?? this.addon,
+      vault: vault ?? this.vault,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'version': version,
+      'randomId': randomId,
+      'addon': addon,
+      'vault': vault,
+    };
+  }
+
+  String toJson() => json.encode(toMap());
+  @override
+  String toString() {
+    return 'KeeVaultEmbeddedConfig(version: $version, randomId: $randomId, addon: $addon, vault: $vault)';
+  }
+
+  @override
+  bool operator ==(Object o) {
+    if (identical(this, o)) {
+      return true;
+    }
+
+    final unOrdDeepEq = const DeepCollectionEquality.unordered().equals;
+    return o is KeeVaultEmbeddedConfig &&
+        o.version == version &&
+        o.randomId == randomId &&
+        unOrdDeepEq(o.addon, addon) &&
+        unOrdDeepEq(o.vault, vault);
+  }
+
+  @override
+  int get hashCode {
+    return version.hashCode ^
+        randomId.hashCode ^
+        addon.hashCode ^
+        vault.hashCode;
+  }
 
 //TODO: Move to keevault repo and implement
   //     settingsToSync: ['theme', 'locale', 'expandGroups', 'clipboardSeconds', 'autoSave',
@@ -304,6 +381,7 @@ class BrowserDbSettings {
     this.defaultPlaceholderHandling,
     this.displayPriorityField,
     this.displayGlobalPlaceholderOption,
+    this.matchedURLAccuracyOverrides,
   });
 
   factory BrowserDbSettings.fromMap(Map<String, dynamic> map) {
@@ -312,17 +390,20 @@ class BrowserDbSettings {
     }
 
     return BrowserDbSettings(
-      version: map['version'] as int,
-      rootUUID: map['rootUUID'] as String,
-      defaultMatchAccuracy: MatchAccuracy.values
-              .singleWhereOrNull((val) => val == map['defaultMatchAccuracy']) ??
-          MatchAccuracy.Domain,
-      defaultPlaceholderHandling:
-          map['defaultPlaceholderHandling'] as String ?? 'Default',
-      displayPriorityField: map['displayPriorityField'] as bool ?? false,
-      displayGlobalPlaceholderOption:
-          map['displayGlobalPlaceholderOption'] as bool ?? false,
-    );
+        version: map['version'] as int,
+        rootUUID: map['rootUUID'] as String,
+        defaultMatchAccuracy: MatchAccuracy.values.singleWhereOrNull(
+                (val) => val == map['defaultMatchAccuracy']) ??
+            MatchAccuracy.Domain,
+        defaultPlaceholderHandling:
+            map['defaultPlaceholderHandling'] as String ?? 'Default',
+        displayPriorityField: map['displayPriorityField'] as bool ?? false,
+        displayGlobalPlaceholderOption:
+            map['displayGlobalPlaceholderOption'] as bool ?? false,
+        matchedURLAccuracyOverrides:
+            (map['matchedURLAccuracyOverrides'] as Map<String, dynamic>)
+                    ?.cast<String, String>() ??
+                <String, String>{});
   }
 
   factory BrowserDbSettings.fromJson(String source) =>
@@ -333,9 +414,9 @@ class BrowserDbSettings {
   // enum
   MatchAccuracy defaultMatchAccuracy = MatchAccuracy.Domain;
   String defaultPlaceholderHandling = 'Default';
-  Map<String, String> matchedURLAccuracyOverrides = <String, String>{};
   bool displayPriorityField = false;
   bool displayGlobalPlaceholderOption = false;
+  Map<String, String> matchedURLAccuracyOverrides = <String, String>{};
 
   BrowserDbSettings copyWith({
     int version,
@@ -344,6 +425,7 @@ class BrowserDbSettings {
     String defaultPlaceholderHandling,
     bool displayPriorityField,
     bool displayGlobalPlaceholderOption,
+    Map<String, String> matchedURLAccuracyOverrides,
   }) {
     return BrowserDbSettings(
       version: version ?? this.version,
@@ -354,6 +436,8 @@ class BrowserDbSettings {
       displayPriorityField: displayPriorityField ?? this.displayPriorityField,
       displayGlobalPlaceholderOption:
           displayGlobalPlaceholderOption ?? this.displayGlobalPlaceholderOption,
+      matchedURLAccuracyOverrides:
+          matchedURLAccuracyOverrides ?? this.matchedURLAccuracyOverrides,
     );
   }
 
@@ -365,6 +449,7 @@ class BrowserDbSettings {
       'defaultPlaceholderHandling': defaultPlaceholderHandling,
       'displayPriorityField': displayPriorityField,
       'displayGlobalPlaceholderOption': displayGlobalPlaceholderOption,
+      'matchedURLAccuracyOverrides': matchedURLAccuracyOverrides,
     };
   }
 
@@ -372,7 +457,7 @@ class BrowserDbSettings {
 
   @override
   String toString() {
-    return 'BrowserDbSettings(version: $version, rootUUID: $rootUUID, defaultMatchAccuracy: $defaultMatchAccuracy, defaultPlaceholderHandling: $defaultPlaceholderHandling, displayPriorityField: $displayPriorityField, displayGlobalPlaceholderOption: $displayGlobalPlaceholderOption)';
+    return 'BrowserDbSettings(version: $version, rootUUID: $rootUUID, defaultMatchAccuracy: $defaultMatchAccuracy, defaultPlaceholderHandling: $defaultPlaceholderHandling, displayPriorityField: $displayPriorityField, displayGlobalPlaceholderOption: $displayGlobalPlaceholderOption), matchedURLAccuracyOverrides: $matchedURLAccuracyOverrides';
   }
 
   @override
@@ -382,13 +467,15 @@ class BrowserDbSettings {
       return true;
     }
 
+    final unOrdDeepEq = const DeepCollectionEquality.unordered().equals;
     return o is BrowserDbSettings &&
         o.version == version &&
         o.rootUUID == rootUUID &&
         o.defaultMatchAccuracy == defaultMatchAccuracy &&
         o.defaultPlaceholderHandling == defaultPlaceholderHandling &&
         o.displayPriorityField == displayPriorityField &&
-        o.displayGlobalPlaceholderOption == displayGlobalPlaceholderOption;
+        o.displayGlobalPlaceholderOption == displayGlobalPlaceholderOption &&
+        unOrdDeepEq(o.matchedURLAccuracyOverrides, matchedURLAccuracyOverrides);
   }
 
   @override
@@ -398,7 +485,8 @@ class BrowserDbSettings {
         defaultMatchAccuracy.hashCode ^
         defaultPlaceholderHandling.hashCode ^
         displayPriorityField.hashCode ^
-        displayGlobalPlaceholderOption.hashCode;
+        displayGlobalPlaceholderOption.hashCode ^
+        matchedURLAccuracyOverrides.hashCode;
   }
 }
 
