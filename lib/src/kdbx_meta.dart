@@ -282,11 +282,11 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
 
 class KeeVaultEmbeddedConfig {
   KeeVaultEmbeddedConfig({
-    this.version,
-    this.randomId,
+    this.version = 1,
+    String randomId,
     this.addon,
     this.vault,
-  });
+  }) : randomId = randomId ?? const Uuid().v4();
 
   factory KeeVaultEmbeddedConfig.fromMap(Map<String, dynamic> map) {
     if (map == null) {
@@ -305,8 +305,8 @@ class KeeVaultEmbeddedConfig {
       KeeVaultEmbeddedConfig.fromMap(
           json.decode(source) as Map<String, dynamic>);
 
-  int version = 1;
-  String randomId = const Uuid().v4();
+  int version;
+  String randomId;
   Map<String, dynamic> addon; // { "prefs": {}, "version": -1 };
   Map<String, dynamic> vault; // { prefs: {} },
 
@@ -375,14 +375,15 @@ class KeeVaultEmbeddedConfig {
 
 class BrowserDbSettings {
   BrowserDbSettings({
-    this.version,
+    this.version = 3,
     this.rootUUID,
-    this.defaultMatchAccuracy,
-    this.defaultPlaceholderHandling,
-    this.displayPriorityField,
-    this.displayGlobalPlaceholderOption,
-    this.matchedURLAccuracyOverrides,
-  });
+    this.defaultMatchAccuracy = MatchAccuracy.Domain,
+    this.defaultPlaceholderHandling = 'Default',
+    this.displayPriorityField = false,
+    this.displayGlobalPlaceholderOption = false,
+    Map<String, String> matchedURLAccuracyOverrides,
+  }) : matchedURLAccuracyOverrides =
+            matchedURLAccuracyOverrides ?? <String, String>{};
 
   factory BrowserDbSettings.fromMap(Map<String, dynamic> map) {
     if (map == null) {
@@ -409,14 +410,14 @@ class BrowserDbSettings {
   factory BrowserDbSettings.fromJson(String source) =>
       BrowserDbSettings.fromMap(json.decode(source) as Map<String, dynamic>);
 
-  int version = 3;
+  int version;
   String rootUUID;
   // enum
-  MatchAccuracy defaultMatchAccuracy = MatchAccuracy.Domain;
-  String defaultPlaceholderHandling = 'Default';
-  bool displayPriorityField = false;
-  bool displayGlobalPlaceholderOption = false;
-  Map<String, String> matchedURLAccuracyOverrides = <String, String>{};
+  MatchAccuracy defaultMatchAccuracy;
+  String defaultPlaceholderHandling;
+  bool displayPriorityField;
+  bool displayGlobalPlaceholderOption;
+  Map<String, String> matchedURLAccuracyOverrides;
 
   BrowserDbSettings copyWith({
     int version,

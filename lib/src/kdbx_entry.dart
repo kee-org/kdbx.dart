@@ -83,16 +83,18 @@ class KdbxKey {
 
 class BrowserEntrySettings {
   BrowserEntrySettings({
-    this.version,
-    this.behaviour,
-    this.minimumMatchAccuracy,
-    this.priority,
-    this.hide,
-    this.realm,
-    this.includeUrls,
-    this.excludeUrls,
-    this.fields,
-  });
+    this.version = 1,
+    this.behaviour = BrowserAutoFillBehaviour.Default,
+    this.minimumMatchAccuracy = MatchAccuracy.Domain,
+    this.priority = 0,
+    this.hide = false,
+    this.realm = '',
+    List<Pattern> includeUrls,
+    List<Pattern> excludeUrls,
+    List<BrowserFieldModel> fields,
+  })  : includeUrls = includeUrls ?? [],
+        excludeUrls = excludeUrls ?? [],
+        fields = fields ?? [];
 
   factory BrowserEntrySettings.fromMap(Map<String, dynamic> map) {
     if (map == null) {
@@ -119,17 +121,17 @@ class BrowserEntrySettings {
   factory BrowserEntrySettings.fromJson(String source) =>
       BrowserEntrySettings.fromMap(json.decode(source) as Map<String, dynamic>);
 
-  int version = 1;
+  int version;
   // enum
-  BrowserAutoFillBehaviour behaviour = BrowserAutoFillBehaviour.Default;
+  BrowserAutoFillBehaviour behaviour;
   // enum
-  MatchAccuracy minimumMatchAccuracy = MatchAccuracy.Domain;
-  int priority = 0; // always 0
-  bool hide = false;
-  String realm = '';
-  List<Pattern> includeUrls = [];
-  List<Pattern> excludeUrls = [];
-  List<BrowserFieldModel> fields = [];
+  MatchAccuracy minimumMatchAccuracy;
+  int priority; // always 0
+  bool hide;
+  String realm;
+  List<Pattern> includeUrls;
+  List<Pattern> excludeUrls;
+  List<BrowserFieldModel> fields;
 
   BrowserEntrySettings copyWith({
     int version,
@@ -569,11 +571,16 @@ class KdbxEntry extends KdbxObject {
     final newUrl = '${scheme ?? "http"}://$webDomain';
     final currentUrl = stringEntries
         .firstWhere((s) => s.key == KdbxKeyCommon.URL, orElse: () => null)
-        ?.value;
-    if (currentUrl == null) {
-      setString(KdbxKeyCommon.URL, PlainValue(newUrl));
-    } else {
-      browserSettings.includeUrls.add(newUrl);
+        ?.value
+        ?.getText();
+    final alreadyPresent =
+        newUrl == currentUrl || browserSettings.includeUrls.contains(newUrl);
+    if (!alreadyPresent) {
+      if (currentUrl == null) {
+        setString(KdbxKeyCommon.URL, PlainValue(newUrl));
+      } else {
+        browserSettings.includeUrls.add(newUrl);
+      }
     }
     browserSettings.hide = false;
     browserSettings = browserSettings;
@@ -581,8 +588,10 @@ class KdbxEntry extends KdbxObject {
   }
 
   void addAndroidPackageName(String name) {
-    androidPackageNames.add(name);
-    androidPackageNames = androidPackageNames;
+    if (!androidPackageNames.contains(name)) {
+      androidPackageNames.add(name);
+      androidPackageNames = androidPackageNames;
+    }
     browserSettings.hide = false;
     browserSettings = browserSettings;
     return;
@@ -696,7 +705,8 @@ class KdbxEntry extends KdbxObject {
 
   String get label =>
       _plainValue(KdbxKeyCommon.TITLE)?.takeUnlessBlank() ??
-      _plainValue(KdbxKeyCommon.URL)?.takeUnlessBlank();
+      _plainValue(KdbxKeyCommon.URL)?.takeUnlessBlank() ??
+      '';
 
   set label(String label) => setString(KdbxKeyCommon.TITLE, PlainValue(label));
 

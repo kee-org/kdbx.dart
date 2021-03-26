@@ -14,12 +14,12 @@ class FormFieldType {
 class BrowserFieldModel {
   BrowserFieldModel({
     this.displayName,
-    this.name,
-    this.type,
-    this.fieldId,
-    this.page,
-    this.placeholderHandling,
-    this.value,
+    this.name = '',
+    this.type = FormFieldType.TEXT,
+    this.fieldId = '',
+    this.page = 0,
+    this.placeholderHandling = 'Default',
+    this.value = '',
   });
 
   factory BrowserFieldModel.fromMap(Map<String, dynamic> map) {
@@ -41,12 +41,12 @@ class BrowserFieldModel {
       BrowserFieldModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   String displayName;
-  String name = '';
-  String type = FormFieldType.TEXT;
-  String fieldId = '';
-  int page = 0;
-  String placeholderHandling = 'Default';
-  String value = '';
+  String name;
+  String type;
+  String fieldId;
+  int page;
+  String placeholderHandling;
+  String value;
 
   @override
   // ignore: avoid_renaming_method_parameters
