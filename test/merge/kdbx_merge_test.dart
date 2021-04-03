@@ -58,8 +58,10 @@ void main() {
     final file = TestUtil.createEmptyFile();
     final entry = _createEntry(file, file.body.rootGroup, 'test1', 'test1');
     await TestUtil.saveAndRead(file);
+    proceedSeconds(1);
     entry.setString(KdbxKeyCommon.USER_NAME, PlainValue('test2'));
     await TestUtil.saveAndRead(file);
+    proceedSeconds(1);
     entry.setString(KdbxKeyCommon.USER_NAME, PlainValue('test3'));
     proceedSeconds(10);
     return await TestUtil.saveAndRead(file);
@@ -559,176 +561,383 @@ void main() {
 
 // meh?
 //  'merges binaries'
-//  ('merges custom icons',
-  //
-  // group('History merges', () {
-  //   test(
-  //     'deletes all history state remotely',
-  //     () async => await withClock(fakeClock, () async {
-  //       final fileRemote = await createFileWithHistory();
+  //('merges custom icons',
 
-  //       final fileLocal = await TestUtil.saveAndRead(fileRemote);
-  //       fileRemote.body.rootGroup.entries[0].history.clear();
-  //       final merge = fileLocal.merge(fileRemote);
-  //       final set = Set<KdbxUuid>.from(merge.merged.keys);
-  //       expect(set, hasLength(2));
-  //       expect(fileLocal.body.rootGroup.entries[0].history.isEmpty, true);
-  //       expect(
-  //           fileLocal.body.rootGroup.entries[0]
-  //               .getString(KdbxKeyCommon.USER_NAME)
-  //               .getText(),
-  //           'test3');
-  //     }),
-  //   );
-  //   test(
-  //     'deletes all history state locally',
-  //     () async => await withClock(fakeClock, () async {
-  //       final fileRemote = await createFileWithHistory();
+  group('History merges', () {
+/*
 
-  //       final fileLocal = await TestUtil.saveAndRead(fileRemote);
-  //       fileLocal.body.rootGroup.entries[0].history.clear();
-  //       final merge = fileLocal.merge(fileRemote);
-  //       final set = Set<KdbxUuid>.from(merge.merged.keys);
-  //       expect(set, hasLength(2));
-  //       expect(fileLocal.body.rootGroup.entries[0].history.isEmpty, true);
-  //       expect(
-  //           fileLocal.body.rootGroup.entries[0]
-  //               .getString(KdbxKeyCommon.USER_NAME)
-  //               .getText(),
-  //           'test3');
-  //     }),
-  //   );
-  //   test(
-  //     'deletes single history state remotely',
-  //     () async => await withClock(fakeClock, () async {
-  //       final fileRemote = await createFileWithHistory();
+Idea to improve history merge algorithm in future:
 
-  //       final fileLocal = await TestUtil.saveAndRead(fileRemote);
-  //       fileRemote.body.rootGroup.entries[0].history.removeAt(0);
-  //       final merge = fileLocal.merge(fileRemote);
-  //       final set = Set<KdbxUuid>.from(merge.merged.keys);
-  //       expect(set, hasLength(2));
-  //       expect(fileLocal.body.rootGroup.entries[0].history.length, 1);
-  //       expect(
-  //           fileLocal.body.rootGroup.entries[0]
-  //               .getString(KdbxKeyCommon.USER_NAME)
-  //               .getText(),
-  //           'test3');
-  //     }),
-  //   );
-  //   test(
-  //     'deletes single history state locally',
-  //     () async => await withClock(fakeClock, () async {
-  //       final fileRemote = await createFileWithHistory();
+customdata["history_cleared_until"] = seconds since epoch;
 
-  //       final fileLocal = await TestUtil.saveAndRead(fileRemote);
-  //       fileLocal.body.rootGroup.entries[0].history.removeAt(0);
-  //       final merge = fileLocal.merge(fileRemote);
-  //       final set = Set<KdbxUuid>.from(merge.merged.keys);
-  //       expect(set, hasLength(2));
-  //       expect(fileLocal.body.rootGroup.entries[0].history.length, 1);
-  //       expect(
-  //           fileLocal.body.rootGroup.entries[0]
-  //               .getString(KdbxKeyCommon.USER_NAME)
-  //               .getText(),
-  //           'test3');
-  //     }),
-  //   );
-  //   test(
-  //     'remote history state from past is pushed to local history stack',
-  //     () async => await withClock(fakeClock, () async {
-  //       final fileRemote = await createFileWithHistory();
+set that to "now" whenever user clears history;
+in future, allow user to set to an arbitrary point in time;
 
-  //       final fileLocal = await TestUtil.saveAndRead(fileRemote);
-  //       fileRemote.body.rootGroup.entries[0].history.removeAt(0);
-  //       final merge = fileLocal.merge(fileRemote);
-  //       final set = Set<KdbxUuid>.from(merge.merged.keys);
-  //       expect(set, hasLength(2));
-  //       expect(fileLocal.body.rootGroup.entries[0].history.length, 1);
-  //       expect(
-  //           fileLocal.body.rootGroup.entries[0]
-  //               .getString(KdbxKeyCommon.USER_NAME)
-  //               .getText(),
-  //           'test3');
-  //     }),
-  //   );
-  // });
+deleting a specific history entry must be done on every device (probably while offline).
 
-  // it('adds past history state remotely', function() {
-  //     var db = getTestDb(),
-  //         remote = getTestDb();
-  //     var remoteEntry = remote.getDefaultGroup().entries[0];
-  //     var entry = db.getDefaultGroup().entries[0];
-  //     remoteEntry.times.lastModTime = dt.upd3;
-  //     entry.times.lastModTime = dt.upd4;
-  //     remoteEntry.pushHistory();
-  //     remoteEntry.times.lastModTime = dt.upd4;
-  //     db.merge(remote);
-  //     var exp = getTestDbStructure();
-  //     exp.root.entries[0].modified = dt.upd4;
-  //     exp.root.entries[0].history.push({ modified: dt.upd3, tags: 'tags' });
-  //     assertDbEquals(db, exp);
-  // });
+in the short term, that is acceptable for operations of deleting all history and back to a specific point in time.
 
-  // it('adds future history state remotely and converts current state into history', function() {
-  //     var db = getTestDb(),
-  //         remote = getTestDb();
-  //     var remoteEntry = remote.getDefaultGroup().entries[0];
-  //     var entry = db.getDefaultGroup().entries[0];
-  //     remoteEntry.times.lastModTime = dt.upd4;
-  //     remoteEntry.tags = 't4';
-  //     remoteEntry.pushHistory();
-  //     remoteEntry.times.lastModTime = dt.upd5;
-  //     remoteEntry.tags = 'tRemote';
-  //     entry.tags = 'tLocal';
-  //     db.merge(remote);
-  //     var exp = getTestDbStructure();
-  //     exp.root.entries[0].modified = dt.upd5;
-  //     exp.root.entries[0].tags = 'tRemote';
-  //     exp.root.entries[0].history.push({ modified: dt.upd3, tags: 'tLocal' });
-  //     exp.root.entries[0].history.push({ modified: dt.upd4, tags: 't4' });
-  //     assertDbEquals(db, exp);
-  // });
+when merging, can look at this value to decide whether history entries from the other entry should be merged in or not. If missing, assume all history entries from other DB need to be retained.
 
-  // it('adds history state locally and converts remote state into history', function() {
-  //     var db = getTestDb(),
-  //         remote = getTestDb();
-  //     var remoteEntry = remote.getDefaultGroup().entries[0];
-  //     var entry = db.getDefaultGroup().entries[0];
-  //     remoteEntry.times.lastModTime = dt.upd5;
-  //     remoteEntry.tags = 'tRemote';
-  //     entry.tags = 't4';
-  //     entry.times.lastModTime = dt.upd4;
-  //     entry.pushHistory();
-  //     entry.tags = 'tLocal';
-  //     entry.times.lastModTime = dt.upd6;
-  //     db.merge(remote);
-  //     var exp = getTestDbStructure();
-  //     exp.root.entries[0].modified = dt.upd6;
-  //     exp.root.entries[0].tags = 'tLocal';
-  //     exp.root.entries[0].history.push({ modified: dt.upd4, tags: 't4' });
-  //     exp.root.entries[0].history.push({ modified: dt.upd5, tags: 'tRemote' });
-  //     assertDbEquals(db, exp);
-  // });
+*/
 
-  // it('can merge with old entry state without state deletions', function() {
-  //     var db = getTestDb(),
-  //         remote = getTestDb();
-  //     var entry = db.getDefaultGroup().entries[0];
-  //     entry.times.lastModTime = dt.upd4;
-  //     entry.tags = 't4';
-  //     entry.pushHistory();
-  //     entry.tags = 'tLocal';
-  //     entry.times.lastModTime = dt.upd5;
-  //     entry._editState = undefined;
-  //     db.merge(remote);
-  //     var exp = getTestDbStructure();
-  //     exp.root.entries[0].tags = 'tLocal';
-  //     exp.root.entries[0].modified = dt.upd5;
-  //     exp.root.entries[0].history.push({ modified: dt.upd3, tags: 'tags' });
-  //     exp.root.entries[0].history.push({ modified: dt.upd4, tags: 't4' });
-  //     assertDbEquals(db, exp);
-  // });
+    // test(
+    //   'deletes all history state remotely',
+    //   () async => await withClock(fakeClock, () async {
+    //     final fileRemote = await createFileWithHistory();
+    //     final fileLocal = await TestUtil.saveAndRead(fileRemote);
+    //     proceedSeconds(10);
+    //     fileRemote.body.rootGroup.entries.values.toList()[0].history.clear();
+    //     final merge = fileLocal.merge(fileRemote);
+    //     final set = Set<KdbxUuid>.from(merge.merged.keys);
+    //     expect(set, hasLength(2));
+    //     expect(
+    //         fileLocal.body.rootGroup.entries.values.toList()[0].history.isEmpty,
+    //         true);
+    //     expect(
+    //         fileLocal.body.rootGroup.entries.values
+    //             .toList()[0]
+    //             .getString(KdbxKeyCommon.USER_NAME)
+    //             .getText(),
+    //         'test3');
+    //   }),
+    // );
+    // test(
+    //   'deletes all history state locally',
+    //   () async => await withClock(fakeClock, () async {
+    //     final fileRemote = await createFileWithHistory();
+    //     final fileLocal = await TestUtil.saveAndRead(fileRemote);
+    //     proceedSeconds(10);
+    //     fileLocal.body.rootGroup.entries.values.toList()[0].history.clear();
+    //     final merge = fileLocal.merge(fileRemote);
+    //     final set = Set<KdbxUuid>.from(merge.merged.keys);
+    //     expect(set, hasLength(2));
+    //     expect(
+    //         fileLocal.body.rootGroup.entries.values.toList()[0].history.isEmpty,
+    //         true);
+    //     expect(
+    //         fileLocal.body.rootGroup.entries.values
+    //             .toList()[0]
+    //             .getString(KdbxKeyCommon.USER_NAME)
+    //             .getText(),
+    //         'test3');
+    //   }),
+    // );
+    // test(
+    //   'deletes single history state remotely',
+    //   () async => await withClock(fakeClock, () async {
+    //     final fileRemote = await createFileWithHistory();
+    //     final fileLocal = await TestUtil.saveAndRead(fileRemote);
+    //     proceedSeconds(10);
+    //     fileRemote.body.rootGroup.entries.values
+    //         .toList()[0]
+    //         .history
+    //         .removeAt(0);
+    //     final merge = fileLocal.merge(fileRemote);
+    //     final set = Set<KdbxUuid>.from(merge.merged.keys);
+    //     expect(set, hasLength(2));
+    //     expect(
+    //         fileLocal.body.rootGroup.entries.values.toList()[0].history.length,
+    //         1);
+    //     expect(
+    //         fileLocal.body.rootGroup.entries.values
+    //             .toList()[0]
+    //             .getString(KdbxKeyCommon.USER_NAME)
+    //             .getText(),
+    //         'test3');
+    //   }),
+    // );
+    // test(
+    //   'deletes single history state locally',
+    //   () async => await withClock(fakeClock, () async {
+    //     final fileRemote = await createFileWithHistory();
+    //     final fileLocal = await TestUtil.saveAndRead(fileRemote);
+    //     proceedSeconds(10);
+    //     fileLocal.body.rootGroup.entries.values.toList()[0].history.removeAt(0);
+    //     final merge = fileLocal.merge(fileRemote);
+    //     final set = Set<KdbxUuid>.from(merge.merged.keys);
+    //     expect(set, hasLength(2));
+    //     expect(
+    //         fileLocal.body.rootGroup.entries.values.toList()[0].history.length,
+    //         1);
+    //     expect(
+    //         fileLocal.body.rootGroup.entries.values
+    //             .toList()[0]
+    //             .getString(KdbxKeyCommon.USER_NAME)
+    //             .getText(),
+    //         'test3');
+    //   }),
+    // );
+
+    test(
+      'deletes all history state locally and remotely',
+      () async => await withClock(fakeClock, () async {
+        final fileRemote = await createFileWithHistory();
+        final fileLocal = await TestUtil.saveAndRead(fileRemote);
+        proceedSeconds(10);
+        fileLocal.body.rootGroup.entries.values.toList()[0].history.clear();
+        proceedSeconds(10);
+        fileRemote.body.rootGroup.entries.values.toList()[0].history.clear();
+        final merge = fileLocal.merge(fileRemote);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(2));
+        expect(
+            fileLocal.body.rootGroup.entries.values.toList()[0].history.isEmpty,
+            true);
+        expect(
+            fileLocal.body.rootGroup.entries.values
+                .toList()[0]
+                .getString(KdbxKeyCommon.USER_NAME)
+                .getText(),
+            'test3');
+      }),
+    );
+
+    test(
+      'deletes single history state locally and remotely',
+      () async => await withClock(fakeClock, () async {
+        final fileRemote = await createFileWithHistory();
+        final fileLocal = await TestUtil.saveAndRead(fileRemote);
+        proceedSeconds(10);
+        fileLocal.body.rootGroup.entries.values.toList()[0].history.removeAt(0);
+        proceedSeconds(10);
+        fileRemote.body.rootGroup.entries.values
+            .toList()[0]
+            .history
+            .removeAt(0);
+        final merge = fileLocal.merge(fileRemote);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(2));
+        expect(
+            fileLocal.body.rootGroup.entries.values.toList()[0].history.length,
+            1);
+        expect(
+            fileLocal.body.rootGroup.entries.values
+                .toList()[0]
+                .getString(KdbxKeyCommon.USER_NAME)
+                .getText(),
+            'test3');
+      }),
+    );
+    test(
+      'remote history state from past is pushed to local history stack',
+      () async => await withClock(fakeClock, () async {
+        final fileSource = await createSimpleFile();
+        final fileLocal = await TestUtil.saveAndRead(fileSource);
+
+        proceedSeconds(10);
+
+        fileSource.body.rootGroup.entries.values
+            .toList()[0]
+            .setString(KdbxKeyCommon.USER_NAME, PlainValue('test2'));
+        final fileRemote = await TestUtil.saveAndRead(fileSource);
+
+        final merge = fileLocal.merge(fileRemote);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(4));
+        expect(
+            fileLocal.body.rootGroup.entries.values.toList()[0].history.length,
+            1);
+        expect(
+            fileLocal.body.rootGroup.entries.values
+                .toList()[0]
+                .getString(KdbxKeyCommon.USER_NAME)
+                .getText(),
+            'test2');
+      }),
+    );
+
+    test(
+      'new local history state is retained',
+      () async => await withClock(fakeClock, () async {
+        final fileSource = await createSimpleFile();
+        final fileRemote = await TestUtil.saveAndRead(fileSource);
+
+        proceedSeconds(10);
+
+        fileSource.body.rootGroup.entries.values
+            .toList()[0]
+            .setString(KdbxKeyCommon.USER_NAME, PlainValue('test2'));
+        final fileLocal = await TestUtil.saveAndRead(fileSource);
+
+        final merge = fileLocal.merge(fileRemote);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(4));
+        expect(
+            fileLocal.body.rootGroup.entries.values.toList()[0].history.length,
+            1);
+        expect(
+            fileLocal.body.rootGroup.entries.values
+                .toList()[0]
+                .getString(KdbxKeyCommon.USER_NAME)
+                .getText(),
+            'test2');
+      }),
+    );
+
+    test(
+      'when modified locally then remotely, remote becomes latest; local state is included in combined history states from both',
+      () async => await withClock(fakeClock, () async {
+        final fileSource = await createFileWithHistory();
+        final fileSource2 = await TestUtil.saveAndRead(fileSource);
+
+        fileSource.body.rootGroup.entries.values
+            .toList()[0]
+            .setString(KdbxKeyCommon.USER_NAME, PlainValue('test4local'));
+        await TestUtil.saveAndRead(fileSource);
+        proceedSeconds(10);
+        fileSource.body.rootGroup.entries.values
+            .toList()[0]
+            .setString(KdbxKeyCommon.USER_NAME, PlainValue('test5local'));
+        final fileLocal = await TestUtil.saveAndRead(fileSource);
+
+        proceedSeconds(10);
+
+        fileSource2.body.rootGroup.entries.values
+            .toList()[0]
+            .setString(KdbxKeyCommon.USER_NAME, PlainValue('test4remote'));
+        await TestUtil.saveAndRead(fileSource2);
+        proceedSeconds(10);
+        fileSource2.body.rootGroup.entries.values
+            .toList()[0]
+            .setString(KdbxKeyCommon.USER_NAME, PlainValue('test5remote'));
+        final fileRemote = await TestUtil.saveAndRead(fileSource2);
+
+        final merge = fileLocal.merge(fileRemote);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(2));
+        expect(
+            fileLocal.body.rootGroup.entries.values
+                .toList()[0]
+                .history
+                .map((e) => e.getString(KdbxKeyCommon.USER_NAME).getText())
+                .toList(),
+            [
+              'test1',
+              'test2',
+              'test3',
+              'test4local',
+              'test5local',
+              'test4remote'
+            ]);
+        expect(
+            fileLocal.body.rootGroup.entries.values
+                .toList()[0]
+                .getString(KdbxKeyCommon.USER_NAME)
+                .getText(),
+            'test5remote');
+      }),
+    );
+
+    test(
+      'when modified remotely then locally, local remains latest; remote state is included in combined history states from both',
+      () async => await withClock(fakeClock, () async {
+        final fileSource = await createFileWithHistory();
+        final fileSource2 = await TestUtil.saveAndRead(fileSource);
+
+        fileSource2.body.rootGroup.entries.values
+            .toList()[0]
+            .setString(KdbxKeyCommon.USER_NAME, PlainValue('test4remote'));
+        await TestUtil.saveAndRead(fileSource2);
+        proceedSeconds(10);
+        fileSource2.body.rootGroup.entries.values
+            .toList()[0]
+            .setString(KdbxKeyCommon.USER_NAME, PlainValue('test5remote'));
+        final fileRemote = await TestUtil.saveAndRead(fileSource2);
+
+        proceedSeconds(10);
+
+        fileSource.body.rootGroup.entries.values
+            .toList()[0]
+            .setString(KdbxKeyCommon.USER_NAME, PlainValue('test4local'));
+        await TestUtil.saveAndRead(fileSource);
+        proceedSeconds(10);
+        fileSource.body.rootGroup.entries.values
+            .toList()[0]
+            .setString(KdbxKeyCommon.USER_NAME, PlainValue('test5local'));
+        final fileLocal = await TestUtil.saveAndRead(fileSource);
+
+        final merge = fileLocal.merge(fileRemote);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(2));
+        expect(
+            fileLocal.body.rootGroup.entries.values
+                .toList()[0]
+                .history
+                .map((e) => e.getString(KdbxKeyCommon.USER_NAME).getText())
+                .toList(),
+            [
+              'test1',
+              'test2',
+              'test3',
+              'test4remote',
+              'test5remote',
+              'test4local'
+            ]);
+        expect(
+            fileLocal.body.rootGroup.entries.values
+                .toList()[0]
+                .getString(KdbxKeyCommon.USER_NAME)
+                .getText(),
+            'test5local');
+      }),
+    );
+
+// In the real world if user has significantly mismatched times on each device, the kdbx format does not allow us to guarantee correct ordering, or even reliable storage of, individual history entry items. To do so, each history entry would need to be assigned a UUID and thus treated as a primary resource in its own right.
+    test(
+      'when modified alternatly locally then remotely, remote becomes latest; local state is appended to combined history states from both',
+      () async => await withClock(fakeClock, () async {
+        final fileSource = await createFileWithHistory();
+        final fileSource2 = await TestUtil.saveAndRead(fileSource);
+
+        fileSource.body.rootGroup.entries.values
+            .toList()[0]
+            .setString(KdbxKeyCommon.USER_NAME, PlainValue('test4local'));
+        await TestUtil.saveAndRead(fileSource);
+        proceedSeconds(10);
+        fileSource2.body.rootGroup.entries.values
+            .toList()[0]
+            .setString(KdbxKeyCommon.USER_NAME, PlainValue('test4remote'));
+        await TestUtil.saveAndRead(fileSource2);
+
+        proceedSeconds(10);
+
+        fileSource.body.rootGroup.entries.values
+            .toList()[0]
+            .setString(KdbxKeyCommon.USER_NAME, PlainValue('test5local'));
+        final fileLocal = await TestUtil.saveAndRead(fileSource);
+        proceedSeconds(10);
+        fileSource2.body.rootGroup.entries.values
+            .toList()[0]
+            .setString(KdbxKeyCommon.USER_NAME, PlainValue('test5remote'));
+        final fileRemote = await TestUtil.saveAndRead(fileSource2);
+
+        final merge = fileLocal.merge(fileRemote);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(2));
+        expect(
+            fileLocal.body.rootGroup.entries.values
+                .toList()[0]
+                .history
+                .map((e) => e.getString(KdbxKeyCommon.USER_NAME).getText())
+                .toList(),
+            [
+              'test1',
+              'test2',
+              'test3',
+              'test4local',
+              'test4remote',
+              'test5local',
+            ]);
+        expect(
+            fileLocal.body.rootGroup.entries.values
+                .toList()[0]
+                .getString(KdbxKeyCommon.USER_NAME)
+                .getText(),
+            'test5remote');
+      }),
+    );
+  });
 
   // group('Kdbx4.1 merges', () {
   //   Future<KdbxFile> createRealFile() async {

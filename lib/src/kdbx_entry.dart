@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -405,6 +406,7 @@ extension KdbxEntryInternal on KdbxEntry {
     bool includeHistory = false,
   }) {
     // we only support overwriting history, if it is empty.
+    // Throws exception if history is not empty and we have asked to include it
     checkArgument(!includeHistory || history.isEmpty,
         message:
             'We can only overwrite with history, if local history is empty.');
@@ -433,7 +435,7 @@ extension KdbxEntryInternal on KdbxEntry {
     times.overwriteFrom(other.times);
     if (includeHistory) {
       for (final historyEntry in other.history) {
-        history.add(historyEntry.cloneInto(parent, toHistoryEntry: false));
+        history.add(historyEntry.cloneInto(parent, toHistoryEntry: true));
       }
     }
   }
@@ -776,8 +778,9 @@ class KdbxEntry extends KdbxObject {
     } else if (wasModifiedAfter(other)) {
       _logger.finest('$this has outgoing changes.');
       // we are newer. check if the old revision lives on in our history.
-      final ourLastModificationTime = times.lastModificationTime.get();
-      final historyEntry = _findHistoryEntry(history, ourLastModificationTime);
+      final theirLastModificationTime = other.times.lastModificationTime.get();
+      final historyEntry =
+          _findHistoryEntry(history, theirLastModificationTime);
       if (historyEntry == null) {
         // it seems like we don't know about that state, so we have to add
         // it to history.
@@ -786,20 +789,34 @@ class KdbxEntry extends KdbxObject {
     } else {
       _logger.finest('$this has no changes.');
     }
-    // copy missing history entries.
-    for (final otherHistoryEntry in other.history) {
-      final meHistoryEntry = _findHistoryEntry(
-          history, otherHistoryEntry.times.lastModificationTime.get());
-      if (meHistoryEntry == null) {
+
+    mergeEntryHistory(mergeContext, history, other.history);
+
+    mergeContext.markAsMerged(this);
+  }
+
+  void mergeEntryHistory(MergeContext mergeContext, List<KdbxEntry> history,
+      List<KdbxEntry> otherHistory) {
+    final dict = SplayTreeMap<DateTime, KdbxEntry>();
+
+    for (var historyEntry in history) {
+      dict[historyEntry.times.lastModificationTime.get()] = historyEntry;
+    }
+
+    for (var historyEntry in otherHistory) {
+      final key = historyEntry.times.lastModificationTime.get();
+      if (!dict.containsKey(key)) {
+        dict[key] = historyEntry.cloneInto(parent, toHistoryEntry: true);
         mergeContext.trackChange(
           this,
           debug: 'merge in history '
-              '${otherHistoryEntry.times.lastModificationTime.get()}',
+              '$key',
         );
-        history.add(otherHistoryEntry.cloneInto(parent, toHistoryEntry: true));
       }
     }
-    mergeContext.markAsMerged(this);
+
+    history.clear();
+    history.addAll(dict.values);
   }
 
   String debugLabel() => label ?? _plainValue(KdbxKeyCommon.USER_NAME);
