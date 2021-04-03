@@ -52,9 +52,10 @@ mixin Changeable<T> {
   /// from false to true)
   @protected
   @mustCallSuper
-  void onAfterModify() {}
+  void onAfterModify({bool preserveModificationTime = false}) {}
 
-  RET modify<RET>(RET Function() modify) {
+  RET modify<RET>(RET Function() modify,
+      {bool preserveModificationTime = false}) {
     if (_isDirty || _isInModify) {
       return modify();
     }
@@ -65,7 +66,7 @@ mixin Changeable<T> {
     } finally {
       _isDirty = true;
       _isInModify = false;
-      onAfterModify();
+      onAfterModify(preserveModificationTime: preserveModificationTime);
       _controller.add(ChangeEvent(object: this as T, isDirty: _isDirty));
     }
   }
@@ -211,9 +212,11 @@ abstract class KdbxObject extends KdbxNode {
   }
 
   @override
-  void onAfterModify() {
-    super.onAfterModify();
-    times.modifiedNow();
+  void onAfterModify({bool preserveModificationTime = false}) {
+    super.onAfterModify(preserveModificationTime: preserveModificationTime);
+    if (!preserveModificationTime) {
+      times.modifiedNow();
+    }
     // during initial `create` the file will be null.
     file?.dirtyObject(this);
   }

@@ -722,38 +722,40 @@ when merging, can look at this value to decide whether history entries from the 
     test(
       'remote history state from past is pushed to local history stack',
       () async => await withClock(fakeClock, () async {
+        final expectedHistoryTime = fakeClock.now().toUtc();
         final fileSource = await createSimpleFile();
         final fileLocal = await TestUtil.saveAndRead(fileSource);
-
         proceedSeconds(10);
+        final expectedEntryTime = fakeClock.now().toUtc();
 
         fileSource.body.rootGroup.entries.values
             .toList()[0]
             .setString(KdbxKeyCommon.USER_NAME, PlainValue('test2'));
         final fileRemote = await TestUtil.saveAndRead(fileSource);
+        proceedSeconds(10);
 
         final merge = fileLocal.merge(fileRemote);
         final set = Set<KdbxUuid>.from(merge.merged.keys);
+        final testEntry = fileLocal.body.rootGroup.entries.values.toList()[0];
         expect(set, hasLength(4));
-        expect(
-            fileLocal.body.rootGroup.entries.values.toList()[0].history.length,
-            1);
-        expect(
-            fileLocal.body.rootGroup.entries.values
-                .toList()[0]
-                .getString(KdbxKeyCommon.USER_NAME)
-                .getText(),
-            'test2');
+        expect(testEntry.history.length, 1);
+        expect(testEntry.getString(KdbxKeyCommon.USER_NAME).getText(), 'test2');
+        expect(testEntry.times.lastModificationTime.get().toUtc(),
+            expectedEntryTime);
+        expect(testEntry.history[0].times.lastModificationTime.get().toUtc(),
+            expectedHistoryTime);
       }),
     );
 
     test(
       'new local history state is retained',
       () async => await withClock(fakeClock, () async {
+        final expectedHistoryTime = fakeClock.now().toUtc();
         final fileSource = await createSimpleFile();
         final fileRemote = await TestUtil.saveAndRead(fileSource);
 
         proceedSeconds(10);
+        final expectedEntryTime = fakeClock.now().toUtc();
 
         fileSource.body.rootGroup.entries.values
             .toList()[0]
@@ -762,16 +764,14 @@ when merging, can look at this value to decide whether history entries from the 
 
         final merge = fileLocal.merge(fileRemote);
         final set = Set<KdbxUuid>.from(merge.merged.keys);
+        final testEntry = fileLocal.body.rootGroup.entries.values.toList()[0];
         expect(set, hasLength(4));
-        expect(
-            fileLocal.body.rootGroup.entries.values.toList()[0].history.length,
-            1);
-        expect(
-            fileLocal.body.rootGroup.entries.values
-                .toList()[0]
-                .getString(KdbxKeyCommon.USER_NAME)
-                .getText(),
-            'test2');
+        expect(testEntry.history.length, 1);
+        expect(testEntry.getString(KdbxKeyCommon.USER_NAME).getText(), 'test2');
+        expect(testEntry.times.lastModificationTime.get().toUtc(),
+            expectedEntryTime);
+        expect(testEntry.history[0].times.lastModificationTime.get().toUtc(),
+            expectedHistoryTime);
       }),
     );
 

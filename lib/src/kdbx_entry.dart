@@ -774,7 +774,8 @@ class KdbxEntry extends KdbxObject {
     if (other.wasModifiedAfter(this)) {
       _logger.finest('$this has incoming changes.');
       // other object is newer, create new history entry and copy fields.
-      modify(() => _overwriteFrom(mergeContext, other));
+      modify(() => _overwriteFrom(mergeContext, other),
+          preserveModificationTime: true);
     } else if (wasModifiedAfter(other)) {
       _logger.finest('$this has outgoing changes.');
       // we are newer. check if the old revision lives on in our history.
