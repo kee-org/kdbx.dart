@@ -26,12 +26,12 @@ class KdbxFile {
 
   static final protectedValues = Expando<ProtectedValue>();
 
-  static ProtectedValue protectedValueForNode(xml.XmlElement node) {
+  static ProtectedValue? protectedValueForNode(xml.XmlElement node) {
     return protectedValues[node];
   }
 
   static void setProtectedValueForNode(
-      xml.XmlElement node, ProtectedValue/*!*/ value) {
+      xml.XmlElement node, ProtectedValue value) {
     protectedValues[node] = value;
   }
 
@@ -78,10 +78,10 @@ class KdbxFile {
     _dirtyObjectsChanged.close();
   }
 
-  CachedValue<KdbxGroup> _recycleBin;
+  CachedValue<KdbxGroup>? _recycleBin;
 
   /// Returns the recycle bin, if it exists, null otherwise.
-  KdbxGroup get recycleBin => (_recycleBin ??= _findRecycleBin()).value;
+  KdbxGroup? get recycleBin => (_recycleBin ??= _findRecycleBin()).value;
 
   CachedValue<KdbxGroup> _findRecycleBin() {
     final uuid = body.meta.recycleBinUUID.get();
@@ -89,7 +89,7 @@ class KdbxFile {
       return CachedValue.withNull();
     }
     try {
-      return CachedValue.withValue(findGroupByUuid(uuid));
+      return CachedValue.withValue(findGroupByUuid(uuid!));
     } catch (e, stackTrace) {
       _logger.warning(() {
         final groupDebug = body.rootGroup
@@ -147,5 +147,5 @@ class CachedValue<T> {
   CachedValue.withNull() : value = null;
   CachedValue.withValue(this.value) : assert(value != null);
 
-  final T value;
+  final T? value;
 }

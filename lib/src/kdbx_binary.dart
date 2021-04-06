@@ -11,13 +11,13 @@ import 'package:xml/xml.dart';
 
 class KdbxBinary {
   KdbxBinary(
-      {/*required*/ this.isInline,
-      /*required*/ this.isProtected,
-      /*required*/ this.value});
+      {/*required*/ required this.isInline,
+      /*required*/ required this.isProtected,
+      /*required*/ required this.value});
   final bool isInline;
   final bool isProtected;
   final Uint8List value;
-  int _valueHashCode;
+  int? _valueHashCode;
 
   static KdbxBinary readBinaryInnerHeader(InnerHeaderField field) {
     final flags = field.bytes[0];
@@ -45,7 +45,7 @@ class KdbxBinary {
   }
 
   static KdbxBinary readBinaryXml(XmlElement valueNode,
-      {@required bool isInline}) {
+      {required bool isInline}) {
     assert(isInline != null);
     final isProtected = valueNode.getAttributeBool(KdbxXml.ATTR_PROTECTED);
     final isCompressed = valueNode.getAttributeBool(KdbxXml.ATTR_COMPRESSED);

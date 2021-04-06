@@ -42,7 +42,7 @@ final _compressionIdsById =
     _compressionIds.map((key, value) => MapEntry(value, key));
 
 extension on Compression {
-  int /*!*/ get id => _compressionIds[this];
+  int get id => _compressionIds[this]!;
 }
 
 /// how protected values are encrypted in the xml.
@@ -151,12 +151,12 @@ class InnerHeaderField implements HeaderFieldBase<InnerHeaderFields> {
 
 class KdbxHeader {
   KdbxHeader({
-    @required this.sig1,
-    @required this.sig2,
-    @required KdbxVersion version,
-    @required this.fields,
-    @required this.endPos,
-    Map<InnerHeaderFields, InnerHeaderField> innerFields,
+    required this.sig1,
+    required this.sig2,
+    required KdbxVersion version,
+    required this.fields,
+    required this.endPos,
+    Map<InnerHeaderFields, InnerHeaderField>? innerFields,
   })  : _version = version,
         innerHeader = InnerHeader(fields: innerFields ?? {});
 
@@ -348,7 +348,7 @@ class KdbxHeader {
   }
 
   static Map<HeaderFields, HeaderField> _defaultFieldValues() => _headerFields({
-        HeaderFields.CipherID: CryptoConsts.CIPHER_IDS[Cipher.aes].toBytes(),
+        HeaderFields.CipherID: CryptoConsts.CIPHER_IDS[Cipher.aes]!.toBytes(),
         HeaderFields.CompressionFlags:
             WriterHelper.singleUint32Bytes(Compression.gzip.id),
         HeaderFields.TransformRounds: WriterHelper.singleUint64Bytes(6000),
@@ -359,7 +359,7 @@ class KdbxHeader {
 
   static Map<HeaderFields, HeaderField> _defaultFieldValuesV4() =>
       _headerFields({
-        HeaderFields.CipherID: CryptoConsts.CIPHER_IDS[Cipher.aes].toBytes(),
+        HeaderFields.CipherID: CryptoConsts.CIPHER_IDS[Cipher.aes]!.toBytes(),
         HeaderFields.CompressionFlags:
             WriterHelper.singleUint32Bytes(Compression.gzip.id),
         HeaderFields.KdfParameters: _createKdfDefaultParameters().write(),
@@ -474,17 +474,17 @@ class KdbxHeader {
   final InnerHeader innerHeader;
 
   /// end position of the header, if we have been reading from a stream.
-  final int endPos;
+  final int? endPos;
 
-  Cipher get cipher {
+  Cipher? get cipher {
     if (version < KdbxVersion.V4) {
       assert(
-          CryptoConsts.cipherFromBytes(fields[HeaderFields.CipherID].bytes) ==
+          CryptoConsts.cipherFromBytes(fields[HeaderFields.CipherID]!.bytes) ==
               Cipher.aes);
       return Cipher.aes;
     }
     try {
-      return CryptoConsts.cipherFromBytes(fields[HeaderFields.CipherID].bytes);
+      return CryptoConsts.cipherFromBytes(fields[HeaderFields.CipherID]!.bytes);
     } catch (e, stackTrace) {
       _logger.warning(
           'Unable to find cipher. '
@@ -498,7 +498,7 @@ class KdbxHeader {
     }
   }
 
-  set cipher(Cipher cipher) {
+  set cipher(Cipher? cipher) {
     checkArgument(version >= KdbxVersion.V4 || cipher == Cipher.aes,
         message: 'Kdbx 3 only supports aes, tried to set it to $cipher');
     if (cipher != Cipher.aes || cipher != Cipher.chaCha20) {
@@ -506,15 +506,15 @@ class KdbxHeader {
     }
     _setHeaderField(
       HeaderFields.CipherID,
-      CryptoConsts.CIPHER_IDS[cipher].toBytes(),
+      CryptoConsts.CIPHER_IDS[cipher!]!.toBytes(),
     );
   }
 
   Compression get compression {
     final id =
-        ReaderHelper.singleUint32(fields[HeaderFields.CompressionFlags].bytes);
+        ReaderHelper.singleUint32(fields[HeaderFields.CompressionFlags]!.bytes);
     return _compressionIdsById[id] ??
-        (() => throw KdbxUnsupportedException('invalid compression $id'))();
+        (() => throw KdbxUnsupportedException('invalid compression $id'))()!;
   }
 
   ProtectedValueEncryption get innerRandomStreamEncryption =>
@@ -522,18 +522,18 @@ class KdbxHeader {
           .values[ReaderHelper.singleUint32(_innerRandomStreamEncryptionBytes)];
 
   Uint8List get _innerRandomStreamEncryptionBytes => version >= KdbxVersion.V4
-      ? innerHeader.fields[InnerHeaderFields.InnerRandomStreamID].bytes
-      : fields[HeaderFields.InnerRandomStreamID].bytes;
+      ? innerHeader.fields[InnerHeaderFields.InnerRandomStreamID]!.bytes
+      : fields[HeaderFields.InnerRandomStreamID]!.bytes;
 
   Uint8List get protectedStreamKey => version >= KdbxVersion.V4
-      ? innerHeader.fields[InnerHeaderFields.InnerRandomStreamKey].bytes
-      : fields[HeaderFields.ProtectedStreamKey].bytes;
+      ? innerHeader.fields[InnerHeaderFields.InnerRandomStreamKey]!.bytes
+      : fields[HeaderFields.ProtectedStreamKey]!.bytes;
 
   VarDictionary get readKdfParameters => VarDictionary.read(
-      ReaderHelper(fields[HeaderFields.KdfParameters].bytes));
+      ReaderHelper(fields[HeaderFields.KdfParameters]!.bytes));
 
   int get v3KdfTransformRounds =>
-      ReaderHelper.singleUint64(fields[HeaderFields.TransformRounds].bytes);
+      ReaderHelper.singleUint64(fields[HeaderFields.TransformRounds]!.bytes);
 
   void writeKdfParameters(VarDictionary kdfParameters) =>
       _setHeaderField(HeaderFields.KdfParameters, kdfParameters.write());
@@ -568,7 +568,7 @@ class KdbxInvalidKeyException implements KdbxException {}
 class KdbxCorruptedFileException implements KdbxException {
   KdbxCorruptedFileException([this.message]);
 
-  final String message;
+  final String? message;
 
   @override
   String toString() {
@@ -641,8 +641,8 @@ class HashedBlockReader {
 
 class InnerHeader {
   InnerHeader({
-    @required this.fields,
-    List<InnerHeaderField> binaries,
+    required this.fields,
+    List<InnerHeaderField>? binaries,
   })  : binaries = binaries ?? [],
         assert(fields != null);
 

@@ -129,7 +129,7 @@ void main() {
       final entry = file.body.rootGroup.entries.first;
       for (final name in ['a', 'b', 'c', 'd', 'e']) {
         expect(
-          utf8.decode(entry.getBinary(KdbxKey('$name.txt')).value).trim(),
+          utf8.decode(entry.getBinary(KdbxKey('$name.txt'))!.value).trim(),
           name,
         );
       }
@@ -190,7 +190,7 @@ class IsUtf8String extends CustomMatcher {
   IsUtf8String(dynamic matcher) : super('is utf8 string', 'utf8', matcher);
 
   @override
-  Object featureValueOf(dynamic actual) {
+  Object? featureValueOf(dynamic actual) {
     if (actual is Uint8List) {
       return utf8.decode(actual);
     }

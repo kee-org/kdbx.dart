@@ -317,7 +317,7 @@ void main() {
             '${KdbxPrintUtils().catGroupToString(file.body.rootGroup)}');
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(5));
-        expect(Set<KdbxNode>.from(merge.changes.map<KdbxNode>((e) => e.object)),
+        expect(Set<KdbxNode>.from(merge.changes.map<KdbxNode?>((e) => e.object)),
             hasLength(2));
       }),
     );
@@ -339,9 +339,9 @@ void main() {
             '${KdbxPrintUtils().catGroupToString(file.body.rootGroup)}');
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(6));
-        expect(Set<KdbxNode>.from(merge.changes.map<KdbxNode>((e) => e.object)),
+        expect(Set<KdbxNode>.from(merge.changes.map<KdbxNode?>((e) => e.object)),
             hasLength(1));
-        expect(file.recycleBin.entries.length, 1);
+        expect(file.recycleBin!.entries.length, 1);
       }),
     );
     test(
@@ -360,9 +360,9 @@ void main() {
             '${KdbxPrintUtils().catGroupToString(file2.body.rootGroup)}');
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(5));
-        expect(Set<KdbxNode>.from(merge.changes.map<KdbxNode>((e) => e.object)),
+        expect(Set<KdbxNode>.from(merge.changes.map<KdbxNode?>((e) => e.object)),
             hasLength(0));
-        expect(file2.recycleBin.entries.length, 1);
+        expect(file2.recycleBin!.entries.length, 1);
       }),
     );
     test(
@@ -390,9 +390,9 @@ void main() {
               expect(set, hasLength(6));
               expect(
                   Set<KdbxNode>.from(
-                      merge.changes.map<KdbxNode>((e) => e.object)),
+                      merge.changes.map<KdbxNode?>((e) => e.object)),
                   hasLength(2));
-              expect(fileLocal.recycleBin.entries.length, 2);
+              expect(fileLocal.recycleBin!.entries.length, 2);
               expect(fileLocal.body.rootGroup.entries.length, 0);
               expect(
                   fileLocal.body.rootGroup.groups.values
@@ -431,9 +431,9 @@ void main() {
             '${KdbxPrintUtils().catGroupToString(fileLocal.body.rootGroup)}');
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(6));
-        expect(Set<KdbxNode>.from(merge.changes.map<KdbxNode>((e) => e.object)),
+        expect(Set<KdbxNode>.from(merge.changes.map<KdbxNode?>((e) => e.object)),
             hasLength(2));
-        expect(fileLocal.recycleBin.entries.length, 1);
+        expect(fileLocal.recycleBin!.entries.length, 1);
         expect(fileLocal.body.rootGroup.entries.length, 0);
         expect(
             fileLocal.body.rootGroup.groups.values.toList()[0].entries.length,
@@ -502,7 +502,7 @@ void main() {
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(6));
         expect(file.body.rootGroup.groups.length, 2);
-        expect(file.recycleBin.groups.length, 1);
+        expect(file.recycleBin!.groups.length, 1);
       }),
     );
     test(
@@ -518,7 +518,7 @@ void main() {
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(5));
         expect(file2.body.rootGroup.groups.length, 2);
-        expect(file2.recycleBin.groups.length, 1);
+        expect(file2.recycleBin!.groups.length, 1);
       }),
     );
     test(
@@ -687,7 +687,7 @@ when merging, can look at this value to decide whether history entries from the 
         expect(
             fileLocal.body.rootGroup.entries.values
                 .toList()[0]
-                .getString(KdbxKeyCommon.USER_NAME)
+                .getString(KdbxKeyCommon.USER_NAME)!
                 .getText(),
             'test3');
       }),
@@ -714,7 +714,7 @@ when merging, can look at this value to decide whether history entries from the 
         expect(
             fileLocal.body.rootGroup.entries.values
                 .toList()[0]
-                .getString(KdbxKeyCommon.USER_NAME)
+                .getString(KdbxKeyCommon.USER_NAME)!
                 .getText(),
             'test3');
       }),
@@ -739,10 +739,10 @@ when merging, can look at this value to decide whether history entries from the 
         final testEntry = fileLocal.body.rootGroup.entries.values.toList()[0];
         expect(set, hasLength(4));
         expect(testEntry.history.length, 1);
-        expect(testEntry.getString(KdbxKeyCommon.USER_NAME).getText(), 'test2');
-        expect(testEntry.times.lastModificationTime.get().toUtc(),
+        expect(testEntry.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test2');
+        expect(testEntry.times.lastModificationTime.get()!.toUtc(),
             expectedEntryTime);
-        expect(testEntry.history[0].times.lastModificationTime.get().toUtc(),
+        expect(testEntry.history[0].times.lastModificationTime.get()!.toUtc(),
             expectedHistoryTime);
       }),
     );
@@ -767,10 +767,10 @@ when merging, can look at this value to decide whether history entries from the 
         final testEntry = fileLocal.body.rootGroup.entries.values.toList()[0];
         expect(set, hasLength(4));
         expect(testEntry.history.length, 1);
-        expect(testEntry.getString(KdbxKeyCommon.USER_NAME).getText(), 'test2');
-        expect(testEntry.times.lastModificationTime.get().toUtc(),
+        expect(testEntry.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test2');
+        expect(testEntry.times.lastModificationTime.get()!.toUtc(),
             expectedEntryTime);
-        expect(testEntry.history[0].times.lastModificationTime.get().toUtc(),
+        expect(testEntry.history[0].times.lastModificationTime.get()!.toUtc(),
             expectedHistoryTime);
       }),
     );
@@ -810,7 +810,7 @@ when merging, can look at this value to decide whether history entries from the 
             fileLocal.body.rootGroup.entries.values
                 .toList()[0]
                 .history
-                .map((e) => e.getString(KdbxKeyCommon.USER_NAME).getText())
+                .map((e) => e.getString(KdbxKeyCommon.USER_NAME)!.getText())
                 .toList(),
             [
               'test1',
@@ -823,7 +823,7 @@ when merging, can look at this value to decide whether history entries from the 
         expect(
             fileLocal.body.rootGroup.entries.values
                 .toList()[0]
-                .getString(KdbxKeyCommon.USER_NAME)
+                .getString(KdbxKeyCommon.USER_NAME)!
                 .getText(),
             'test5remote');
       }),
@@ -864,7 +864,7 @@ when merging, can look at this value to decide whether history entries from the 
             fileLocal.body.rootGroup.entries.values
                 .toList()[0]
                 .history
-                .map((e) => e.getString(KdbxKeyCommon.USER_NAME).getText())
+                .map((e) => e.getString(KdbxKeyCommon.USER_NAME)!.getText())
                 .toList(),
             [
               'test1',
@@ -877,7 +877,7 @@ when merging, can look at this value to decide whether history entries from the 
         expect(
             fileLocal.body.rootGroup.entries.values
                 .toList()[0]
-                .getString(KdbxKeyCommon.USER_NAME)
+                .getString(KdbxKeyCommon.USER_NAME)!
                 .getText(),
             'test5local');
       }),
@@ -919,7 +919,7 @@ when merging, can look at this value to decide whether history entries from the 
             fileLocal.body.rootGroup.entries.values
                 .toList()[0]
                 .history
-                .map((e) => e.getString(KdbxKeyCommon.USER_NAME).getText())
+                .map((e) => e.getString(KdbxKeyCommon.USER_NAME)!.getText())
                 .toList(),
             [
               'test1',
@@ -932,7 +932,7 @@ when merging, can look at this value to decide whether history entries from the 
         expect(
             fileLocal.body.rootGroup.entries.values
                 .toList()[0]
-                .getString(KdbxKeyCommon.USER_NAME)
+                .getString(KdbxKeyCommon.USER_NAME)!
                 .getText(),
             'test5remote');
       }),

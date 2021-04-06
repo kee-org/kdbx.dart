@@ -22,9 +22,9 @@ final _logger = Logger('kdbx_meta');
 
 class KdbxMeta extends KdbxNode implements KdbxNodeContext {
   KdbxMeta.create({
-    @required String databaseName,
-    @required this.ctx,
-    String generator,
+    required String databaseName,
+    required this.ctx,
+    String? generator,
   })  : customData = KdbxCustomData.create(),
         binaries = [],
         _customIcons = {},
@@ -49,7 +49,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
             .singleElement(KdbxXml.NODE_BINARIES)
             ?.let((el) sync* {
               for (final binaryNode in el.findElements(KdbxXml.NODE_BINARY)) {
-                final id = int.parse(binaryNode.getAttribute(KdbxXml.ATTR_ID));
+                final id = int.parse(binaryNode.getAttribute(KdbxXml.ATTR_ID)!);
                 yield MapEntry(
                   id,
                   KdbxBinary.readBinaryXml(binaryNode, isInline: false),
@@ -90,7 +90,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
   final KdbxCustomData customData;
 
   /// only used in Kdbx 3
-  final List<KdbxBinary> binaries;
+  final List<KdbxBinary>? binaries;
 
   final Map<KdbxUuid, KdbxCustomIcon> _customIcons;
 
@@ -153,7 +153,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
 
 //  void addCustomIcon
 
-  BrowserDbSettings _browserSettings;
+  BrowserDbSettings? _browserSettings;
   BrowserDbSettings get browserSettings {
     if (_browserSettings == null) {
       final tempJson = customData['KeePassRPC.Config'];
@@ -164,14 +164,14 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
         _browserSettings = BrowserDbSettings();
       }
     }
-    return _browserSettings;
+    return _browserSettings!;
   }
 
   set browserSettings(BrowserDbSettings settings) {
     customData['KeePassRPC.Config'] = settings.toJson();
   }
 
-  KeeVaultEmbeddedConfig _keeVaultSettings;
+  KeeVaultEmbeddedConfig? _keeVaultSettings;
   KeeVaultEmbeddedConfig get keeVaultSettings {
     if (_keeVaultSettings == null) {
       final tempJson = customData['KeeVault.Config'];
@@ -182,7 +182,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
         _keeVaultSettings = KeeVaultEmbeddedConfig();
       }
     }
-    return _keeVaultSettings;
+    return _keeVaultSettings!;
   }
 
   set keeVaultSettings(KeeVaultEmbeddedConfig settings) {
@@ -283,19 +283,19 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
 class KeeVaultEmbeddedConfig {
   KeeVaultEmbeddedConfig({
     this.version = 1,
-    String randomId,
+    String? randomId,
     this.addon,
     this.vault,
   }) : randomId = randomId ?? const Uuid().v4();
 
-  factory KeeVaultEmbeddedConfig.fromMap(Map<String, dynamic> map) {
+  factory KeeVaultEmbeddedConfig.fromMap(Map<String, dynamic>? map) {
     if (map == null) {
       return KeeVaultEmbeddedConfig();
     }
 
     return KeeVaultEmbeddedConfig(
-      version: map['version'] as int ?? 1,
-      randomId: map['randomId'] as String,
+      version: map['version'] as int? ?? 1,
+      randomId: map['randomId'] as String?,
       addon: Map<String, dynamic>.from(map['addon'] as Map<String, dynamic>),
       vault: Map<String, dynamic>.from(map['vault'] as Map<String, dynamic>),
     );
@@ -303,18 +303,18 @@ class KeeVaultEmbeddedConfig {
 
   factory KeeVaultEmbeddedConfig.fromJson(String source) =>
       KeeVaultEmbeddedConfig.fromMap(
-          json.decode(source) as Map<String, dynamic>);
+          json.decode(source) as Map<String, dynamic>?);
 
-  int /*!*/ version;
+  int version;
   String randomId;
-  Map<String, dynamic> addon; // { "prefs": {}, "version": -1 };
-  Map<String, dynamic> vault; // { prefs: {} },
+  Map<String, dynamic>? addon; // { "prefs": {}, "version": -1 };
+  Map<String, dynamic>? vault; // { prefs: {} },
 
   KeeVaultEmbeddedConfig copyWith({
-    int version,
-    String randomId,
-    Map<String, dynamic> addon,
-    Map<String, dynamic> vault,
+    int? version,
+    String? randomId,
+    Map<String, dynamic>? addon,
+    Map<String, dynamic>? vault,
   }) {
     return KeeVaultEmbeddedConfig(
       version: version ?? this.version,
@@ -381,37 +381,37 @@ class BrowserDbSettings {
     this.defaultPlaceholderHandling = 'Default',
     this.displayPriorityField = false,
     this.displayGlobalPlaceholderOption = false,
-    Map<String, String> matchedURLAccuracyOverrides,
+    Map<String, String>? matchedURLAccuracyOverrides,
   }) : matchedURLAccuracyOverrides =
             matchedURLAccuracyOverrides ?? <String, String>{};
 
-  factory BrowserDbSettings.fromMap(Map<String, dynamic> map) {
+  factory BrowserDbSettings.fromMap(Map<String, dynamic>? map) {
     if (map == null) {
       return BrowserDbSettings();
     }
 
     return BrowserDbSettings(
-        version: map['version'] as int ?? 3,
-        rootUUID: map['rootUUID'] as String,
+        version: map['version'] as int? ?? 3,
+        rootUUID: map['rootUUID'] as String?,
         defaultMatchAccuracy: MatchAccuracy.values.singleWhereOrNull(
                 (val) => val == map['defaultMatchAccuracy']) ??
             MatchAccuracy.Domain,
         defaultPlaceholderHandling:
-            map['defaultPlaceholderHandling'] as String ?? 'Default',
-        displayPriorityField: map['displayPriorityField'] as bool ?? false,
+            map['defaultPlaceholderHandling'] as String? ?? 'Default',
+        displayPriorityField: map['displayPriorityField'] as bool? ?? false,
         displayGlobalPlaceholderOption:
-            map['displayGlobalPlaceholderOption'] as bool ?? false,
+            map['displayGlobalPlaceholderOption'] as bool? ?? false,
         matchedURLAccuracyOverrides:
-            (map['matchedURLAccuracyOverrides'] as Map<String, dynamic>)
+            (map['matchedURLAccuracyOverrides'] as Map<String, dynamic>?)
                     ?.cast<String, String>() ??
                 <String, String>{});
   }
 
   factory BrowserDbSettings.fromJson(String source) =>
-      BrowserDbSettings.fromMap(json.decode(source) as Map<String, dynamic>);
+      BrowserDbSettings.fromMap(json.decode(source) as Map<String, dynamic>?);
 
   int version;
-  String rootUUID;
+  String? rootUUID;
   // enum
   MatchAccuracy defaultMatchAccuracy;
   String defaultPlaceholderHandling;
@@ -420,13 +420,13 @@ class BrowserDbSettings {
   Map<String, String> matchedURLAccuracyOverrides;
 
   BrowserDbSettings copyWith({
-    int version,
-    String rootUUID,
-    MatchAccuracy defaultMatchAccuracy,
-    String defaultPlaceholderHandling,
-    bool displayPriorityField,
-    bool displayGlobalPlaceholderOption,
-    Map<String, String> matchedURLAccuracyOverrides,
+    int? version,
+    String? rootUUID,
+    MatchAccuracy? defaultMatchAccuracy,
+    String? defaultPlaceholderHandling,
+    bool? displayPriorityField,
+    bool? displayGlobalPlaceholderOption,
+    Map<String, String>? matchedURLAccuracyOverrides,
   }) {
     return BrowserDbSettings(
       version: version ?? this.version,
@@ -492,7 +492,7 @@ class BrowserDbSettings {
 }
 
 class KdbxCustomIcon {
-  KdbxCustomIcon({/*required*/ this.uuid, /*required*/ this.data});
+  KdbxCustomIcon({/*required*/ required this.uuid, /*required*/ required this.data});
 
   /// uuid of the icon, must be unique within each file.
   final KdbxUuid uuid;

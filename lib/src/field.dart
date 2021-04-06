@@ -22,31 +22,31 @@ class BrowserFieldModel {
     this.value = '',
   });
 
-  factory BrowserFieldModel.fromMap(Map<String, dynamic> map) {
+  factory BrowserFieldModel.fromMap(Map<String, dynamic>? map) {
     if (map == null) {
       return BrowserFieldModel();
     }
 
     return BrowserFieldModel(
-      displayName: map['displayName'] as String,
-      name: map['name'] as String,
-      type: map['type'] as String,
-      fieldId: map['id'] as String,
-      page: map['page'] as int,
-      placeholderHandling: map['placeholderHandling'] as String,
-      value: map['value'] as String,
+      displayName: map['displayName'] as String?,
+      name: map['name'] as String?,
+      type: map['type'] as String?,
+      fieldId: map['id'] as String?,
+      page: map['page'] as int?,
+      placeholderHandling: map['placeholderHandling'] as String?,
+      value: map['value'] as String?,
     );
   }
   factory BrowserFieldModel.fromJson(String source) =>
-      BrowserFieldModel.fromMap(json.decode(source) as Map<String, dynamic>);
+      BrowserFieldModel.fromMap(json.decode(source) as Map<String, dynamic>?);
 
-  String displayName;
-  String name;
-  String type;
-  String fieldId;
-  int page;
-  String placeholderHandling;
-  String value;
+  String? displayName;
+  String? name;
+  String? type;
+  String? fieldId;
+  int? page;
+  String? placeholderHandling;
+  String? value;
 
   @override
   // ignore: avoid_renaming_method_parameters
@@ -77,13 +77,13 @@ class BrowserFieldModel {
   }
 
   BrowserFieldModel copyWith({
-    String displayName,
-    String name,
-    String type,
-    String fieldId,
-    int page,
-    String placeholderHandling,
-    String value,
+    String? displayName,
+    String? name,
+    String? type,
+    String? fieldId,
+    int? page,
+    String? placeholderHandling,
+    String? value,
   }) {
     return BrowserFieldModel(
       displayName: displayName ?? this.displayName,

@@ -20,7 +20,7 @@ class KdbxPrintUtils {
     for (final group in group.groups.values) {
       catGroup(buf, group, depth: depth + 1);
     }
-    final valueToSting = (StringValue value) =>
+    final valueToSting = (StringValue? value) =>
         forceDecrypt ? value?.getText() : value?.toString();
 
     for (final entry in group.entries.values) {

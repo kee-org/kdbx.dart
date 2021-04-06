@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:clock/clock.dart';
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:kdbx/src/kdbx_format.dart';
 import 'package:kdbx/src/kdbx_header.dart';
 import 'package:kdbx/src/kdbx_object.dart';
@@ -80,27 +81,27 @@ extension on List<XmlNode> {
   }
 }
 
-abstract class KdbxSubTextNode<T> extends KdbxSubNode<T> {
+abstract class KdbxSubTextNode<T> extends KdbxSubNode<T?> {
   KdbxSubTextNode(KdbxNode node, String name) : super(node, name);
 
-  void Function() _onModify;
+  void Function()? _onModify;
 
   @protected
-  String encode(T value);
+  String? encode(T value);
 
   @protected
   T decode(String value);
 
-  XmlElement _opt(String nodeName) => node.node
+  XmlElement? _opt(String nodeName) => node.node
       .findElements(nodeName)
-      .singleWhere((x) => true, orElse: () => null);
+      .singleWhereOrNull((x) => true);
 
   void setOnModifyListener(void Function() onModify) {
     _onModify = onModify;
   }
 
   @override
-  T get() {
+  T? get() {
     final textValue = _opt(name)?.text;
     if (textValue == null) {
       return null;
@@ -109,7 +110,7 @@ abstract class KdbxSubTextNode<T> extends KdbxSubNode<T> {
   }
 
   @override
-  bool set(T value, {bool force = false}) {
+  bool set(T? value, {bool force = false}) {
     if (get() == value && force != true) {
       return false;
     }
@@ -140,24 +141,24 @@ abstract class KdbxSubTextNode<T> extends KdbxSubNode<T> {
   }
 }
 
-class IntNode extends KdbxSubTextNode<int> {
+class IntNode extends KdbxSubTextNode<int?> {
   IntNode(KdbxNode node, String name) : super(node, name);
 
   @override
-  int decode(String value) => int.tryParse(value);
+  int? decode(String value) => int.tryParse(value);
 
   @override
-  String encode(int value) => value.toString();
+  String encode(int? value) => value.toString();
 }
 
-class StringNode extends KdbxSubTextNode<String> {
+class StringNode extends KdbxSubTextNode<String?> {
   StringNode(KdbxNode node, String name) : super(node, name);
 
   @override
   String decode(String value) => value;
 
   @override
-  String encode(String value) => value;
+  String? encode(String? value) => value;
 }
 
 class StringListNode extends KdbxSubTextNode<List<String>> {
@@ -184,14 +185,14 @@ class Base64Node extends KdbxSubTextNode<ByteBuffer> {
   String encode(ByteBuffer value) => base64.encode(value.asUint8List());
 }
 
-class UuidNode extends KdbxSubTextNode<KdbxUuid> {
+class UuidNode extends KdbxSubTextNode<KdbxUuid?> {
   UuidNode(KdbxNode node, String name) : super(node, name);
 
   @override
   KdbxUuid decode(String value) => KdbxUuid(value);
 
   @override
-  String encode(KdbxUuid /*!*/ value) => value.uuid;
+  String encode(KdbxUuid value) => value.uuid;
 }
 
 class IconNode extends KdbxSubTextNode<KdbxIcon> {
@@ -228,11 +229,11 @@ class ColorNode extends KdbxSubTextNode<KdbxColor> {
   String encode(KdbxColor value) => value.isNull ? '' : value._rgb;
 }
 
-class NullableBooleanNode extends KdbxSubTextNode<bool> {
+class NullableBooleanNode extends KdbxSubTextNode<bool?> {
   NullableBooleanNode(KdbxNode node, String name) : super(node, name);
 
   @override
-  bool decode(String value) {
+  bool? decode(String value) {
     switch (value.toLowerCase()) {
       case 'null':
         return null;
@@ -245,11 +246,11 @@ class NullableBooleanNode extends KdbxSubTextNode<bool> {
   }
 
   @override
-  String encode(bool value) =>
+  String encode(bool? value) =>
       value != null ? (value ? 'true' : 'false') : 'null';
 }
 
-class DateTimeUtcNode extends KdbxSubTextNode<DateTime> {
+class DateTimeUtcNode extends KdbxSubTextNode<DateTime?> {
   DateTimeUtcNode(KdbxNodeContext node, String name) : super(node, name);
 
   static const EpochSeconds = 62135596800;
@@ -265,7 +266,7 @@ class DateTimeUtcNode extends KdbxSubTextNode<DateTime> {
   }
 
   @override
-  DateTime decode(String value) {
+  DateTime? decode(String value) {
     if (value.isEmpty) {
       _logger.warning('time contains empty string. $name');
       return null;
@@ -290,17 +291,17 @@ class DateTimeUtcNode extends KdbxSubTextNode<DateTime> {
   }
 
   @override
-  String encode(DateTime value) {
-    assert(value.isUtc);
+  String encode(DateTime? value) {
+    assert(value!.isUtc);
     if (_ctx.versionMajor >= 4) {
       // for kdbx v4 we need to support binary/base64
       final secondsFrom00 =
-          (value.millisecondsSinceEpoch ~/ 1000) + EpochSeconds;
+          (value!.millisecondsSinceEpoch ~/ 1000) + EpochSeconds;
       final encoded = base64.encode(
           (WriterHelper()..writeUint64(secondsFrom00)).output.toBytes());
       return encoded;
     }
-    return DateTimeUtils.toIso8601StringSeconds(value);
+    return DateTimeUtils.toIso8601StringSeconds(value!);
   }
 }
 

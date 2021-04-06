@@ -39,7 +39,7 @@ class TestUtil {
   }
 
   static Future<KdbxFile> readKdbxFileBytes(Uint8List data,
-      {String password = 'asdf', Credentials credentials}) async {
+      {String password = 'asdf', Credentials? credentials}) async {
     final kdbxFormat = TestUtil.kdbxFormat();
     final file = await kdbxFormat.read(
         data, credentials ?? Credentials(ProtectedValue.fromString(password)));
@@ -77,6 +77,6 @@ extension UnmodifiableMapViewKdbxObject<K extends String, V extends KdbxObject>
     return values.last;
   }
 
-  V firstWhere(bool Function(V) test, {V Function() orElse}) =>
+  V firstWhere(bool Function(V) test, {V Function()? orElse}) =>
       values.firstWhere(test, orElse: orElse);
 }

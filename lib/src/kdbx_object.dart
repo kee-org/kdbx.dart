@@ -21,7 +21,7 @@ import 'package:xml/xml.dart';
 final _logger = Logger('kdbx.kdbx_object');
 
 class ChangeEvent<T> {
-  ChangeEvent({/*required*/ this.object, /*required*/ this.isDirty});
+  ChangeEvent({/*required*/ required this.object, /*required*/ required this.isDirty});
 
   final T object;
   final bool isDirty;
@@ -112,8 +112,8 @@ abstract class KdbxNode with Changeable<KdbxNode> {
 
 extension IterableKdbxObject<K extends String, V extends KdbxObject>
     on LinkedHashMap<K, V> {
-  V findByUuid(KdbxUuid uuid) {
-    return this[uuid.uuid];
+  V? findByUuid(KdbxUuid uuid) {
+    return this[uuid.uuid as K];
   }
 
   void add(KdbxObject obj) {
@@ -165,7 +165,7 @@ abstract class KdbxObject extends KdbxNode {
     this.ctx,
     this.file,
     String nodeName,
-    KdbxGroup parent,
+    KdbxGroup? parent,
   )   : assert(ctx != null),
         times = KdbxTimes.create(ctx),
         _parent = parent,
@@ -173,7 +173,7 @@ abstract class KdbxObject extends KdbxNode {
     _uuid.set(KdbxUuid.random());
   }
 
-  KdbxObject.read(this.ctx, KdbxGroup parent, XmlElement node)
+  KdbxObject.read(this.ctx, KdbxGroup? parent, XmlElement node)
       : assert(ctx != null),
         times = KdbxTimes.read(node.findElements('Times').single, ctx),
         _parent = parent,
@@ -181,13 +181,13 @@ abstract class KdbxObject extends KdbxNode {
 
   /// the file this object is part of. will be set AFTER loading, etc.
   /// TODO: We should probably get rid of this `file` reference.
-  KdbxFile file;
+  KdbxFile? file;
 
   final KdbxReadWriteContext ctx;
 
   final KdbxTimes times;
 
-  KdbxUuid/*!*/ get uuid => _uuid.get();
+  KdbxUuid get uuid => _uuid.get()!;
 
   UuidNode get _uuid => UuidNode(this, KdbxXml.NODE_UUID);
 
@@ -195,16 +195,16 @@ abstract class KdbxObject extends KdbxNode {
 
   UuidNode get customIconUuid => UuidNode(this, 'CustomIconUUID');
 
-  KdbxGroup get parent => _parent;
+  KdbxGroup? get parent => _parent;
 
-  KdbxGroup _parent;
+  KdbxGroup? _parent;
 
-  KdbxCustomIcon get customIcon =>
-      customIconUuid.get()?.let((uuid) => file.body.meta.customIcons[uuid]);
+  KdbxCustomIcon? get customIcon =>
+      customIconUuid.get()?.let((uuid) => file!.body.meta.customIcons[uuid]);
 
-  set customIcon(KdbxCustomIcon icon) {
+  set customIcon(KdbxCustomIcon? icon) {
     if (icon != null) {
-      file.body.meta.addCustomIcon(icon);
+      file!.body.meta.addCustomIcon(icon);
       customIconUuid.set(icon.uuid);
     } else {
       customIconUuid.set(null);
@@ -222,11 +222,11 @@ abstract class KdbxObject extends KdbxNode {
   }
 
   bool wasModifiedAfter(KdbxObject other) => times.lastModificationTime
-      .get()
-      .isAfter(other.times.lastModificationTime.get());
+      .get()!
+      .isAfter(other.times.lastModificationTime.get()!);
 
   bool wasMovedAfter(KdbxObject other) =>
-      times.locationChanged.get().isAfter(other.times.locationChanged.get());
+      times.locationChanged.get()!.isAfter(other.times.locationChanged.get()!);
 
   @override
   XmlElement toXml() {

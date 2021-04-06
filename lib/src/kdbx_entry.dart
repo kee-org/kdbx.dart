@@ -90,29 +90,29 @@ class BrowserEntrySettings {
     this.priority = 0,
     this.hide = false,
     this.realm = '',
-    List<Pattern> includeUrls,
-    List<Pattern> excludeUrls,
-    List<BrowserFieldModel> fields,
+    List<Pattern>? includeUrls,
+    List<Pattern>? excludeUrls,
+    List<BrowserFieldModel>? fields,
   })  : includeUrls = includeUrls ?? [],
         excludeUrls = excludeUrls ?? [],
         fields = fields ?? [];
 
-  factory BrowserEntrySettings.fromMap(Map<String, dynamic> map) {
+  factory BrowserEntrySettings.fromMap(Map<String, dynamic>? map) {
     if (map == null) {
       return BrowserEntrySettings();
     }
 
     return BrowserEntrySettings(
-      version: map['version'] as int ?? 1,
+      version: map['version'] as int? ?? 1,
       behaviour: getBehaviour(map),
       minimumMatchAccuracy: getMam(map),
-      priority: map['priority'] as int ?? 0,
-      hide: map['hide'] as bool ?? false,
-      realm: map['hTTPRealm'] as String,
+      priority: map['priority'] as int? ?? 0,
+      hide: map['hide'] as bool? ?? false,
+      realm: map['hTTPRealm'] as String?,
       includeUrls: getIncludeUrls(map),
       excludeUrls: getExcludeUrls(map),
       fields: List<BrowserFieldModel>.from((map['formFieldList']
-                  as List<dynamic>)
+                  as List<dynamic>?)
               ?.cast<Map<String, dynamic>>()
               ?.map<BrowserFieldModel>((x) => BrowserFieldModel.fromMap(x)) ??
           <BrowserFieldModel>[]),
@@ -120,7 +120,7 @@ class BrowserEntrySettings {
   }
 
   factory BrowserEntrySettings.fromJson(String source) =>
-      BrowserEntrySettings.fromMap(json.decode(source) as Map<String, dynamic>);
+      BrowserEntrySettings.fromMap(json.decode(source) as Map<String, dynamic>?);
 
   int version;
   // enum
@@ -129,21 +129,21 @@ class BrowserEntrySettings {
   MatchAccuracy minimumMatchAccuracy;
   int priority; // always 0
   bool hide;
-  String realm;
+  String? realm;
   List<Pattern> includeUrls;
   List<Pattern> excludeUrls;
   List<BrowserFieldModel> fields;
 
   BrowserEntrySettings copyWith({
-    int version,
-    BrowserAutoFillBehaviour behaviour,
-    MatchAccuracy minimumMatchAccuracy,
-    int priority,
-    bool hide,
-    String realm,
-    List<Pattern> includeUrls,
-    List<Pattern> excludeUrls,
-    List<BrowserFieldModel> fields,
+    int? version,
+    BrowserAutoFillBehaviour? behaviour,
+    MatchAccuracy? minimumMatchAccuracy,
+    int? priority,
+    bool? hide,
+    String? realm,
+    List<Pattern>? includeUrls,
+    List<Pattern>? excludeUrls,
+    List<BrowserFieldModel>? fields,
   }) {
     return BrowserEntrySettings(
       version: version ?? this.version,
@@ -159,16 +159,16 @@ class BrowserEntrySettings {
   }
 
   static BrowserAutoFillBehaviour getBehaviour(Map<String, dynamic> map) {
-    if (map['neverAutoFill'] as bool ?? false) {
+    if (map['neverAutoFill'] as bool? ?? false) {
       return BrowserAutoFillBehaviour.NeverAutoFillNeverAutoSubmit;
-    } else if (map['alwaysAutoSubmit'] as bool ?? false) {
+    } else if (map['alwaysAutoSubmit'] as bool? ?? false) {
       return BrowserAutoFillBehaviour.AlwaysAutoFillAlwaysAutoSubmit;
-    } else if ((map['alwaysAutoFill'] as bool ?? false) &&
-        (map['neverAutoSubmit'] as bool ?? false)) {
+    } else if ((map['alwaysAutoFill'] as bool? ?? false) &&
+        (map['neverAutoSubmit'] as bool? ?? false)) {
       return BrowserAutoFillBehaviour.AlwaysAutoFillNeverAutoSubmit;
-    } else if (map['neverAutoSubmit'] as bool ?? false) {
+    } else if (map['neverAutoSubmit'] as bool? ?? false) {
       return BrowserAutoFillBehaviour.NeverAutoSubmit;
-    } else if (map['alwaysAutoFill'] as bool ?? false) {
+    } else if (map['alwaysAutoFill'] as bool? ?? false) {
       return BrowserAutoFillBehaviour.AlwaysAutoFill;
     } else {
       return BrowserAutoFillBehaviour.Default;
@@ -176,9 +176,9 @@ class BrowserEntrySettings {
   }
 
   static MatchAccuracy getMam(Map<String, dynamic> map) {
-    if (map['blockHostnameOnlyMatch'] as bool ?? false) {
+    if (map['blockHostnameOnlyMatch'] as bool? ?? false) {
       return MatchAccuracy.Exact;
-    } else if (map['blockDomainOnlyMatch'] as bool ?? false) {
+    } else if (map['blockDomainOnlyMatch'] as bool? ?? false) {
       return MatchAccuracy.Hostname;
     } else {
       return MatchAccuracy.Domain;
@@ -288,8 +288,8 @@ class BrowserEntrySettings {
 
   static List<Pattern> getIncludeUrls(Map<String, dynamic> map) {
     final includeUrls = <Pattern>[];
-    final altUrls = (map['altURLs'] as List<dynamic>)?.cast<String>();
-    final regExURLs = (map['regExURLs'] as List<dynamic>)?.cast<String>();
+    final altUrls = (map['altURLs'] as List<dynamic>?)?.cast<String>();
+    final regExURLs = (map['regExURLs'] as List<dynamic>?)?.cast<String>();
     if (altUrls != null && altUrls is List<String>) {
       altUrls.forEach((url) => includeUrls.add(url));
     }
@@ -301,9 +301,9 @@ class BrowserEntrySettings {
 
   static List<Pattern> getExcludeUrls(Map<String, dynamic> map) {
     final excludeUrls = <Pattern>[];
-    final blockedURLs = (map['blockedURLs'] as List<dynamic>)?.cast<String>();
+    final blockedURLs = (map['blockedURLs'] as List<dynamic>?)?.cast<String>();
     final regExBlockedURLs =
-        (map['regExBlockedURLs'] as List<dynamic>)?.cast<String>();
+        (map['regExBlockedURLs'] as List<dynamic>?)?.cast<String>();
     if (blockedURLs != null && blockedURLs is List<String>) {
       blockedURLs.forEach((url) => excludeUrls.add(url));
     }
@@ -380,7 +380,7 @@ enum MatchAccuracy { Exact, Hostname, Domain }
 extension KdbxEntryInternal on KdbxEntry {
   KdbxEntry cloneInto(KdbxGroup otherGroup, {bool toHistoryEntry = false}) =>
       KdbxEntry.create(
-        otherGroup.file,
+        otherGroup.file!,
         otherGroup,
         isHistoryEntry: toHistoryEntry,
       )
@@ -435,12 +435,12 @@ extension KdbxEntryInternal on KdbxEntry {
     times.overwriteFrom(other.times);
     if (includeHistory) {
       for (final historyEntry in other.history) {
-        history.add(historyEntry.cloneInto(parent, toHistoryEntry: true));
+        history.add(historyEntry.cloneInto(parent!, toHistoryEntry: true));
       }
     }
   }
 
-  List<String> _diffMap(Map<Object, Object> a, Map<Object, Object> b) {
+  List<String> _diffMap(Map<Object, Object?> a, Map<Object, Object?> b) {
     final keys = {...a.keys, ...b.keys};
     final ret = <String>[];
     for (final key in keys) {
@@ -468,7 +468,7 @@ class KdbxEntry extends KdbxObject {
     _browserSettings = BrowserEntrySettings();
   }
 
-  KdbxEntry.read(KdbxReadWriteContext ctx, KdbxGroup parent, XmlElement node,
+  KdbxEntry.read(KdbxReadWriteContext ctx, KdbxGroup? parent, XmlElement node,
       {this.isHistoryEntry = false})
       : customData = node
                 .singleElement('CustomData')
@@ -526,11 +526,11 @@ class KdbxEntry extends KdbxObject {
     customData['KeeVault.AndroidPackageNames'] = json.encode(names);
   }
 
-  BrowserEntrySettings _browserSettings;
+  BrowserEntrySettings? _browserSettings;
   BrowserEntrySettings get browserSettings {
     if (_browserSettings == null) {
       final tempJson = stringEntries
-          .firstWhere((s) => s.key.key == 'KPRPC JSON', orElse: () => null)
+          .firstWhereOrNull((s) => s.key.key == 'KPRPC JSON')
           ?.value;
 
       if (tempJson != null) {
@@ -539,7 +539,7 @@ class KdbxEntry extends KdbxObject {
         _browserSettings = BrowserEntrySettings();
       }
     }
-    return _browserSettings;
+    return _browserSettings!;
   }
 
   set browserSettings(BrowserEntrySettings settings) {
@@ -559,7 +559,7 @@ class KdbxEntry extends KdbxObject {
   StringListNode get tags => StringListNode(this, 'Tags');
 
   @override
-  set file(KdbxFile file) {
+  set file(KdbxFile? file) {
     super.file = file;
     // TODO this looks like some weird workaround, get rid of the
     // `file` reference.
@@ -571,7 +571,7 @@ class KdbxEntry extends KdbxObject {
   void addAutofillUrl(String webDomain, String scheme) {
     final newUrl = '${scheme ?? "http"}://$webDomain';
     final currentUrl = stringEntries
-        .firstWhere((s) => s.key == KdbxKeyCommon.URL, orElse: () => null)
+        .firstWhereOrNull((s) => s.key == KdbxKeyCommon.URL)
         ?.value
         ?.getText();
     final alreadyPresent =
@@ -623,7 +623,7 @@ class KdbxEntry extends KdbxObject {
         KdbxFile.setProtectedValueForNode(
             value, stringEntry.value as ProtectedValue);
       } else if (stringEntry.value is StringValue) {
-        value.children.add(XmlText(stringEntry.value.getText()));
+        value.children.add(XmlText(stringEntry.value!.getText()));
       }
       return XmlElement(XmlName(KdbxXml.NODE_STRING))
         ..children.addAll([
@@ -657,23 +657,23 @@ class KdbxEntry extends KdbxObject {
     return el;
   }
 
-  final Map<KdbxKey, StringValue> _strings = {};
+  final Map<KdbxKey, StringValue?> _strings = {};
 
   final Map<KdbxKey, KdbxBinary> _binaries = {};
 
   Iterable<MapEntry<KdbxKey, KdbxBinary>> get binaryEntries =>
       _binaries.entries;
 
-  KdbxBinary getBinary(KdbxKey key) => _binaries[key];
+  KdbxBinary? getBinary(KdbxKey key) => _binaries[key];
 
 //  Map<KdbxKey, StringValue> get strings => UnmodifiableMapView(_strings);
 
-  Iterable<MapEntry<KdbxKey, StringValue>> get stringEntries =>
+  Iterable<MapEntry<KdbxKey, StringValue?>> get stringEntries =>
       _strings.entries;
 
-  StringValue getString(KdbxKey key) => _strings[key];
+  StringValue? getString(KdbxKey key) => _strings[key];
 
-  void setString(KdbxKey key, StringValue value) {
+  void setString(KdbxKey key, StringValue? value) {
     assert(key != null);
     if (_strings[key] == value) {
       _logger.finest('Value did not change for $key');
@@ -696,7 +696,7 @@ class KdbxEntry extends KdbxObject {
 
   void removeString(KdbxKey key) => setString(key, null);
 
-  String _plainValue(KdbxKey key) {
+  String? _plainValue(KdbxKey key) {
     final value = _strings[key];
     if (value is PlainValue) {
       return value.getText();
@@ -713,9 +713,9 @@ class KdbxEntry extends KdbxObject {
 
   /// Creates a new binary and adds it to this entry.
   KdbxBinary createBinary({
-    @required bool isProtected,
-    @required String name,
-    @required Uint8List bytes,
+    required bool isProtected,
+    required String name,
+    required Uint8List bytes,
   }) {
     assert(isProtected != null);
     assert(bytes != null);
@@ -728,7 +728,7 @@ class KdbxEntry extends KdbxObject {
       value: bytes,
     );
     modify(() {
-      file.ctx.addBinary(binary);
+      file!.ctx.addBinary(binary);
       _binaries[key] = binary;
     });
     return binary;
@@ -760,12 +760,11 @@ class KdbxEntry extends KdbxObject {
     throw StateError('Unable to find unique name for $fileName');
   }
 
-  static KdbxEntry _findHistoryEntry(
-          List<KdbxEntry> history, DateTime lastModificationTime) =>
-      history.firstWhere(
+  static KdbxEntry? _findHistoryEntry(
+          List<KdbxEntry> history, DateTime? lastModificationTime) =>
+      history.firstWhereOrNull(
           (history) =>
-              history.times.lastModificationTime.get() == lastModificationTime,
-          orElse: () => null);
+              history.times.lastModificationTime.get() == lastModificationTime);
 
   @override
   void merge(MergeContext mergeContext, KdbxEntry other) {
@@ -784,7 +783,7 @@ class KdbxEntry extends KdbxObject {
       if (historyEntry == null) {
         // it seems like we don't know about that state, so we have to add
         // it to history.
-        history.add(other.cloneInto(parent, toHistoryEntry: true));
+        history.add(other.cloneInto(parent!, toHistoryEntry: true));
       }
     } else {
       _logger.finest('$this has no changes.');
@@ -797,7 +796,7 @@ class KdbxEntry extends KdbxObject {
 
   void mergeEntryHistory(MergeContext mergeContext, List<KdbxEntry> history,
       List<KdbxEntry> otherHistory) {
-    final dict = SplayTreeMap<DateTime, KdbxEntry>();
+    final dict = SplayTreeMap<DateTime?, KdbxEntry>();
 
     for (var historyEntry in history) {
       dict[historyEntry.times.lastModificationTime.get()] = historyEntry;
@@ -806,7 +805,7 @@ class KdbxEntry extends KdbxObject {
     for (var historyEntry in otherHistory) {
       final key = historyEntry.times.lastModificationTime.get();
       if (!dict.containsKey(key)) {
-        dict[key] = historyEntry.cloneInto(parent, toHistoryEntry: true);
+        dict[key] = historyEntry.cloneInto(parent!, toHistoryEntry: true);
         mergeContext.trackChange(
           this,
           debug: 'merge in history '
@@ -819,7 +818,7 @@ class KdbxEntry extends KdbxObject {
     history.addAll(dict.values);
   }
 
-  String debugLabel() => label ?? _plainValue(KdbxKeyCommon.USER_NAME);
+  String debugLabel() => label ?? _plainValue(KdbxKeyCommon.USER_NAME)!;
 
   @override
   String toString() {
