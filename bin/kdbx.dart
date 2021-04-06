@@ -16,7 +16,7 @@ final _logger = Logger('kdbx');
 void main(List<String> arguments) {
   exitCode = 0;
   final runner = KdbxCommandRunner('kdbx', 'Kdbx Utility');
-  runner.run(arguments).catchError((dynamic error, StackTrace stackTrace) {
+  runner.run(arguments).catchError((Object error, StackTrace stackTrace) {
     if (error is! UsageException) {
       return Future<dynamic>.error(error, stackTrace);
     }

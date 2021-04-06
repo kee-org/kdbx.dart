@@ -441,9 +441,8 @@ class KdbxHeader {
       final headerId = reader.readUint8();
       final bodySize =
           version >= KdbxVersion.V4 ? reader.readUint32() : reader.readUint16();
-      final bodyBytes = bodySize > 0
-          ? reader.readBytes(bodySize)
-          : <Uint8List>[] as Uint8List;
+      final bodyBytes =
+          bodySize > 0 ? reader.readBytes(bodySize) : Uint8List.fromList([]);
 //      _logger.finer(
 //          'Read header ${fields[headerId]}: ${ByteUtils.toHexList(bodyBytes)}');
       if (headerId > 0) {
@@ -514,7 +513,7 @@ class KdbxHeader {
     final id =
         ReaderHelper.singleUint32(fields[HeaderFields.CompressionFlags]!.bytes);
     return _compressionIdsById[id] ??
-        (() => throw KdbxUnsupportedException('invalid compression $id'))()!;
+        (() => throw KdbxUnsupportedException('invalid compression $id'))();
   }
 
   ProtectedValueEncryption get innerRandomStreamEncryption =>

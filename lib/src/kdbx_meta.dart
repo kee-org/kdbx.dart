@@ -56,8 +56,8 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
                 );
               }
             })
-            ?.toList()
-            ?.let((binaries) {
+            .toList()
+            .let((binaries) {
               binaries.sort((a, b) => a.key.compareTo(b.key));
               for (var i = 0; i < binaries.length; i++) {
                 if (i != binaries[i].key) {
@@ -79,8 +79,8 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
                             iconNode.singleTextNode(KdbxXml.NODE_DATA)));
                   }
                 })
-                ?.map((e) => MapEntry(e.uuid, e))
-                ?.let((that) => Map.fromEntries(that)) ??
+                .map((e) => MapEntry(e.uuid, e))
+                .let((that) => Map.fromEntries(that)) ??
             {},
         super.read(node);
 
@@ -492,7 +492,8 @@ class BrowserDbSettings {
 }
 
 class KdbxCustomIcon {
-  KdbxCustomIcon({/*required*/ required this.uuid, /*required*/ required this.data});
+  KdbxCustomIcon(
+      {/*required*/ required this.uuid, /*required*/ required this.data});
 
   /// uuid of the icon, must be unique within each file.
   final KdbxUuid uuid;

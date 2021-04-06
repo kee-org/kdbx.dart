@@ -100,7 +100,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.4.3"
+    version: "0.5.0+2"
   logging:
     dependency: "direct overridden"
     description:

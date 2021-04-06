@@ -46,12 +46,23 @@ extension StringExt on String {
   String? takeUnlessBlank() => nullIfBlank();
 
   String? nullIfBlank() {
-    if (this == null || isEmpty) {
+    if (isEmpty) {
       return null;
     }
     return this;
   }
 }
+
+// extension StringExt2 on String? {
+//   String? takeUnlessBlank() => nullIfBlank();
+
+//   String? nullIfBlank() {
+//     if (isEmpty) {
+//       return null;
+//     }
+//     return this;
+//   }
+// }
 
 // extension IterableExt<T> on Iterable<T> {
 //   T get singleOrNull => singleWhere((element) => true, orElse: () => null);

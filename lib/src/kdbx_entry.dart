@@ -86,7 +86,7 @@ class BrowserEntrySettings {
   BrowserEntrySettings({
     this.version = 1,
     this.behaviour = BrowserAutoFillBehaviour.Default,
-    this.minimumMatchAccuracy = MatchAccuracy.Domain,
+    required this.minimumMatchAccuracy,
     this.priority = 0,
     this.hide = false,
     this.realm = '',
@@ -97,9 +97,10 @@ class BrowserEntrySettings {
         excludeUrls = excludeUrls ?? [],
         fields = fields ?? [];
 
-  factory BrowserEntrySettings.fromMap(Map<String, dynamic>? map) {
+  factory BrowserEntrySettings.fromMap(Map<String, dynamic>? map,
+      {required MatchAccuracy minimumMatchAccuracy}) {
     if (map == null) {
-      return BrowserEntrySettings();
+      return BrowserEntrySettings(minimumMatchAccuracy: minimumMatchAccuracy);
     }
 
     return BrowserEntrySettings(
@@ -114,13 +115,15 @@ class BrowserEntrySettings {
       fields: List<BrowserFieldModel>.from((map['formFieldList']
                   as List<dynamic>?)
               ?.cast<Map<String, dynamic>>()
-              ?.map<BrowserFieldModel>((x) => BrowserFieldModel.fromMap(x)) ??
+              .map<BrowserFieldModel>((x) => BrowserFieldModel.fromMap(x)) ??
           <BrowserFieldModel>[]),
     );
   }
 
-  factory BrowserEntrySettings.fromJson(String source) =>
-      BrowserEntrySettings.fromMap(json.decode(source) as Map<String, dynamic>?);
+  factory BrowserEntrySettings.fromJson(String source,
+          {required MatchAccuracy minimumMatchAccuracy}) =>
+      BrowserEntrySettings.fromMap(json.decode(source) as Map<String, dynamic>?,
+          minimumMatchAccuracy: minimumMatchAccuracy);
 
   int version;
   // enum
@@ -291,10 +294,12 @@ class BrowserEntrySettings {
     final altUrls = (map['altURLs'] as List<dynamic>?)?.cast<String>();
     final regExURLs = (map['regExURLs'] as List<dynamic>?)?.cast<String>();
     if (altUrls != null && altUrls is List<String>) {
-      altUrls.forEach((url) => includeUrls.add(url));
+      altUrls.forEach(includeUrls.add);
     }
     if (regExURLs != null && regExURLs is List<String>) {
-      regExURLs.forEach((url) => includeUrls.add(RegExp(url)));
+      for (var url in regExURLs) {
+        includeUrls.add(RegExp(url));
+      }
     }
     return includeUrls;
   }
@@ -305,10 +310,12 @@ class BrowserEntrySettings {
     final regExBlockedURLs =
         (map['regExBlockedURLs'] as List<dynamic>?)?.cast<String>();
     if (blockedURLs != null && blockedURLs is List<String>) {
-      blockedURLs.forEach((url) => excludeUrls.add(url));
+      blockedURLs.forEach(excludeUrls.add);
     }
     if (regExBlockedURLs != null && regExBlockedURLs is List<String>) {
-      regExBlockedURLs.forEach((url) => excludeUrls.add(RegExp(url)));
+      for (var url in regExBlockedURLs) {
+        excludeUrls.add(RegExp(url));
+      }
     }
     return excludeUrls;
   }
@@ -319,7 +326,7 @@ class BrowserEntrySettings {
       'priority': priority,
       'hide': hide,
       'hTTPRealm': realm,
-      'formFieldList': fields?.map((x) => x?.toMap())?.toList(),
+      'formFieldList': fields.map((x) => x.toMap()).toList(),
       ...parseBehaviour(behaviour),
       ...parseMam(minimumMatchAccuracy),
       ...parseUrls(includeUrls, excludeUrls),
@@ -465,8 +472,13 @@ class KdbxEntry extends KdbxObject {
         history = [],
         super.create(file.ctx, file, 'Entry', parent) {
     icon.set(KdbxIcon.Key);
-    _browserSettings = BrowserEntrySettings();
+    _browserSettings = BrowserEntrySettings(
+        minimumMatchAccuracy:
+            file.body.meta.browserSettings.defaultMatchAccuracy);
   }
+
+  @override
+  KdbxGroup get parent => super.parent!;
 
   KdbxEntry.read(KdbxReadWriteContext ctx, KdbxGroup? parent, XmlElement node,
       {this.isHistoryEntry = false})
@@ -506,9 +518,9 @@ class KdbxEntry extends KdbxObject {
             .findElements(KdbxXml.NODE_HISTORY)
             .singleOrNull
             ?.findElements('Entry')
-            ?.map((entry) =>
+            .map((entry) =>
                 KdbxEntry.read(ctx, parent, entry, isHistoryEntry: true))
-            ?.toList() ??
+            .toList() ??
         []);
   }
 
@@ -534,9 +546,13 @@ class KdbxEntry extends KdbxObject {
           ?.value;
 
       if (tempJson != null) {
-        _browserSettings = BrowserEntrySettings.fromJson(tempJson.getText());
+        _browserSettings = BrowserEntrySettings.fromJson(tempJson.getText(),
+            minimumMatchAccuracy:
+                file!.body.meta.browserSettings.defaultMatchAccuracy);
       } else {
-        _browserSettings = BrowserEntrySettings();
+        _browserSettings = BrowserEntrySettings(
+            minimumMatchAccuracy:
+                file!.body.meta.browserSettings.defaultMatchAccuracy);
       }
     }
     return _browserSettings!;
@@ -568,7 +584,7 @@ class KdbxEntry extends KdbxObject {
     }
   }
 
-  void addAutofillUrl(String webDomain, String scheme) {
+  void addAutofillUrl(String webDomain, String? scheme) {
     final newUrl = '${scheme ?? "http"}://$webDomain';
     final currentUrl = stringEntries
         .firstWhereOrNull((s) => s.key == KdbxKeyCommon.URL)
@@ -762,9 +778,8 @@ class KdbxEntry extends KdbxObject {
 
   static KdbxEntry? _findHistoryEntry(
           List<KdbxEntry> history, DateTime? lastModificationTime) =>
-      history.firstWhereOrNull(
-          (history) =>
-              history.times.lastModificationTime.get() == lastModificationTime);
+      history.firstWhereOrNull((history) =>
+          history.times.lastModificationTime.get() == lastModificationTime);
 
   @override
   void merge(MergeContext mergeContext, KdbxEntry other) {
@@ -818,7 +833,8 @@ class KdbxEntry extends KdbxObject {
     history.addAll(dict.values);
   }
 
-  String debugLabel() => label ?? _plainValue(KdbxKeyCommon.USER_NAME)!;
+  String debugLabel() =>
+      label.takeUnlessBlank() ?? _plainValue(KdbxKeyCommon.USER_NAME)!;
 
   @override
   String toString() {

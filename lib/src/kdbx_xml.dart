@@ -92,9 +92,8 @@ abstract class KdbxSubTextNode<T> extends KdbxSubNode<T?> {
   @protected
   T decode(String value);
 
-  XmlElement? _opt(String nodeName) => node.node
-      .findElements(nodeName)
-      .singleWhereOrNull((x) => true);
+  XmlElement? _opt(String nodeName) =>
+      node.node.findElements(nodeName).singleWhereOrNull((x) => true);
 
   void setOnModifyListener(void Function() onModify) {
     _onModify = onModify;
@@ -151,14 +150,14 @@ class IntNode extends KdbxSubTextNode<int?> {
   String encode(int? value) => value.toString();
 }
 
-class StringNode extends KdbxSubTextNode<String?> {
+class StringNode extends KdbxSubTextNode<String> {
   StringNode(KdbxNode node, String name) : super(node, name);
 
   @override
   String decode(String value) => value;
 
   @override
-  String? encode(String? value) => value;
+  String encode(String value) => value;
 }
 
 class StringListNode extends KdbxSubTextNode<List<String>> {
@@ -185,7 +184,7 @@ class Base64Node extends KdbxSubTextNode<ByteBuffer> {
   String encode(ByteBuffer value) => base64.encode(value.asUint8List());
 }
 
-class UuidNode extends KdbxSubTextNode<KdbxUuid?> {
+class UuidNode extends KdbxSubTextNode<KdbxUuid> {
   UuidNode(KdbxNode node, String name) : super(node, name);
 
   @override

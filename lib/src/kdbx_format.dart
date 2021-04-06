@@ -40,7 +40,7 @@ abstract class Credentials {
       Credentials.composite(password, null); //PasswordCredentials(password);
   factory Credentials.composite(ProtectedValue password, Uint8List? keyFile) =>
       KeyFileComposite(
-        password: password == null ? null : PasswordCredentials(password),
+        password: PasswordCredentials(password),
         keyFile: keyFile == null ? null : KeyFileCredentials(keyFile),
       );
 
@@ -57,7 +57,7 @@ class KeyFileComposite implements Credentials {
 
   @override
   Uint8List getHash() {
-    final buffer = [...?password?.getBinary(), ...?keyFile?.getBinary()];
+    final buffer = [...password.getBinary(), ...?keyFile?.getBinary()];
     return crypto.sha256.convert(buffer).bytes as Uint8List;
 
 //    final output = convert.AccumulatorSink<crypto.Digest>();
@@ -74,7 +74,7 @@ class KdbxReadWriteContext {
   KdbxReadWriteContext({
     required List<KdbxBinary> binaries,
     required this.header,
-  })  : assert(binaries != null),
+  })   : assert(binaries != null),
         assert(header != null),
         _binaries = binaries,
         _deletedObjects = [];
@@ -473,7 +473,8 @@ class MergeChange {
 
 class MergeContext implements OverwriteContext {
   MergeContext(
-      {/*required*/ required this.objectIndex, /*required*/ required this.deletedObjects});
+      {/*required*/ required this.objectIndex,
+      /*required*/ required this.deletedObjects});
   final Map<KdbxUuid, KdbxObject> objectIndex;
   final Map<KdbxUuid, KdbxDeletedObject> deletedObjects;
   final Map<KdbxUuid, KdbxObject> merged = {};
@@ -497,8 +498,8 @@ class MergeContext implements OverwriteContext {
   }
 
   String debugChanges() {
-    final group =
-        changes.groupBy(((element) => element.object!) as KdbxNode Function(MergeChange), valueTransform: (x) => x);
+    final group = changes.groupBy<KdbxNode, MergeChange>(
+        ((MergeChange element) => element.object!));
     return group.entries
         .map((e) => [
               e.key.toString(),

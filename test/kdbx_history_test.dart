@@ -23,13 +23,13 @@ class StreamExpect<T> {
     });
   }
 
-  Future<RET> expectNext<RET>(T value, FutureOr<RET>? Function() cb) async {
+  Future<RET> expectNext<RET>(T value, FutureOr<RET> Function() cb) async {
     if (_expectNext != null) {
       fail('The last event was never received. last: $_expectNext');
     }
     _expectNext = Optional.fromNullable(value);
     try {
-      return await cb()!;
+      return await cb();
     } finally {
       await pumpEventQueue();
     }
