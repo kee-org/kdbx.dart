@@ -21,7 +21,7 @@ import 'package:xml/xml.dart';
 final _logger = Logger('kdbx.kdbx_object');
 
 class ChangeEvent<T> {
-  ChangeEvent({this.object, this.isDirty});
+  ChangeEvent({/*required*/ this.object, /*required*/ this.isDirty});
 
   final T object;
   final bool isDirty;
@@ -187,7 +187,7 @@ abstract class KdbxObject extends KdbxNode {
 
   final KdbxTimes times;
 
-  KdbxUuid get uuid => _uuid.get();
+  KdbxUuid/*!*/ get uuid => _uuid.get();
 
   UuidNode get _uuid => UuidNode(this, KdbxXml.NODE_UUID);
 

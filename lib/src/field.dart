@@ -24,7 +24,7 @@ class BrowserFieldModel {
 
   factory BrowserFieldModel.fromMap(Map<String, dynamic> map) {
     if (map == null) {
-      return null;
+      return BrowserFieldModel();
     }
 
     return BrowserFieldModel(

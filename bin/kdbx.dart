@@ -127,9 +127,9 @@ class CatCommand extends KdbxFileCommand {
   @override
   String get name => 'cat';
 
-  bool get forceDecrypt => argResults['decrypt'] as bool;
+  bool get forceDecrypt => (argResults['decrypt'] ?? false) as bool;
 
-  bool get allFields => argResults['all-fields'] as bool;
+  bool get allFields => (argResults['all-fields'] ?? false) as bool;
 
   @override
   Future<void> runWithFile(KdbxFile file) async {

@@ -473,7 +473,8 @@ class MergeChange {
 }
 
 class MergeContext implements OverwriteContext {
-  MergeContext({this.objectIndex, this.deletedObjects});
+  MergeContext(
+      {/*required*/ this.objectIndex, /*required*/ this.deletedObjects});
   final Map<KdbxUuid, KdbxObject> objectIndex;
   final Map<KdbxUuid, KdbxDeletedObject> deletedObjects;
   final Map<KdbxUuid, KdbxObject> merged = {};
@@ -1070,7 +1071,7 @@ https://github.com/renggli/dart-xml/blob/main/example/xml_flatten.dart
 
   static Uint8List _gzipEncode(Uint8List bytes) {
     if (dartWebWorkaround) {
-      return GZipEncoder().encode(bytes) as Uint8List;
+      return (GZipEncoder().encode(bytes) ?? []) as Uint8List;
     }
     return GZipCodec().encode(bytes) as Uint8List;
   }

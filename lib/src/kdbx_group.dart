@@ -113,14 +113,16 @@ class KdbxGroup extends KdbxObject {
   StringNode get notes => StringNode(this, 'Notes');
 
 //  String get name => text('Name') ?? '';
-  BooleanNode get expanded => BooleanNode(this, 'IsExpanded');
+  NullableBooleanNode get expanded => NullableBooleanNode(this, 'IsExpanded');
 
   StringNode get defaultAutoTypeSequence =>
       StringNode(this, 'DefaultAutoTypeSequence');
 
-  BooleanNode get enableAutoType => BooleanNode(this, 'EnableAutoType');
+  NullableBooleanNode get enableAutoType =>
+      NullableBooleanNode(this, 'EnableAutoType');
 
-  BooleanNode get enableSearching => BooleanNode(this, 'EnableSearching');
+  NullableBooleanNode get enableSearching =>
+      NullableBooleanNode(this, 'EnableSearching');
 
   UuidNode get lastTopVisibleEntry => UuidNode(this, 'LastTopVisibleEntry');
 

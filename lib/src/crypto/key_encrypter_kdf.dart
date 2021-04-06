@@ -83,7 +83,11 @@ class KeyEncrypterKdf {
     }
     final kdfUuid = base64.encode(uuid);
     try {
-      return kdfUuids[kdfUuid];
+      final type = kdfUuids[kdfUuid];
+      if (type != null) {
+        return type;
+      }
+      throw KdbxCorruptedFileException('Invalid KDF UUID $kdfUuid');
     } catch (e) {
       throw KdbxCorruptedFileException(
           'Invalid KDF UUID ${uuid.encodeBase64()}');

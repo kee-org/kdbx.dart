@@ -99,15 +99,15 @@ class BrowserEntrySettings {
 
   factory BrowserEntrySettings.fromMap(Map<String, dynamic> map) {
     if (map == null) {
-      return null;
+      return BrowserEntrySettings();
     }
 
     return BrowserEntrySettings(
-      version: map['version'] as int,
+      version: map['version'] as int ?? 1,
       behaviour: getBehaviour(map),
       minimumMatchAccuracy: getMam(map),
-      priority: map['priority'] as int,
-      hide: map['hide'] as bool,
+      priority: map['priority'] as int ?? 0,
+      hide: map['hide'] as bool ?? false,
       realm: map['hTTPRealm'] as String,
       includeUrls: getIncludeUrls(map),
       excludeUrls: getExcludeUrls(map),
@@ -535,10 +535,9 @@ class KdbxEntry extends KdbxObject {
 
       if (tempJson != null) {
         _browserSettings = BrowserEntrySettings.fromJson(tempJson.getText());
+      } else {
+        _browserSettings = BrowserEntrySettings();
       }
-
-      // We now require all entries to have a browser settings JSON string, even if just the default.
-      _browserSettings ??= BrowserEntrySettings();
     }
     return _browserSettings;
   }

@@ -126,7 +126,8 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
 
   Base64Node get headerHash => Base64Node(this, 'HeaderHash');
 
-  BooleanNode get recycleBinEnabled => BooleanNode(this, 'RecycleBinEnabled');
+  NullableBooleanNode get recycleBinEnabled =>
+      NullableBooleanNode(this, 'RecycleBinEnabled');
 
   UuidNode get recycleBinUUID => UuidNode(this, 'RecycleBinUUID')
     ..setOnModifyListener(() => recycleBinChanged.setToNow());
@@ -159,10 +160,9 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
 
       if (tempJson != null) {
         _browserSettings = BrowserDbSettings.fromJson(tempJson);
+      } else {
+        _browserSettings = BrowserDbSettings();
       }
-
-      // We now require the DB to have a browser settings JSON string, even if just the default.
-      _browserSettings ??= BrowserDbSettings();
     }
     return _browserSettings;
   }
@@ -178,10 +178,9 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
 
       if (tempJson != null) {
         _keeVaultSettings = KeeVaultEmbeddedConfig.fromJson(tempJson);
+      } else {
+        _keeVaultSettings = KeeVaultEmbeddedConfig();
       }
-
-      // We now require the DB to have a Kee Vault settings JSON string, even if just the default.
-      _keeVaultSettings ??= KeeVaultEmbeddedConfig();
     }
     return _keeVaultSettings;
   }
@@ -212,9 +211,10 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
     ret.children.add(
       XmlElement(XmlName(KdbxXml.NODE_CUSTOM_ICONS))
         ..children.addAll(customIcons.values.map(
-          (e) => XmlUtils.createNode(KdbxXml.NODE_ICON, [
-            XmlUtils.createTextNode(KdbxXml.NODE_UUID, e.uuid.uuid),
-            XmlUtils.createTextNode(KdbxXml.NODE_DATA, base64.encode(e.data))
+          (customIcon) => XmlUtils.createNode(KdbxXml.NODE_ICON, [
+            XmlUtils.createTextNode(KdbxXml.NODE_UUID, customIcon.uuid.uuid),
+            XmlUtils.createTextNode(
+                KdbxXml.NODE_DATA, base64.encode(customIcon.data))
           ]),
         )),
     );
@@ -290,11 +290,11 @@ class KeeVaultEmbeddedConfig {
 
   factory KeeVaultEmbeddedConfig.fromMap(Map<String, dynamic> map) {
     if (map == null) {
-      return null;
+      return KeeVaultEmbeddedConfig();
     }
 
     return KeeVaultEmbeddedConfig(
-      version: map['version'] as int,
+      version: map['version'] as int ?? 1,
       randomId: map['randomId'] as String,
       addon: Map<String, dynamic>.from(map['addon'] as Map<String, dynamic>),
       vault: Map<String, dynamic>.from(map['vault'] as Map<String, dynamic>),
@@ -305,7 +305,7 @@ class KeeVaultEmbeddedConfig {
       KeeVaultEmbeddedConfig.fromMap(
           json.decode(source) as Map<String, dynamic>);
 
-  int version;
+  int /*!*/ version;
   String randomId;
   Map<String, dynamic> addon; // { "prefs": {}, "version": -1 };
   Map<String, dynamic> vault; // { prefs: {} },
@@ -387,11 +387,11 @@ class BrowserDbSettings {
 
   factory BrowserDbSettings.fromMap(Map<String, dynamic> map) {
     if (map == null) {
-      return null;
+      return BrowserDbSettings();
     }
 
     return BrowserDbSettings(
-        version: map['version'] as int,
+        version: map['version'] as int ?? 3,
         rootUUID: map['rootUUID'] as String,
         defaultMatchAccuracy: MatchAccuracy.values.singleWhereOrNull(
                 (val) => val == map['defaultMatchAccuracy']) ??
@@ -492,7 +492,7 @@ class BrowserDbSettings {
 }
 
 class KdbxCustomIcon {
-  KdbxCustomIcon({this.uuid, this.data});
+  KdbxCustomIcon({/*required*/ this.uuid, /*required*/ this.data});
 
   /// uuid of the icon, must be unique within each file.
   final KdbxUuid uuid;

@@ -31,7 +31,7 @@ class KdbxFile {
   }
 
   static void setProtectedValueForNode(
-      xml.XmlElement node, ProtectedValue value) {
+      xml.XmlElement node, ProtectedValue/*!*/ value) {
     protectedValues[node] = value;
   }
 

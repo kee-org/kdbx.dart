@@ -191,14 +191,14 @@ class UuidNode extends KdbxSubTextNode<KdbxUuid> {
   KdbxUuid decode(String value) => KdbxUuid(value);
 
   @override
-  String encode(KdbxUuid value) => value.uuid;
+  String encode(KdbxUuid /*!*/ value) => value.uuid;
 }
 
 class IconNode extends KdbxSubTextNode<KdbxIcon> {
   IconNode(KdbxNode node, String name) : super(node, name);
 
   @override
-  KdbxIcon decode(String value) => KdbxIcon.values[int.tryParse(value)];
+  KdbxIcon decode(String value) => KdbxIcon.values[int.tryParse(value) ?? 0];
 
   @override
   String encode(KdbxIcon value) => value.index.toString();
@@ -228,12 +228,12 @@ class ColorNode extends KdbxSubTextNode<KdbxColor> {
   String encode(KdbxColor value) => value.isNull ? '' : value._rgb;
 }
 
-class BooleanNode extends KdbxSubTextNode<bool> {
-  BooleanNode(KdbxNode node, String name) : super(node, name);
+class NullableBooleanNode extends KdbxSubTextNode<bool> {
+  NullableBooleanNode(KdbxNode node, String name) : super(node, name);
 
   @override
   bool decode(String value) {
-    switch (value?.toLowerCase()) {
+    switch (value.toLowerCase()) {
       case 'null':
         return null;
       case 'true':
@@ -245,7 +245,8 @@ class BooleanNode extends KdbxSubTextNode<bool> {
   }
 
   @override
-  String encode(bool value) => value ? 'true' : 'false';
+  String encode(bool value) =>
+      value != null ? (value ? 'true' : 'false') : 'null';
 }
 
 class DateTimeUtcNode extends KdbxSubTextNode<DateTime> {
@@ -265,9 +266,6 @@ class DateTimeUtcNode extends KdbxSubTextNode<DateTime> {
 
   @override
   DateTime decode(String value) {
-    if (value == null) {
-      return null;
-    }
     if (value.isEmpty) {
       _logger.warning('time contains empty string. $name');
       return null;

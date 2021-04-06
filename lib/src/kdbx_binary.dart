@@ -10,7 +10,10 @@ import 'package:quiver/core.dart';
 import 'package:xml/xml.dart';
 
 class KdbxBinary {
-  KdbxBinary({this.isInline, this.isProtected, this.value});
+  KdbxBinary(
+      {/*required*/ this.isInline,
+      /*required*/ this.isProtected,
+      /*required*/ this.value});
   final bool isInline;
   final bool isProtected;
   final Uint8List value;

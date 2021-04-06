@@ -42,7 +42,7 @@ final _compressionIdsById =
     _compressionIds.map((key, value) => MapEntry(value, key));
 
 extension on Compression {
-  int get id => _compressionIds[this];
+  int /*!*/ get id => _compressionIds[this];
 }
 
 /// how protected values are encrypted in the xml.
@@ -441,7 +441,9 @@ class KdbxHeader {
       final headerId = reader.readUint8();
       final bodySize =
           version >= KdbxVersion.V4 ? reader.readUint32() : reader.readUint16();
-      final bodyBytes = bodySize > 0 ? reader.readBytes(bodySize) : null;
+      final bodyBytes = bodySize > 0
+          ? reader.readBytes(bodySize)
+          : <Uint8List>[] as Uint8List;
 //      _logger.finer(
 //          'Read header ${fields[headerId]}: ${ByteUtils.toHexList(bodyBytes)}');
       if (headerId > 0) {
@@ -486,12 +488,12 @@ class KdbxHeader {
     } catch (e, stackTrace) {
       _logger.warning(
           'Unable to find cipher. '
-          '${fields[HeaderFields.CipherID]?.bytes?.encodeBase64()}',
+          '${fields[HeaderFields.CipherID]?.bytes.encodeBase64()}',
           e,
           stackTrace);
       throw KdbxCorruptedFileException(
         'Invalid cipher. '
-        '${fields[HeaderFields.CipherID]?.bytes?.encodeBase64()}',
+        '${fields[HeaderFields.CipherID]?.bytes.encodeBase64()}',
       );
     }
   }
@@ -499,6 +501,9 @@ class KdbxHeader {
   set cipher(Cipher cipher) {
     checkArgument(version >= KdbxVersion.V4 || cipher == Cipher.aes,
         message: 'Kdbx 3 only supports aes, tried to set it to $cipher');
+    if (cipher != Cipher.aes || cipher != Cipher.chaCha20) {
+      throw KdbxUnsupportedException('Unknown cipher: $cipher');
+    }
     _setHeaderField(
       HeaderFields.CipherID,
       CryptoConsts.CIPHER_IDS[cipher].toBytes(),
