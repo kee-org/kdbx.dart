@@ -7,7 +7,6 @@ import 'package:kdbx/src/internal/consts.dart';
 import 'package:kdbx/src/kdbx_binary.dart';
 import 'package:kdbx/src/kdbx_var_dictionary.dart';
 import 'package:logging/logging.dart';
-import 'package:meta/meta.dart';
 import 'package:quiver/check.dart';
 import 'package:quiver/core.dart';
 
@@ -642,8 +641,7 @@ class InnerHeader {
   InnerHeader({
     required this.fields,
     List<InnerHeaderField>? binaries,
-  })  : binaries = binaries ?? [],
-        assert(fields != null);
+  }) : binaries = binaries ?? [];
 
   factory InnerHeader.fromFields(Iterable<InnerHeaderField> fields) {
     final fieldMap = Map.fromEntries(fields

@@ -74,9 +74,7 @@ class KdbxReadWriteContext {
   KdbxReadWriteContext({
     required List<KdbxBinary> binaries,
     required this.header,
-  })   : assert(binaries != null),
-        assert(header != null),
-        _binaries = binaries,
+  })   : _binaries = binaries,
         _deletedObjects = [];
 
   static final kdbxContext = Expando<KdbxReadWriteContext>();
@@ -130,7 +128,6 @@ class KdbxReadWriteContext {
   /// finds the ID of the given binary.
   /// if it can't be found, [KdbxCorruptedFileException] is thrown.
   int findBinaryId(KdbxBinary binary) {
-    assert(binary != null);
     assert(!binary.isInline);
     final id = _binaries.indexOf(binary);
     if (id < 0) {

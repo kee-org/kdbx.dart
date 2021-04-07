@@ -102,12 +102,10 @@ class KeyEncrypterKdf {
       case KdfType.Argon2:
         _logger.fine('Must be using argon2');
         return await encryptArgon2(key, kdfParameters);
-        break;
       case KdfType.Aes:
         _logger.fine('Must be using aes');
         return await encryptAes(key, kdfParameters);
     }
-    throw UnsupportedError('unsupported KDF Type $kdfType.');
   }
 
   Future<Uint8List> encryptArgon2(

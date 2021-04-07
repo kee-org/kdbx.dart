@@ -1,14 +1,11 @@
 import 'dart:convert';
 import 'dart:typed_data';
-
 import 'package:collection/collection.dart';
 import 'package:logging/logging.dart';
-import 'package:meta/meta.dart';
 import 'package:quiver/iterables.dart';
 import 'package:uuid/uuid.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:xml/xml.dart';
-
 import 'package:kdbx/src/internal/extension_utils.dart';
 import 'package:kdbx/src/kdbx_binary.dart';
 import 'package:kdbx/src/kdbx_custom_data.dart';
@@ -340,6 +337,7 @@ class KeeVaultEmbeddedConfig {
   }
 
   @override
+  // ignore: avoid_renaming_method_parameters
   bool operator ==(Object o) {
     if (identical(this, o)) {
       return true;

@@ -205,7 +205,7 @@ class IconNode extends KdbxSubTextNode<KdbxIcon> {
 }
 
 class KdbxColor {
-  const KdbxColor._fromRgbCode(this._rgb) : assert(_rgb != null && _rgb != '');
+  const KdbxColor._fromRgbCode(this._rgb) : assert(_rgb != '');
   const KdbxColor._nullColor() : _rgb = '';
 
   factory KdbxColor.parse(String rgb) =>

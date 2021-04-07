@@ -317,7 +317,8 @@ void main() {
             '${KdbxPrintUtils().catGroupToString(file.body.rootGroup)}');
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(5));
-        expect(Set<KdbxNode>.from(merge.changes.map<KdbxNode?>((e) => e.object)),
+        expect(
+            Set<KdbxNode>.from(merge.changes.map<KdbxNode?>((e) => e.object)),
             hasLength(2));
       }),
     );
@@ -339,7 +340,8 @@ void main() {
             '${KdbxPrintUtils().catGroupToString(file.body.rootGroup)}');
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(6));
-        expect(Set<KdbxNode>.from(merge.changes.map<KdbxNode?>((e) => e.object)),
+        expect(
+            Set<KdbxNode>.from(merge.changes.map<KdbxNode?>((e) => e.object)),
             hasLength(1));
         expect(file.recycleBin!.entries.length, 1);
       }),
@@ -360,7 +362,8 @@ void main() {
             '${KdbxPrintUtils().catGroupToString(file2.body.rootGroup)}');
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(5));
-        expect(Set<KdbxNode>.from(merge.changes.map<KdbxNode?>((e) => e.object)),
+        expect(
+            Set<KdbxNode>.from(merge.changes.map<KdbxNode?>((e) => e.object)),
             hasLength(0));
         expect(file2.recycleBin!.entries.length, 1);
       }),
@@ -431,7 +434,8 @@ void main() {
             '${KdbxPrintUtils().catGroupToString(fileLocal.body.rootGroup)}');
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(6));
-        expect(Set<KdbxNode>.from(merge.changes.map<KdbxNode?>((e) => e.object)),
+        expect(
+            Set<KdbxNode>.from(merge.changes.map<KdbxNode?>((e) => e.object)),
             hasLength(2));
         expect(fileLocal.recycleBin!.entries.length, 1);
         expect(fileLocal.body.rootGroup.entries.length, 0);
@@ -446,14 +450,13 @@ void main() {
             1);
       }),
     );
-    test(
-      'Adds binary to remote entry',
-      () async => await withClock(fakeClock, () async {
-        final file = await createRealFile();
-
-        final fileMod = await TestUtil.saveAndRead(file);
-      }),
-    );
+    // test(
+    //   'Adds binary to remote entry',
+    //   () async => await withClock(fakeClock, () async {
+    //     final file = await createRealFile();
+    //     await TestUtil.saveAndRead(file);
+    //   }),
+    // );
   });
 
   group('Group merges', () {
@@ -739,7 +742,8 @@ when merging, can look at this value to decide whether history entries from the 
         final testEntry = fileLocal.body.rootGroup.entries.values.toList()[0];
         expect(set, hasLength(4));
         expect(testEntry.history.length, 1);
-        expect(testEntry.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test2');
+        expect(
+            testEntry.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test2');
         expect(testEntry.times.lastModificationTime.get()!.toUtc(),
             expectedEntryTime);
         expect(testEntry.history[0].times.lastModificationTime.get()!.toUtc(),
@@ -767,7 +771,8 @@ when merging, can look at this value to decide whether history entries from the 
         final testEntry = fileLocal.body.rootGroup.entries.values.toList()[0];
         expect(set, hasLength(4));
         expect(testEntry.history.length, 1);
-        expect(testEntry.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test2');
+        expect(
+            testEntry.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test2');
         expect(testEntry.times.lastModificationTime.get()!.toUtc(),
             expectedEntryTime);
         expect(testEntry.history[0].times.lastModificationTime.get()!.toUtc(),

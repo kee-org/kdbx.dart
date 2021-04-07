@@ -1,7 +1,6 @@
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:typed_data';
-
 import 'package:collection/collection.dart';
 import 'package:kdbx/src/crypto/protected_value.dart';
 import 'package:kdbx/src/internal/extension_utils.dart';
@@ -14,11 +13,9 @@ import 'package:kdbx/src/kdbx_header.dart';
 import 'package:kdbx/src/kdbx_object.dart';
 import 'package:kdbx/src/kdbx_xml.dart';
 import 'package:logging/logging.dart';
-import 'package:meta/meta.dart';
 import 'package:path/path.dart' as path;
 import 'package:quiver/check.dart';
 import 'package:xml/xml.dart';
-
 import '../kdbx.dart';
 import 'field.dart';
 
@@ -70,8 +67,7 @@ class KdbxKey {
   final String _canonicalKey;
 
   @override
-  bool operator ==(Object other) =>
-      other is KdbxKey && _canonicalKey == other._canonicalKey;
+  bool operator ==(Object other) => other is KdbxKey && _canonicalKey == other._canonicalKey;
 
   @override
   int get hashCode => _canonicalKey.hashCode;
@@ -97,8 +93,7 @@ class BrowserEntrySettings {
         excludeUrls = excludeUrls ?? [],
         fields = fields ?? [];
 
-  factory BrowserEntrySettings.fromMap(Map<String, dynamic>? map,
-      {required MatchAccuracy minimumMatchAccuracy}) {
+  factory BrowserEntrySettings.fromMap(Map<String, dynamic>? map, {required MatchAccuracy minimumMatchAccuracy}) {
     if (map == null) {
       return BrowserEntrySettings(minimumMatchAccuracy: minimumMatchAccuracy);
     }
@@ -112,16 +107,14 @@ class BrowserEntrySettings {
       realm: map['hTTPRealm'] as String?,
       includeUrls: getIncludeUrls(map),
       excludeUrls: getExcludeUrls(map),
-      fields: List<BrowserFieldModel>.from((map['formFieldList']
-                  as List<dynamic>?)
+      fields: List<BrowserFieldModel>.from((map['formFieldList'] as List<dynamic>?)
               ?.cast<Map<String, dynamic>>()
               .map<BrowserFieldModel>((x) => BrowserFieldModel.fromMap(x)) ??
           <BrowserFieldModel>[]),
     );
   }
 
-  factory BrowserEntrySettings.fromJson(String source,
-          {required MatchAccuracy minimumMatchAccuracy}) =>
+  factory BrowserEntrySettings.fromJson(String source, {required MatchAccuracy minimumMatchAccuracy}) =>
       BrowserEntrySettings.fromMap(json.decode(source) as Map<String, dynamic>?,
           minimumMatchAccuracy: minimumMatchAccuracy);
 
@@ -166,8 +159,7 @@ class BrowserEntrySettings {
       return BrowserAutoFillBehaviour.NeverAutoFillNeverAutoSubmit;
     } else if (map['alwaysAutoSubmit'] as bool? ?? false) {
       return BrowserAutoFillBehaviour.AlwaysAutoFillAlwaysAutoSubmit;
-    } else if ((map['alwaysAutoFill'] as bool? ?? false) &&
-        (map['neverAutoSubmit'] as bool? ?? false)) {
+    } else if ((map['alwaysAutoFill'] as bool? ?? false) && (map['neverAutoSubmit'] as bool? ?? false)) {
       return BrowserAutoFillBehaviour.AlwaysAutoFillNeverAutoSubmit;
     } else if (map['neverAutoSubmit'] as bool? ?? false) {
       return BrowserAutoFillBehaviour.NeverAutoSubmit;
@@ -233,12 +225,6 @@ class BrowserEntrySettings {
           'neverAutoSubmit': false,
         };
     }
-    return {
-      'alwaysAutoFill': false,
-      'alwaysAutoSubmit': false,
-      'neverAutoFill': false,
-      'neverAutoSubmit': false,
-    };
   }
 
   static Map<String, bool> parseMam(MatchAccuracy mam) {
@@ -261,26 +247,25 @@ class BrowserEntrySettings {
     }
   }
 
-  static Map<String, List<String>> parseUrls(
-      List<Pattern> includeUrls, List<Pattern> excludeUrls) {
+  static Map<String, List<String>> parseUrls(List<Pattern> includeUrls, List<Pattern> excludeUrls) {
     final altURLs = <String>[];
     final regExURLs = <String>[];
     final blockedURLs = <String>[];
     final regExBlockedURLs = <String>[];
-    includeUrls.forEach((p) {
+    for (var p in includeUrls) {
       if (p is RegExp) {
         regExURLs.add(p.pattern);
       } else if (p is String) {
         altURLs.add(p);
       }
-    });
-    excludeUrls.forEach((p) {
+    }
+    for (var p in excludeUrls) {
       if (p is RegExp) {
         regExBlockedURLs.add(p.pattern);
       } else if (p is String) {
         blockedURLs.add(p);
       }
-    });
+    }
     return <String, List<String>>{
       'altURLs': altURLs,
       'regExURLs': regExURLs,
@@ -307,8 +292,7 @@ class BrowserEntrySettings {
   static List<Pattern> getExcludeUrls(Map<String, dynamic> map) {
     final excludeUrls = <Pattern>[];
     final blockedURLs = (map['blockedURLs'] as List<dynamic>?)?.cast<String>();
-    final regExBlockedURLs =
-        (map['regExBlockedURLs'] as List<dynamic>?)?.cast<String>();
+    final regExBlockedURLs = (map['regExBlockedURLs'] as List<dynamic>?)?.cast<String>();
     if (blockedURLs != null && blockedURLs is List<String>) {
       blockedURLs.forEach(excludeUrls.add);
     }
@@ -385,8 +369,7 @@ enum BrowserAutoFillBehaviour {
 enum MatchAccuracy { Exact, Hostname, Domain }
 
 extension KdbxEntryInternal on KdbxEntry {
-  KdbxEntry cloneInto(KdbxGroup otherGroup, {bool toHistoryEntry = false}) =>
-      KdbxEntry.create(
+  KdbxEntry cloneInto(KdbxGroup otherGroup, {bool toHistoryEntry = false}) => KdbxEntry.create(
         otherGroup.file!,
         otherGroup,
         isHistoryEntry: toHistoryEntry,
@@ -415,8 +398,7 @@ extension KdbxEntryInternal on KdbxEntry {
     // we only support overwriting history, if it is empty.
     // Throws exception if history is not empty and we have asked to include it
     checkArgument(!includeHistory || history.isEmpty,
-        message:
-            'We can only overwrite with history, if local history is empty.');
+        message: 'We can only overwrite with history, if local history is empty.');
     assertSameUuid(other, 'overwrite');
     overwriteSubNodesFrom(
       overwriteContext,
@@ -426,23 +408,21 @@ extension KdbxEntryInternal on KdbxEntry {
     // overwrite all strings
     final stringsDiff = _diffMap(_strings, other._strings);
     if (stringsDiff.isNotEmpty) {
-      overwriteContext.trackChange(this,
-          node: 'strings', debug: 'changed: ${stringsDiff.join(',')}');
+      overwriteContext.trackChange(this, node: 'strings', debug: 'changed: ${stringsDiff.join(',')}');
     }
     _strings.clear();
     _strings.addAll(other._strings);
     // overwrite all binaries
     final newBinaries = other._binaries.map((key, value) => MapEntry(
           key,
-          ctx.findBinaryByValue(value) ??
-              (value..let((that) => ctx.addBinary(that))),
+          ctx.findBinaryByValue(value) ?? (value..let((that) => ctx.addBinary(that))),
         ));
     _binaries.clear();
     _binaries.addAll(newBinaries);
     times.overwriteFrom(other.times);
     if (includeHistory) {
       for (final historyEntry in other.history) {
-        history.add(historyEntry.cloneInto(parent!, toHistoryEntry: true));
+        history.add(historyEntry.cloneInto(parent, toHistoryEntry: true));
       }
     }
   }
@@ -472,27 +452,20 @@ class KdbxEntry extends KdbxObject {
         history = [],
         super.create(file.ctx, file, 'Entry', parent) {
     icon.set(KdbxIcon.Key);
-    _browserSettings = BrowserEntrySettings(
-        minimumMatchAccuracy:
-            file.body.meta.browserSettings.defaultMatchAccuracy);
+    _browserSettings = BrowserEntrySettings(minimumMatchAccuracy: file.body.meta.browserSettings.defaultMatchAccuracy);
   }
 
   @override
   KdbxGroup get parent => super.parent!;
 
-  KdbxEntry.read(KdbxReadWriteContext ctx, KdbxGroup? parent, XmlElement node,
-      {this.isHistoryEntry = false})
-      : customData = node
-                .singleElement('CustomData')
-                ?.let((e) => KdbxCustomData.read(e)) ??
-            KdbxCustomData.create(),
+  KdbxEntry.read(KdbxReadWriteContext ctx, KdbxGroup? parent, XmlElement node, {this.isHistoryEntry = false})
+      : customData = node.singleElement('CustomData')?.let((e) => KdbxCustomData.read(e)) ?? KdbxCustomData.create(),
         history = [],
         super.read(ctx, parent, node) {
     _strings.addEntries(node.findElements(KdbxXml.NODE_STRING).map((el) {
       final key = KdbxKey(el.findElements(KdbxXml.NODE_KEY).single.text);
       final valueNode = el.findElements(KdbxXml.NODE_VALUE).single;
-      if (valueNode.getAttribute(KdbxXml.ATTR_PROTECTED)?.toLowerCase() ==
-          'true') {
+      if (valueNode.getAttribute(KdbxXml.ATTR_PROTECTED)?.toLowerCase() == 'true') {
         return MapEntry(key, KdbxFile.protectedValueForNode(valueNode));
       } else {
         return MapEntry(key, PlainValue(valueNode.text));
@@ -506,8 +479,7 @@ class KdbxEntry extends KdbxObject {
         final refId = int.parse(ref);
         final binary = ctx.binaryById(refId);
         if (binary == null) {
-          throw KdbxCorruptedFileException(
-              'Unable to find binary with id $refId');
+          throw KdbxCorruptedFileException('Unable to find binary with id $refId');
         }
         return MapEntry(key, binary);
       }
@@ -518,8 +490,7 @@ class KdbxEntry extends KdbxObject {
             .findElements(KdbxXml.NODE_HISTORY)
             .singleOrNull
             ?.findElements('Entry')
-            .map((entry) =>
-                KdbxEntry.read(ctx, parent, entry, isHistoryEntry: true))
+            .map((entry) => KdbxEntry.read(ctx, parent, entry, isHistoryEntry: true))
             .toList() ??
         []);
   }
@@ -541,26 +512,21 @@ class KdbxEntry extends KdbxObject {
   BrowserEntrySettings? _browserSettings;
   BrowserEntrySettings get browserSettings {
     if (_browserSettings == null) {
-      final tempJson = stringEntries
-          .firstWhereOrNull((s) => s.key.key == 'KPRPC JSON')
-          ?.value;
+      final tempJson = stringEntries.firstWhereOrNull((s) => s.key.key == 'KPRPC JSON')?.value;
 
       if (tempJson != null) {
         _browserSettings = BrowserEntrySettings.fromJson(tempJson.getText(),
-            minimumMatchAccuracy:
-                file!.body.meta.browserSettings.defaultMatchAccuracy);
+            minimumMatchAccuracy: file!.body.meta.browserSettings.defaultMatchAccuracy);
       } else {
-        _browserSettings = BrowserEntrySettings(
-            minimumMatchAccuracy:
-                file!.body.meta.browserSettings.defaultMatchAccuracy);
+        _browserSettings =
+            BrowserEntrySettings(minimumMatchAccuracy: file!.body.meta.browserSettings.defaultMatchAccuracy);
       }
     }
     return _browserSettings!;
   }
 
   set browserSettings(BrowserEntrySettings settings) {
-    setString(
-        KdbxKey('KPRPC JSON'), ProtectedValue.fromString(settings.toJson()));
+    setString(KdbxKey('KPRPC JSON'), ProtectedValue.fromString(settings.toJson()));
   }
 
   final KdbxCustomData customData;
@@ -586,12 +552,8 @@ class KdbxEntry extends KdbxObject {
 
   void addAutofillUrl(String webDomain, String? scheme) {
     final newUrl = '${scheme ?? "http"}://$webDomain';
-    final currentUrl = stringEntries
-        .firstWhereOrNull((s) => s.key == KdbxKeyCommon.URL)
-        ?.value
-        ?.getText();
-    final alreadyPresent =
-        newUrl == currentUrl || browserSettings.includeUrls.contains(newUrl);
+    final currentUrl = stringEntries.firstWhereOrNull((s) => s.key == KdbxKeyCommon.URL)?.value?.getText();
+    final alreadyPresent = newUrl == currentUrl || browserSettings.includeUrls.contains(newUrl);
     if (!alreadyPresent) {
       if (currentUrl == null) {
         setString(KdbxKeyCommon.URL, PlainValue(newUrl));
@@ -634,17 +596,14 @@ class KdbxEntry extends KdbxObject {
     el.children.addAll(stringEntries.map((stringEntry) {
       final value = XmlElement(XmlName(KdbxXml.NODE_VALUE));
       if (stringEntry.value is ProtectedValue) {
-        value.attributes.add(
-            XmlAttribute(XmlName(KdbxXml.ATTR_PROTECTED), KdbxXml.VALUE_TRUE));
-        KdbxFile.setProtectedValueForNode(
-            value, stringEntry.value as ProtectedValue);
+        value.attributes.add(XmlAttribute(XmlName(KdbxXml.ATTR_PROTECTED), KdbxXml.VALUE_TRUE));
+        KdbxFile.setProtectedValueForNode(value, stringEntry.value as ProtectedValue);
       } else if (stringEntry.value is StringValue) {
         value.children.add(XmlText(stringEntry.value!.getText()));
       }
       return XmlElement(XmlName(KdbxXml.NODE_STRING))
         ..children.addAll([
-          XmlElement(XmlName(KdbxXml.NODE_KEY))
-            ..children.add(XmlText(stringEntry.key.key)),
+          XmlElement(XmlName(KdbxXml.NODE_KEY))..children.add(XmlText(stringEntry.key.key)),
           value,
         ]);
     }));
@@ -666,8 +625,7 @@ class KdbxEntry extends KdbxObject {
     }));
     if (!isHistoryEntry) {
       el.children.add(
-        XmlElement(XmlName(KdbxXml.NODE_HISTORY))
-          ..children.addAll(history.map((e) => e.toXml())),
+        XmlElement(XmlName(KdbxXml.NODE_HISTORY))..children.addAll(history.map((e) => e.toXml())),
       );
     }
     return el;
@@ -677,20 +635,17 @@ class KdbxEntry extends KdbxObject {
 
   final Map<KdbxKey, KdbxBinary> _binaries = {};
 
-  Iterable<MapEntry<KdbxKey, KdbxBinary>> get binaryEntries =>
-      _binaries.entries;
+  Iterable<MapEntry<KdbxKey, KdbxBinary>> get binaryEntries => _binaries.entries;
 
   KdbxBinary? getBinary(KdbxKey key) => _binaries[key];
 
 //  Map<KdbxKey, StringValue> get strings => UnmodifiableMapView(_strings);
 
-  Iterable<MapEntry<KdbxKey, StringValue?>> get stringEntries =>
-      _strings.entries;
+  Iterable<MapEntry<KdbxKey, StringValue?>> get stringEntries => _strings.entries;
 
   StringValue? getString(KdbxKey key) => _strings[key];
 
   void setString(KdbxKey key, StringValue? value) {
-    assert(key != null);
     if (_strings[key] == value) {
       _logger.finest('Value did not change for $key');
       return;
@@ -721,9 +676,7 @@ class KdbxEntry extends KdbxObject {
   }
 
   String get label =>
-      _plainValue(KdbxKeyCommon.TITLE)?.takeUnlessBlank() ??
-      _plainValue(KdbxKeyCommon.URL)?.takeUnlessBlank() ??
-      '';
+      _plainValue(KdbxKeyCommon.TITLE)?.takeUnlessBlank() ?? _plainValue(KdbxKeyCommon.URL)?.takeUnlessBlank() ?? '';
 
   set label(String label) => setString(KdbxKeyCommon.TITLE, PlainValue(label));
 
@@ -733,9 +686,6 @@ class KdbxEntry extends KdbxObject {
     required String name,
     required Uint8List bytes,
   }) {
-    assert(isProtected != null);
-    assert(bytes != null);
-    assert(name != null);
     // make sure we don't have a path, just the file name.
     final key = _uniqueBinaryName(path.basename(name));
     final binary = KdbxBinary(
@@ -754,8 +704,7 @@ class KdbxEntry extends KdbxObject {
     modify(() {
       final binary = _binaries.remove(binaryKey);
       if (binary == null) {
-        throw StateError(
-            'Trying to remove binary key $binaryKey does not exist.');
+        throw StateError('Trying to remove binary key $binaryKey does not exist.');
       }
       // binary will not be removed (yet) from file, because it will
       // be referenced in history.
@@ -764,8 +713,7 @@ class KdbxEntry extends KdbxObject {
 
   KdbxKey _uniqueBinaryName(String fileName) {
     final lastIndex = fileName.lastIndexOf('.');
-    final baseName =
-        lastIndex > -1 ? fileName.substring(0, lastIndex) : fileName;
+    final baseName = lastIndex > -1 ? fileName.substring(0, lastIndex) : fileName;
     final ext = lastIndex > -1 ? fileName.substring(lastIndex + 1) : 'ext';
     for (var i = 0; i < 1000; i++) {
       final k = i == 0 ? KdbxKey(fileName) : KdbxKey('$baseName$i.$ext');
@@ -776,10 +724,8 @@ class KdbxEntry extends KdbxObject {
     throw StateError('Unable to find unique name for $fileName');
   }
 
-  static KdbxEntry? _findHistoryEntry(
-          List<KdbxEntry> history, DateTime? lastModificationTime) =>
-      history.firstWhereOrNull((history) =>
-          history.times.lastModificationTime.get() == lastModificationTime);
+  static KdbxEntry? _findHistoryEntry(List<KdbxEntry> history, DateTime? lastModificationTime) =>
+      history.firstWhereOrNull((history) => history.times.lastModificationTime.get() == lastModificationTime);
 
   @override
   void merge(MergeContext mergeContext, KdbxEntry other) {
@@ -787,18 +733,16 @@ class KdbxEntry extends KdbxObject {
     if (other.wasModifiedAfter(this)) {
       _logger.finest('$this has incoming changes.');
       // other object is newer, create new history entry and copy fields.
-      modify(() => _overwriteFrom(mergeContext, other),
-          preserveModificationTime: true);
+      modify(() => _overwriteFrom(mergeContext, other), preserveModificationTime: true);
     } else if (wasModifiedAfter(other)) {
       _logger.finest('$this has outgoing changes.');
       // we are newer. check if the old revision lives on in our history.
       final theirLastModificationTime = other.times.lastModificationTime.get();
-      final historyEntry =
-          _findHistoryEntry(history, theirLastModificationTime);
+      final historyEntry = _findHistoryEntry(history, theirLastModificationTime);
       if (historyEntry == null) {
         // it seems like we don't know about that state, so we have to add
         // it to history.
-        history.add(other.cloneInto(parent!, toHistoryEntry: true));
+        history.add(other.cloneInto(parent, toHistoryEntry: true));
       }
     } else {
       _logger.finest('$this has no changes.');
@@ -809,8 +753,7 @@ class KdbxEntry extends KdbxObject {
     mergeContext.markAsMerged(this);
   }
 
-  void mergeEntryHistory(MergeContext mergeContext, List<KdbxEntry> history,
-      List<KdbxEntry> otherHistory) {
+  void mergeEntryHistory(MergeContext mergeContext, List<KdbxEntry> history, List<KdbxEntry> otherHistory) {
     final dict = SplayTreeMap<DateTime?, KdbxEntry>();
 
     for (var historyEntry in history) {
@@ -820,7 +763,7 @@ class KdbxEntry extends KdbxObject {
     for (var historyEntry in otherHistory) {
       final key = historyEntry.times.lastModificationTime.get();
       if (!dict.containsKey(key)) {
-        dict[key] = historyEntry.cloneInto(parent!, toHistoryEntry: true);
+        dict[key] = historyEntry.cloneInto(parent, toHistoryEntry: true);
         mergeContext.trackChange(
           this,
           debug: 'merge in history '
@@ -833,8 +776,7 @@ class KdbxEntry extends KdbxObject {
     history.addAll(dict.values);
   }
 
-  String debugLabel() =>
-      label.takeUnlessBlank() ?? _plainValue(KdbxKeyCommon.USER_NAME)!;
+  String debugLabel() => label.takeUnlessBlank() ?? _plainValue(KdbxKeyCommon.USER_NAME) ?? '';
 
   @override
   String toString() {

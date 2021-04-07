@@ -76,7 +76,7 @@ abstract class KdbxFileCommand extends Command<void> {
 
   @override
   FutureOr<void> run() async {
-    final inputFile = argResults!['input'] as String;
+    final inputFile = argResults!['input'] as String?;
     if (inputFile == null) {
       usageException('Required argument: --input');
     }
