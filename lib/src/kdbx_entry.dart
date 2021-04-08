@@ -527,6 +527,7 @@ class KdbxEntry extends KdbxObject {
 
   set browserSettings(BrowserEntrySettings settings) {
     setString(KdbxKey('KPRPC JSON'), ProtectedValue.fromString(settings.toJson()));
+    _browserSettings = null;
   }
 
   final KdbxCustomData customData;
