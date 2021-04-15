@@ -21,55 +21,9 @@ void main() {
     now = DateTime.fromMillisecondsSinceEpoch(0);
   });
 
-  Future<KdbxFile> createSimpleFile() async {
-    final file = TestUtil.createEmptyFile();
-    _createEntry(file, file.body.rootGroup, 'test1', 'test1');
-    final subGroup =
-        file.createGroup(parent: file.body.rootGroup, name: 'Sub Group');
-    _createEntry(file, subGroup, 'test2', 'test2');
-    proceedSeconds(10);
-    return await TestUtil.saveAndRead(file);
-  }
-
-  Future<KdbxFile> createRealFile() async {
-    final file = TestUtil.createEmptyFile();
-    _createEntry(file, file.body.rootGroup, 'test1', 'test1');
-    final subGroup =
-        file.createGroup(parent: file.body.rootGroup, name: 'Sub Group');
-    _createEntry(file, subGroup, 'test2', 'test2');
-    file.createGroup(parent: file.body.rootGroup, name: 'Sub Group 2');
-    proceedSeconds(10);
-    return await TestUtil.saveAndRead(file);
-  }
-
-  Future<KdbxFile> createGroupMergeFile() async {
-    final file = TestUtil.createEmptyFile();
-    _createEntry(file, file.body.rootGroup, 'test1', 'test1');
-    final subGroup =
-        file.createGroup(parent: file.body.rootGroup, name: 'Sub Group');
-    _createEntry(file, subGroup, 'test2', 'test2');
-    file.createGroup(parent: file.body.rootGroup, name: 'Sub Group 2');
-    file.createGroup(parent: file.body.rootGroup, name: 'target group');
-    proceedSeconds(10);
-    return await TestUtil.saveAndRead(file);
-  }
-
-  Future<KdbxFile> createFileWithHistory() async {
-    final file = TestUtil.createEmptyFile();
-    final entry = _createEntry(file, file.body.rootGroup, 'test1', 'test1');
-    await TestUtil.saveAndRead(file);
-    proceedSeconds(1);
-    entry.setString(KdbxKeyCommon.USER_NAME, PlainValue('test2'));
-    await TestUtil.saveAndRead(file);
-    proceedSeconds(1);
-    entry.setString(KdbxKeyCommon.USER_NAME, PlainValue('test3'));
-    proceedSeconds(10);
-    return await TestUtil.saveAndRead(file);
-  }
-
   group('Simple merges', () {
     test('Noop merge', () async {
-      final file = await createSimpleFile();
+      final file = await TestUtil.createSimpleFile(proceedSeconds);
       final file2 = await TestUtil.saveAndRead(file);
       final merge = file.merge(file2);
       final set = Set<KdbxUuid>.from(merge.merged.keys);
@@ -78,7 +32,7 @@ void main() {
     });
     test('Username change', () async {
       await withClock(fakeClock, () async {
-        final file = await createSimpleFile();
+        final file = await TestUtil.createSimpleFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
 
@@ -101,7 +55,7 @@ void main() {
     test(
       'Change Group Name',
       () async => await withClock(fakeClock, () async {
-        final file = await createSimpleFile();
+        final file = await TestUtil.createSimpleFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
 
@@ -118,7 +72,7 @@ void main() {
   group('Real merges', () {
     test('Local file custom data wins', () async {
       await withClock(fakeClock, () async {
-        final file = await createRealFile();
+        final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
         final fileReverse = await TestUtil.saveAndRead(file);
@@ -146,8 +100,8 @@ void main() {
     });
 
     test('Generates merge error when merging another db', () async {
-      final file = await createRealFile();
-      final file2 = await createRealFile();
+      final file = await TestUtil.createRealFile(proceedSeconds);
+      final file2 = await TestUtil.createRealFile(proceedSeconds);
       expect(
         () => file.merge(file2),
         throwsA(
@@ -165,7 +119,7 @@ void main() {
     test(
       'Move entry to existing group in local file',
       () async => await withClock(fakeClock, () async {
-        final file = await createRealFile();
+        final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
         file.move(file.body.rootGroup.entries.first,
@@ -183,7 +137,7 @@ void main() {
     test(
       'Move entry to existing group in remote file',
       () async => await withClock(fakeClock, () async {
-        final file = await createRealFile();
+        final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
         fileMod.move(fileMod.body.rootGroup.entries.first,
@@ -201,7 +155,7 @@ void main() {
     test(
       'Move entry to existing group in both files',
       () async => await withClock(fakeClock, () async {
-        final file = await createRealFile();
+        final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
         file.move(file.body.rootGroup.entries.first,
@@ -221,7 +175,7 @@ void main() {
     test(
       'Move entry to different existing groups in both files',
       () async => await withClock(fakeClock, () async {
-        final file = await createRealFile();
+        final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
         file.move(file.body.rootGroup.entries.first,
@@ -242,7 +196,7 @@ void main() {
     test(
       'Move entry to new group in local file',
       () async => await withClock(fakeClock, () async {
-        final file = await createRealFile();
+        final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
         final newGroup =
@@ -261,7 +215,7 @@ void main() {
     test(
       'Move entry to new group in remote file',
       () async => await withClock(fakeClock, () async {
-        final file = await createRealFile();
+        final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
         final newGroup = fileMod.createGroup(
@@ -280,7 +234,7 @@ void main() {
     test(
       'Move entry to new group in both files',
       () async => await withClock(fakeClock, () async {
-        final file = await createRealFile();
+        final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
         final newGroup =
@@ -304,7 +258,7 @@ void main() {
     test(
       'Move Entry to recycle bin',
       () async => await withClock(fakeClock, () async {
-        final file = await createSimpleFile();
+        final file = await TestUtil.createSimpleFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
 
@@ -325,7 +279,7 @@ void main() {
     test(
       'Move Entry to recycle bin in both files',
       () async => await withClock(fakeClock, () async {
-        final file = await createRealFile();
+        final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
 
@@ -349,7 +303,7 @@ void main() {
     test(
       'Move Entry to recycle bin in original file',
       () async => await withClock(fakeClock, () async {
-        final file = await createRealFile();
+        final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
 
@@ -371,7 +325,7 @@ void main() {
     test(
         'Move different entries to new recycle bins in both files results in both in recycle bin',
         () async => await withClock(fakeClock, () async {
-              final file = await createRealFile();
+              final file = await TestUtil.createRealFile(proceedSeconds);
 
               final fileMod = await TestUtil.saveAndRead(file);
 
@@ -415,7 +369,7 @@ void main() {
     test(
       'Move different entries to new recycle bins in both files leaves one in the recycle bin and the other in a new group called Trash',
       () async => await withClock(fakeClock, () async {
-        final file = await createRealFile();
+        final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
 
@@ -453,7 +407,7 @@ void main() {
     // test(
     //   'Adds binary to remote entry',
     //   () async => await withClock(fakeClock, () async {
-    //     final file = await createRealFile();
+    //     final file = await TestUtil.createRealFile(proceedSeconds);
     //     await TestUtil.saveAndRead(file);
     //   }),
     // );
@@ -463,7 +417,7 @@ void main() {
     test(
       'Adds new remote group',
       () async => await withClock(fakeClock, () async {
-        final file = await createRealFile();
+        final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
         fileMod.createGroup(
@@ -479,7 +433,7 @@ void main() {
     test(
       'Adds new local group',
       () async => await withClock(fakeClock, () async {
-        final file = await createRealFile();
+        final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
         fileMod.createGroup(
@@ -495,7 +449,7 @@ void main() {
     test(
       'Deletes remote group',
       () async => await withClock(fakeClock, () async {
-        final file = await createRealFile();
+        final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
         fileMod.deleteGroup(fileMod.body.rootGroup.groups.values.toList()[1]);
@@ -511,7 +465,7 @@ void main() {
     test(
       'Deletes local group',
       () async => await withClock(fakeClock, () async {
-        final file = await createRealFile();
+        final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
         fileMod.deleteGroup(fileMod.body.rootGroup.groups.values.toList()[1]);
@@ -527,7 +481,7 @@ void main() {
     test(
       'group moved to locally moved group',
       () async => await withClock(fakeClock, () async {
-        final fileLocal = await createGroupMergeFile();
+        final fileLocal = await TestUtil.createGroupMergeFile(proceedSeconds);
 
         final fileRemote = await TestUtil.saveAndRead(fileLocal);
         fileRemote.move(fileRemote.body.rootGroup.groups.values.toList()[1],
@@ -545,7 +499,7 @@ void main() {
     test(
       'group moved to remotely moved group',
       () async => await withClock(fakeClock, () async {
-        final fileRemote = await createGroupMergeFile();
+        final fileRemote = await TestUtil.createGroupMergeFile(proceedSeconds);
 
         final fileLocal = await TestUtil.saveAndRead(fileRemote);
         fileLocal.move(fileLocal.body.rootGroup.groups.values.toList()[1],
@@ -587,7 +541,7 @@ when merging, can look at this value to decide whether history entries from the 
     // test(
     //   'deletes all history state remotely',
     //   () async => await withClock(fakeClock, () async {
-    //     final fileRemote = await createFileWithHistory();
+    //     final fileRemote = await TestUtil.createFileWithHistory(proceedSeconds);
     //     final fileLocal = await TestUtil.saveAndRead(fileRemote);
     //     proceedSeconds(10);
     //     fileRemote.body.rootGroup.entries.values.toList()[0].history.clear();
@@ -608,7 +562,7 @@ when merging, can look at this value to decide whether history entries from the 
     // test(
     //   'deletes all history state locally',
     //   () async => await withClock(fakeClock, () async {
-    //     final fileRemote = await createFileWithHistory();
+    //     final fileRemote = await TestUtil.createFileWithHistory(proceedSeconds);
     //     final fileLocal = await TestUtil.saveAndRead(fileRemote);
     //     proceedSeconds(10);
     //     fileLocal.body.rootGroup.entries.values.toList()[0].history.clear();
@@ -629,7 +583,7 @@ when merging, can look at this value to decide whether history entries from the 
     // test(
     //   'deletes single history state remotely',
     //   () async => await withClock(fakeClock, () async {
-    //     final fileRemote = await createFileWithHistory();
+    //     final fileRemote = await TestUtil.createFileWithHistory(proceedSeconds);
     //     final fileLocal = await TestUtil.saveAndRead(fileRemote);
     //     proceedSeconds(10);
     //     fileRemote.body.rootGroup.entries.values
@@ -653,7 +607,7 @@ when merging, can look at this value to decide whether history entries from the 
     // test(
     //   'deletes single history state locally',
     //   () async => await withClock(fakeClock, () async {
-    //     final fileRemote = await createFileWithHistory();
+    //     final fileRemote = await TestUtil.createFileWithHistory(proceedSeconds);
     //     final fileLocal = await TestUtil.saveAndRead(fileRemote);
     //     proceedSeconds(10);
     //     fileLocal.body.rootGroup.entries.values.toList()[0].history.removeAt(0);
@@ -675,7 +629,7 @@ when merging, can look at this value to decide whether history entries from the 
     test(
       'deletes all history state locally and remotely',
       () async => await withClock(fakeClock, () async {
-        final fileRemote = await createFileWithHistory();
+        final fileRemote = await TestUtil.createFileWithHistory(proceedSeconds);
         final fileLocal = await TestUtil.saveAndRead(fileRemote);
         proceedSeconds(10);
         fileLocal.body.rootGroup.entries.values.toList()[0].history.clear();
@@ -699,7 +653,7 @@ when merging, can look at this value to decide whether history entries from the 
     test(
       'deletes single history state locally and remotely',
       () async => await withClock(fakeClock, () async {
-        final fileRemote = await createFileWithHistory();
+        final fileRemote = await TestUtil.createFileWithHistory(proceedSeconds);
         final fileLocal = await TestUtil.saveAndRead(fileRemote);
         proceedSeconds(10);
         fileLocal.body.rootGroup.entries.values.toList()[0].history.removeAt(0);
@@ -726,7 +680,7 @@ when merging, can look at this value to decide whether history entries from the 
       'remote history state from past is pushed to local history stack',
       () async => await withClock(fakeClock, () async {
         final expectedHistoryTime = fakeClock.now().toUtc();
-        final fileSource = await createSimpleFile();
+        final fileSource = await TestUtil.createSimpleFile(proceedSeconds);
         final fileLocal = await TestUtil.saveAndRead(fileSource);
         proceedSeconds(10);
         final expectedEntryTime = fakeClock.now().toUtc();
@@ -755,7 +709,7 @@ when merging, can look at this value to decide whether history entries from the 
       'new local history state is retained',
       () async => await withClock(fakeClock, () async {
         final expectedHistoryTime = fakeClock.now().toUtc();
-        final fileSource = await createSimpleFile();
+        final fileSource = await TestUtil.createSimpleFile(proceedSeconds);
         final fileRemote = await TestUtil.saveAndRead(fileSource);
 
         proceedSeconds(10);
@@ -783,7 +737,7 @@ when merging, can look at this value to decide whether history entries from the 
     test(
       'when modified locally then remotely, remote becomes latest; local state is included in combined history states from both',
       () async => await withClock(fakeClock, () async {
-        final fileSource = await createFileWithHistory();
+        final fileSource = await TestUtil.createFileWithHistory(proceedSeconds);
         final fileSource2 = await TestUtil.saveAndRead(fileSource);
 
         fileSource.body.rootGroup.entries.values
@@ -837,7 +791,7 @@ when merging, can look at this value to decide whether history entries from the 
     test(
       'when modified remotely then locally, local remains latest; remote state is included in combined history states from both',
       () async => await withClock(fakeClock, () async {
-        final fileSource = await createFileWithHistory();
+        final fileSource = await TestUtil.createFileWithHistory(proceedSeconds);
         final fileSource2 = await TestUtil.saveAndRead(fileSource);
 
         fileSource2.body.rootGroup.entries.values
@@ -892,7 +846,7 @@ when merging, can look at this value to decide whether history entries from the 
     test(
       'when modified alternatly locally then remotely, remote becomes latest; local state is appended to combined history states from both',
       () async => await withClock(fakeClock, () async {
-        final fileSource = await createFileWithHistory();
+        final fileSource = await TestUtil.createFileWithHistory(proceedSeconds);
         final fileSource2 = await TestUtil.saveAndRead(fileSource);
 
         fileSource.body.rootGroup.entries.values
@@ -945,7 +899,7 @@ when merging, can look at this value to decide whether history entries from the 
   });
 
   // group('Kdbx4.1 merges', () {
-  //   Future<KdbxFile> createRealFile() async {
+  //   Future<KdbxFile> TestUtil.createRealFile(proceedSeconds) async {
   //     final file = TestUtil.createEmptyFile();
   //     _createEntry(file, file.body.rootGroup, 'test1', 'test1');
   //     final subGroup =
@@ -957,19 +911,10 @@ when merging, can look at this value to decide whether history entries from the 
 
   //   test('Newest file plugin data wins', () async {
   //     await withClock(fakeClock, () async {
-  //       final file = await createRealFile();
+  //       final file = await TestUtil.createRealFile(proceedSeconds);
 
   //       final fileMod = await TestUtil.saveAndRead(file);
   //     });
   //   });
   // });
-}
-
-KdbxEntry _createEntry(
-    KdbxFile file, KdbxGroup group, String username, String password) {
-  final entry = KdbxEntry.create(file, group);
-  group.addEntry(entry);
-  entry.setString(KdbxKeyCommon.USER_NAME, PlainValue(username));
-  entry.setString(KdbxKeyCommon.PASSWORD, ProtectedValue.fromString(password));
-  return entry;
 }

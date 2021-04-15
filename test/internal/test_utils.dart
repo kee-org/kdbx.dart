@@ -65,6 +65,62 @@ class TestUtil {
 
     return file;
   }
+
+  static Future<KdbxFile> createFileWithHistory(Function proceedSeconds) async {
+    final file = TestUtil.createEmptyFile();
+    final entry = _createEntry(file, file.body.rootGroup, 'test1', 'test1');
+    await TestUtil.saveAndRead(file);
+    proceedSeconds(1);
+    entry.setString(KdbxKeyCommon.USER_NAME, PlainValue('test2'));
+    await TestUtil.saveAndRead(file);
+    proceedSeconds(1);
+    entry.setString(KdbxKeyCommon.USER_NAME, PlainValue('test3'));
+    proceedSeconds(10);
+    return await TestUtil.saveAndRead(file);
+  }
+
+  static Future<KdbxFile> createSimpleFile(Function proceedSeconds) async {
+    final file = TestUtil.createEmptyFile();
+    _createEntry(file, file.body.rootGroup, 'test1', 'test1');
+    final subGroup =
+        file.createGroup(parent: file.body.rootGroup, name: 'Sub Group');
+    _createEntry(file, subGroup, 'test2', 'test2');
+    proceedSeconds(10);
+    return await TestUtil.saveAndRead(file);
+  }
+
+  static Future<KdbxFile> createRealFile(Function proceedSeconds) async {
+    final file = TestUtil.createEmptyFile();
+    _createEntry(file, file.body.rootGroup, 'test1', 'test1');
+    final subGroup =
+        file.createGroup(parent: file.body.rootGroup, name: 'Sub Group');
+    _createEntry(file, subGroup, 'test2', 'test2');
+    file.createGroup(parent: file.body.rootGroup, name: 'Sub Group 2');
+    proceedSeconds(10);
+    return await TestUtil.saveAndRead(file);
+  }
+
+  static Future<KdbxFile> createGroupMergeFile(Function proceedSeconds) async {
+    final file = TestUtil.createEmptyFile();
+    _createEntry(file, file.body.rootGroup, 'test1', 'test1');
+    final subGroup =
+        file.createGroup(parent: file.body.rootGroup, name: 'Sub Group');
+    _createEntry(file, subGroup, 'test2', 'test2');
+    file.createGroup(parent: file.body.rootGroup, name: 'Sub Group 2');
+    file.createGroup(parent: file.body.rootGroup, name: 'target group');
+    proceedSeconds(10);
+    return await TestUtil.saveAndRead(file);
+  }
+
+  static KdbxEntry _createEntry(
+      KdbxFile file, KdbxGroup group, String username, String password) {
+    final entry = KdbxEntry.create(file, group);
+    group.addEntry(entry);
+    entry.setString(KdbxKeyCommon.USER_NAME, PlainValue(username));
+    entry.setString(
+        KdbxKeyCommon.PASSWORD, ProtectedValue.fromString(password));
+    return entry;
+  }
 }
 
 extension UnmodifiableMapViewKdbxObject<K extends String, V extends KdbxObject>

@@ -1,5 +1,7 @@
 import 'dart:async';
+//import 'dart:html';
 
+import 'package:clock/clock.dart';
 import 'package:kdbx/kdbx.dart';
 import 'package:quiver/core.dart';
 import 'package:test/test.dart';
@@ -47,6 +49,16 @@ class StreamExpect<T> {
 
 void main() {
   TestUtil.setupLogging();
+  var now = DateTime.fromMillisecondsSinceEpoch(0);
+
+  final fakeClock = Clock(() => now);
+  void proceedSeconds(int seconds) {
+    now = now.add(Duration(seconds: seconds));
+  }
+
+  setUp(() {
+    now = DateTime.fromMillisecondsSinceEpoch(0);
+  });
   group('test history for values', () {
     test('check history creation', () async {
       final file = await TestUtil.readKdbxFile('test/keepass2test.kdbx');
@@ -97,5 +109,92 @@ void main() {
       await pumpEventQueue();
       dirtyExpect.expectFinished();
     });
+
+    test(
+      'reverts 1st history item',
+      () async => await withClock(fakeClock, () async {
+        final file = await TestUtil.createFileWithHistory(proceedSeconds);
+        proceedSeconds(10);
+        final expectedFinalModifiedDate = now.toUtc();
+        final entry = file.body.rootGroup.entries.values.toList()[0];
+        entry.revertToHistoryEntry(entry.history.length - 1);
+        final history = entry.history;
+        proceedSeconds(10);
+        expect(history.length, 3);
+        final history_1 = history.last;
+        final history_2 = history[history.length - 2];
+        final history_3 = history[history.length - 3];
+        expect(
+            history_1.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test3');
+        expect(
+            history_2.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test2');
+        expect(
+            history_3.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test1');
+        expect(entry.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test2');
+        expect(entry.times.lastModificationTime.get()!.toUtc(),
+            expectedFinalModifiedDate);
+        expect(entry.times.creationTime.get()!.toUtc(),
+            DateTime.fromMillisecondsSinceEpoch(0).toUtc());
+        expect(history_1.times.lastModificationTime.get()!.toUtc(),
+            isNot(expectedFinalModifiedDate));
+      }),
+    );
+
+    test(
+      'reverts 2nd history item',
+      () async => await withClock(fakeClock, () async {
+        final file = await TestUtil.createFileWithHistory(proceedSeconds);
+        proceedSeconds(10);
+        final expectedFinalModifiedDate = now.toUtc();
+        final entry = file.body.rootGroup.entries.values.toList()[0];
+        entry.revertToHistoryEntry(entry.history.length - 2);
+        final history = entry.history;
+        proceedSeconds(10);
+        expect(history.length, 3);
+        final history_1 = history.last;
+        final history_2 = history[history.length - 2];
+        final history_3 = history[history.length - 3];
+        expect(
+            history_1.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test3');
+        expect(
+            history_2.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test2');
+        expect(
+            history_3.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test1');
+        expect(entry.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test1');
+        expect(entry.times.lastModificationTime.get()!.toUtc(),
+            expectedFinalModifiedDate);
+        expect(entry.times.creationTime.get()!.toUtc(),
+            DateTime.fromMillisecondsSinceEpoch(0).toUtc());
+        expect(history_1.times.lastModificationTime.get()!.toUtc(),
+            isNot(expectedFinalModifiedDate));
+      }),
+    );
+    test(
+      'revert then edit does not duplicate current state',
+      () async => await withClock(fakeClock, () async {
+        final file = await TestUtil.createFileWithHistory(proceedSeconds);
+        proceedSeconds(10);
+        final expectedFinalModifiedDate = now.toUtc();
+        final entry = file.body.rootGroup.entries.values.toList()[0];
+        entry.revertToHistoryEntry(entry.history.length - 1);
+        entry.setString(KdbxKeyCommon.USER_NAME, PlainValue('test4'));
+        final history = entry.history;
+        proceedSeconds(10);
+        expect(history.length, 3);
+        final history_1 = history.last;
+        final history_2 = history[history.length - 2];
+        expect(
+            history_1.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test3');
+        expect(
+            history_2.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test2');
+        expect(entry.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test4');
+        expect(entry.times.lastModificationTime.get()!.toUtc(),
+            expectedFinalModifiedDate);
+        expect(entry.times.creationTime.get()!.toUtc(),
+            DateTime.fromMillisecondsSinceEpoch(0).toUtc());
+        expect(history_1.times.lastModificationTime.get()!.toUtc(),
+            isNot(expectedFinalModifiedDate));
+      }),
+    );
   }, tags: ['kdbx3']);
 }
