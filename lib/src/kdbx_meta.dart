@@ -264,9 +264,9 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
 
     if (otherIsNewer) {
       historyMaxItems.set(other.historyMaxItems.get());
-      historyMaxItems.set(other.historyMaxSize.get());
-      historyMaxItems.set(other.maintenanceHistoryDays.get());
-      //TODO: keyChangeRec and keyChangeForce and color
+      historyMaxSize.set(other.historyMaxSize.get());
+      maintenanceHistoryDays.set(other.maintenanceHistoryDays.get());
+      //TODO: keyChangeRec and keyChangeForce and database color
     }
 
     // Remove the cached versions of these so they have to be regenerated from the latest JSON when next requested
