@@ -183,6 +183,31 @@ void main() {
     test('Add new attachment kdbx4', () async {
       await _testAddNewAttachment('test/keepass2kdbx4binaries.kdbx');
     });
+    test('remove unused attachment kdbx4', () async {
+      final saved = await (() async {
+        final file =
+            await TestUtil.readKdbxFile('test/keepass2kdbx4binaries.kdbx');
+        final entry = file.body.rootGroup.entries.first;
+        expectBinary(file.body.rootGroup.entries.first, 'example2.txt',
+            IsUtf8String('content2 example\n\n'));
+        expectBinary(file.body.rootGroup.entries.last, 'keepasslogo.jpeg',
+            hasLength(7092));
+        expect(file.ctx.binariesIterable, hasLength(2));
+        entry.removeBinary(KdbxKey('example2.txt'));
+        // the binary remains in the file, since it is referenced in the history
+        expect(file.ctx.binariesIterable, hasLength(2));
+        // but now we remove that reference...
+        entry.history.clear();
+        expect(file.dirtyObjects, [entry]);
+        return await file.save();
+      })();
+      final file = await TestUtil.readKdbxFileBytes(saved);
+      final entry = file.body.rootGroup.entries.first;
+      expect(entry.binaryEntries, hasLength(0));
+      expectBinary(file.body.rootGroup.entries.last, 'keepasslogo.jpeg',
+          hasLength(7092));
+      expect(file.ctx.binariesIterable, hasLength(1));
+    });
   }, tags: ['kdbx4']);
 }
 

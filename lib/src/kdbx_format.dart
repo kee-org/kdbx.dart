@@ -72,9 +72,8 @@ class KeyFileComposite implements Credentials {
 /// Context used during reading and writing.
 class KdbxReadWriteContext {
   KdbxReadWriteContext({
-    required List<KdbxBinary> binaries,
     required this.header,
-  })   : _binaries = binaries,
+  })   : _binaries = [],
         _deletedObjects = [];
 
   static final kdbxContext = Expando<KdbxReadWriteContext>();
@@ -92,7 +91,6 @@ class KdbxReadWriteContext {
     kdbxContext[node.document!] = ctx;
   }
 
-  // TODO make [_binaries] and [_deletedObjects] late init :-)
   @protected
   final List<KdbxBinary> _binaries;
   final List<KdbxDeletedObject> _deletedObjects;
@@ -143,6 +141,18 @@ class KdbxReadWriteContext {
     if (!_binaries.remove(binary)) {
       throw KdbxCorruptedFileException(
           'Tried to remove binary which is not in this file.');
+    }
+  }
+
+  void removeUnusedBinaries(Set<int> usedIndexes) {
+    final reversedUnusedIndexes = _binaries
+        .whereIndexed((index, element) => !usedIndexes.contains(index))
+        .mapIndexed((index, element) => index)
+        .toList()
+        .reversed;
+    // ignore: prefer_foreach
+    for (var index in reversedUnusedIndexes) {
+      _binaries.removeAt(index);
     }
   }
 }
@@ -282,7 +292,7 @@ class KdbxBody extends KdbxNode {
     if (cipher == Cipher.aes) {
       _logger.fine('We need AES');
       final result = kdbxFile.kdbxFormat
-          ._encryptContentV4Aes(header, cipherKey, compressedBytes);
+          ._encryptContentV4(header, cipherKey, compressedBytes);
 //      _logger.fine('Result: ${ByteUtils.toHexList(result)}');
       return result;
     } else if (cipher == Cipher.chaCha20) {
@@ -360,11 +370,12 @@ class KdbxBody extends KdbxNode {
         ? meta.historyMaxItems.get()
         : double.maxFinite as int;
     final usedCustomIcons = HashSet<KdbxUuid>();
-    final usedBinaries = HashSet<KdbxKey>();
+    final usedBinaries = <int>{};
 
     void _trackEntryForCleanup(KdbxEntry e) {
       e.binaryEntries.toList().forEach((b) {
-        usedBinaries.add(b.key);
+        final id = ctx.findBinaryId(b.value);
+        usedBinaries.add(id);
       });
       if (e.customIcon != null) {
         usedCustomIcons.add(e.customIcon!.uuid);
@@ -393,7 +404,8 @@ class KdbxBody extends KdbxNode {
         meta.customIcons.remove(key);
       }
     });
-    //TODO: Work out how to remove binaries from the header when they are no longer referenced by any entry
+
+    ctx.removeUnusedBinaries(usedBinaries);
   }
 
   xml.XmlDocument generateXml(ProtectedSaltGenerator saltGenerator) {
@@ -469,9 +481,7 @@ class MergeChange {
 }
 
 class MergeContext implements OverwriteContext {
-  MergeContext(
-      {/*required*/ required this.objectIndex,
-      /*required*/ required this.deletedObjects});
+  MergeContext({required this.objectIndex, required this.deletedObjects});
   final Map<KdbxUuid, KdbxObject> objectIndex;
   final Map<KdbxUuid, KdbxDeletedObject> deletedObjects;
   final Map<KdbxUuid, KdbxObject> merged = {};
@@ -528,7 +538,7 @@ class KdbxFormat {
     KdbxHeader? header,
   }) {
     header ??= argon2 == null ? KdbxHeader.createV3() : KdbxHeader.createV4();
-    final ctx = KdbxReadWriteContext(binaries: [], header: header);
+    final ctx = KdbxReadWriteContext(header: header);
     final meta = KdbxMeta.create(
       databaseName: name,
       ctx: ctx,
@@ -620,6 +630,10 @@ https://github.com/renggli/dart-xml/blob/main/example/xml_flatten.dart
 
     final output = BytesBuilder();
     final writer = WriterHelper(output);
+
+    // Regular maintenance such as removing old history entries and unused binaries/icons
+    body.cleanup();
+
     header.generateSalts();
     header.write(writer);
     final headerHash =
@@ -658,7 +672,7 @@ https://github.com/renggli/dart-xml/blob/main/example/xml_flatten.dart
     final blocks = HashedBlockReader.readBlocks(ReaderHelper(content));
 
     _logger.finer('compression: ${header.compression}');
-    final ctx = KdbxReadWriteContext(binaries: [], header: header);
+    final ctx = KdbxReadWriteContext(header: header);
     if (header.compression == Compression.gzip) {
       final xml = KdbxFormat._gzipDecode(blocks);
       final string = utf8.decode(xml);
@@ -733,7 +747,7 @@ https://github.com/renggli/dart-xml/blob/main/example/xml_flatten.dart
 
   Future<KdbxFile> _loadV4PostDecryptionKdbxFile(
       KdbxHeader header, Credentials credentials, XmlDocument document) async {
-    final context = KdbxReadWriteContext(binaries: [], header: header);
+    final context = KdbxReadWriteContext(header: header);
     final body = _processParsedXml(context, header, document);
     return KdbxFile(context, this, credentials, header, body);
   }
@@ -775,7 +789,7 @@ https://github.com/renggli/dart-xml/blob/main/example/xml_flatten.dart
 //      header.innerFields.addAll(headerFields);
       header.innerHeader.updateFrom(innerHeader);
       final xml = utf8.decode(contentReader.readRemaining());
-      final context = KdbxReadWriteContext(binaries: [], header: header);
+      final context = KdbxReadWriteContext(header: header);
       return KdbxFile(
           context, this, credentials, header, _loadXml(context, header, xml));
     }
@@ -1030,15 +1044,10 @@ https://github.com/renggli/dart-xml/blob/main/example/xml_flatten.dart
     return decrypted;
   }
 
-  /// TODO combine this with [_decryptContentV4] (or [_encryptDataAes]?)
-  Uint8List _encryptContentV4Aes(
+  Uint8List _encryptContentV4(
       KdbxHeader header, Uint8List cipherKey, Uint8List bytes) {
     final encryptionIv = header.fields[HeaderFields.EncryptionIV]!.bytes;
-    final encryptCypher = CBCBlockCipher(AESFastEngine());
-    encryptCypher.init(
-        true, ParametersWithIV(KeyParameter(cipherKey), encryptionIv));
-    final paddedBytes = AesHelper.pad(bytes, encryptCypher.blockSize);
-    return AesHelper.processBlocks(encryptCypher, paddedBytes);
+    return KdbxFormat._encryptDataAes(cipherKey, bytes, encryptionIv);
   }
 
   static Future<Uint8List> _generateMasterKeyV3(

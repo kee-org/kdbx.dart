@@ -21,8 +21,7 @@ import 'package:xml/xml.dart';
 final _logger = Logger('kdbx.kdbx_object');
 
 class ChangeEvent<T> {
-  ChangeEvent(
-      {/*required*/ required this.object, /*required*/ required this.isDirty});
+  ChangeEvent({required this.object, required this.isDirty});
 
   final T object;
   final bool isDirty;

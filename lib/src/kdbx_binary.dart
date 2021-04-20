@@ -9,9 +9,7 @@ import 'package:xml/xml.dart';
 
 class KdbxBinary {
   KdbxBinary(
-      {/*required*/ required this.isInline,
-      /*required*/ required this.isProtected,
-      /*required*/ required this.value});
+      {required this.isInline, required this.isProtected, required this.value});
   final bool isInline;
   final bool isProtected;
   final Uint8List value;

@@ -490,8 +490,7 @@ class BrowserDbSettings {
 }
 
 class KdbxCustomIcon {
-  KdbxCustomIcon(
-      {/*required*/ required this.uuid, /*required*/ required this.data});
+  KdbxCustomIcon({required this.uuid, required this.data});
 
   /// uuid of the icon, must be unique within each file.
   final KdbxUuid uuid;
