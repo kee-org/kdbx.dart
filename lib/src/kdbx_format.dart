@@ -46,6 +46,8 @@ abstract class Credentials {
 
   factory Credentials.fromHash(Uint8List hash) => HashCredentials(hash);
 
+  void changePassword(ProtectedValue password);
+
   Uint8List getHash();
 }
 
@@ -66,6 +68,11 @@ class KeyFileComposite implements Credentials {
 //    input.add(buffer);
 //    input.close();
 //    return output.events.single.bytes as Uint8List;
+  }
+
+  @override
+  void changePassword(ProtectedValue password) {
+    this.password = PasswordCredentials(password);
   }
 }
 
@@ -211,10 +218,16 @@ class PasswordCredentials implements CredentialsPart {
 class HashCredentials implements Credentials {
   HashCredentials(this.hash);
 
-  final Uint8List hash;
+  Uint8List hash;
 
   @override
   Uint8List getHash() => hash;
+
+  @override
+  void changePassword(ProtectedValue password) {
+    final buffer = password.hash;
+    hash = crypto.sha256.convert(buffer).bytes as Uint8List;
+  }
 }
 
 class KdbxBody extends KdbxNode {

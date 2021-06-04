@@ -898,6 +898,47 @@ when merging, can look at this value to decide whether history entries from the 
     );
   });
 
+  group('Credential merges', () {
+    test(
+      'Overwrites older credentials',
+      () async => await withClock(fakeClock, () async {
+        final file1 = await TestUtil.createSimpleFile(proceedSeconds);
+
+        final fileMod = await TestUtil.saveAndRead(file1);
+        fileMod.changePassword("newPass");
+
+        final file2 = await TestUtil.saveAndRead(fileMod);
+        expect(file1.credentials.getHash(),
+            Credentials(ProtectedValue("asdf")).getHash());
+        final merge = file1.merge(file2);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(4));
+        expect(file1.credentials.getHash(),
+            Credentials(ProtectedValue("newPass")).getHash());
+        expect(file1.body.meta.masterKeyChanged.get(),
+            DateTime.fromMillisecondsSinceEpoch(10000, isUtc: true));
+      }),
+    );
+    test(
+      'Retains newer credentials',
+      () async => await withClock(fakeClock, () async {
+        final file1 = await TestUtil.createSimpleFile(proceedSeconds);
+
+        final fileMod = await TestUtil.saveAndRead(file1);
+        fileMod.changePassword("newPass");
+
+        final file2 = await TestUtil.saveAndRead(fileMod);
+        final merge = file2.merge(file1);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(4));
+        expect(file1.credentials.getHash(),
+            Credentials(ProtectedValue("asdf")).getHash());
+        expect(file1.body.meta.masterKeyChanged.get(),
+            DateTime.fromMillisecondsSinceEpoch(0, isUtc: true));
+      }),
+    );
+  });
+
   // group('Kdbx4.1 merges', () {
   //   Future<KdbxFile> TestUtil.createRealFile(proceedSeconds) async {
   //     final file = TestUtil.createEmptyFile();

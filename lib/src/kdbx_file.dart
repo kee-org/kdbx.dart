@@ -18,7 +18,7 @@ final _logger = Logger('kdbx_file');
 
 class KdbxFile {
   KdbxFile(
-      this.ctx, this.kdbxFormat, this.credentials, this.header, this.body) {
+      this.ctx, this.kdbxFormat, this._credentials, this.header, this.body) {
     for (final obj in _allObjects) {
       obj.file = this;
     }
@@ -37,7 +37,8 @@ class KdbxFile {
 
   final KdbxFormat kdbxFormat;
   final KdbxReadWriteContext ctx;
-  final Credentials credentials;
+  Credentials _credentials;
+  Credentials get credentials => _credentials;
   final KdbxHeader header;
   final KdbxBody body;
   final Set<KdbxObject> dirtyObjects = {};
@@ -72,6 +73,11 @@ class KdbxFile {
   void dirtyObject(KdbxObject kdbxObject) {
     dirtyObjects.add(kdbxObject);
     _dirtyObjectsChanged.add(UnmodifiableSetView(Set.of(dirtyObjects)));
+  }
+
+  void changePassword(String password) {
+    _credentials = Credentials(ProtectedValue(password));
+    body.meta.masterKeyChanged.setToNow();
   }
 
   void dispose() {
@@ -134,6 +140,11 @@ class KdbxFile {
     if (other.body.rootGroup.uuid != body.rootGroup.uuid) {
       throw KdbxUnsupportedException(
           'Root groups of source and dest file do not match.');
+    }
+
+    if (other.body.meta.masterKeyChanged.isAfter(body.meta.masterKeyChanged)) {
+      _credentials = other.credentials;
+      _logger.finest('Changing MasterKey.');
     }
     return body.merge(other.body);
   }

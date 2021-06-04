@@ -48,7 +48,7 @@ class TestUtil {
 
   static Future<KdbxFile> saveAndRead(KdbxFile file) async {
     return await readKdbxFileBytes(await file.save(),
-        credentials: file.credentials);
+        credentials: Credentials.fromHash(file.credentials.getHash()));
   }
 
   static Future<void> saveTestOutput(String name, KdbxFile file) async {
@@ -59,11 +59,12 @@ class TestUtil {
   }
 
   static KdbxFile createEmptyFile() {
-    final file = kdbxFormat().create(
-        Credentials.composite(ProtectedValue.fromString('asdf'), null),
-        'example');
+    return createEmptyFileWithCredentials(
+        Credentials.composite(ProtectedValue.fromString('asdf'), null));
+  }
 
-    return file;
+  static KdbxFile createEmptyFileWithCredentials(Credentials credentials) {
+    return kdbxFormat().create(credentials, 'example');
   }
 
   static Future<KdbxFile> createFileWithHistory(Function proceedSeconds) async {
@@ -81,6 +82,17 @@ class TestUtil {
 
   static Future<KdbxFile> createSimpleFile(Function proceedSeconds) async {
     final file = TestUtil.createEmptyFile();
+    _createEntry(file, file.body.rootGroup, 'test1', 'test1');
+    final subGroup =
+        file.createGroup(parent: file.body.rootGroup, name: 'Sub Group');
+    _createEntry(file, subGroup, 'test2', 'test2');
+    proceedSeconds(10);
+    return await TestUtil.saveAndRead(file);
+  }
+
+  static Future<KdbxFile> createSimpleFileWithCredentials(
+      Function proceedSeconds, Credentials credentials) async {
+    final file = TestUtil.createEmptyFileWithCredentials(credentials);
     _createEntry(file, file.body.rootGroup, 'test1', 'test1');
     final subGroup =
         file.createGroup(parent: file.body.rootGroup, name: 'Sub Group');
