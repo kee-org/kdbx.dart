@@ -7,7 +7,7 @@ class KdbxDeletedObject extends KdbxNode implements KdbxNodeContext {
   KdbxDeletedObject.create(this.ctx, KdbxUuid uuid, {DateTime? deletionTime})
       : super.create(NODE_NAME) {
     _uuid.set(uuid);
-    this.deletionTime.set(deletionTime ?? DateTime.now());
+    this.deletionTime.set(deletionTime ?? DateTime.now().toUtc());
   }
 
   KdbxDeletedObject.read(XmlElement node, this.ctx) : super.read(node);

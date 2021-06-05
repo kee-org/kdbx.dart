@@ -378,7 +378,7 @@ class KdbxBody extends KdbxNode {
   }
 
   void cleanup() {
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final historyMaxItems = (meta.historyMaxItems.get() ?? 0) > 0
         ? meta.historyMaxItems.get()
         : double.maxFinite as int;
