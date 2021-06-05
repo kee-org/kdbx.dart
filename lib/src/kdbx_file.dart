@@ -80,6 +80,20 @@ class KdbxFile {
     body.meta.masterKeyChanged.setToNow();
   }
 
+  void overwriteCredentials(Credentials credentials, DateTime timestamp) {
+    _credentials = credentials;
+    body.meta.masterKeyChanged.set(timestamp);
+
+    // We don't change masterKeyChanged because this is only used when either:
+    // 1. we are uploading after a merge from a more recent remote file, which will have a newer datestamp anyway
+    // 2. we are upoloading when no more recent version exists...
+  }
+
+  void changeCredentials(Credentials credentials) {
+    _credentials = credentials;
+    body.meta.masterKeyChanged.setToNow();
+  }
+
   void dispose() {
     _dirtyObjectsChanged.close();
   }
