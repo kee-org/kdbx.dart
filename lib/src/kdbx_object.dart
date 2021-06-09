@@ -259,6 +259,8 @@ class KdbxUuid {
   /// base64 representation of uuid.
   final String uuid;
 
+  String get uuidUrlSafe => base64UrlEncode(toBytes());
+
   Uint8List toBytes() => base64.decode(uuid);
 
   @override
