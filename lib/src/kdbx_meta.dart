@@ -358,17 +358,6 @@ class KeeVaultEmbeddedConfig {
         addon.hashCode ^
         vault.hashCode;
   }
-
-//TODO: Move to keevault repo and implement
-  //     settingsToSync: ['theme', 'locale', 'expandGroups', 'clipboardSeconds', 'autoSave',
-  // 'rememberKeyFiles', 'idleMinutes', 'colorfulIcons', 'lockOnCopy', 'helpTipCopyShown',
-  // 'templateHelpShown', 'hideEmptyFields', 'generatorPresets'],
-
-  // this.settingsToSync.forEach(setting => {
-  //     this.listenTo(AppSettingsModel.instance, 'change:' + setting, (obj) => {
-  //         this.updateSetting('vault', setting, obj.changed[setting]);
-  //     });
-  // });
 }
 
 class BrowserDbSettings {
@@ -376,7 +365,7 @@ class BrowserDbSettings {
     this.version = 3,
     this.rootUUID,
     this.defaultMatchAccuracy = MatchAccuracy.Domain,
-    this.defaultPlaceholderHandling = 'Default',
+    this.defaultPlaceholderHandling = 'Disabled',
     this.displayPriorityField = false,
     this.displayGlobalPlaceholderOption = false,
     Map<String, String>? matchedURLAccuracyOverrides,
