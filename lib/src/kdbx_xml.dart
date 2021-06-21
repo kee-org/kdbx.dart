@@ -165,6 +165,9 @@ class StringListNode extends KdbxSubTextNode<List<String>> {
 
   @override
   List<String> decode(String value) {
+    if (value.isEmpty) {
+      return [];
+    }
     return value.split(RegExp(r'[,;:]'));
   }
 

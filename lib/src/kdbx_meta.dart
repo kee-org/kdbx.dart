@@ -166,6 +166,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
 
   set browserSettings(BrowserDbSettings settings) {
     customData['KeePassRPC.Config'] = settings.toJson();
+    settingsChanged.setToNow();
   }
 
   KeeVaultEmbeddedConfig? _keeVaultSettings;
@@ -184,6 +185,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
 
   set keeVaultSettings(KeeVaultEmbeddedConfig settings) {
     customData['KeeVault.Config'] = settings.toJson();
+    settingsChanged.setToNow();
   }
 
   @override
@@ -273,7 +275,9 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
     _browserSettings = null;
     _keeVaultSettings = null;
 
-    settingsChanged.set(other.settingsChanged.get());
+    if (otherIsNewer) {
+      settingsChanged.set(other.settingsChanged.get());
+    }
   }
 }
 

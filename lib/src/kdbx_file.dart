@@ -98,6 +98,23 @@ class KdbxFile {
     _dirtyObjectsChanged.close();
   }
 
+  List<String>? _tags;
+
+  List<String> get tags {
+    _tags ??= body.rootGroup
+        .getAllEntries()
+        .values
+        .map((e) => e.tags.get() ?? [])
+        .flatten()
+        .toSet()
+        .toList();
+    return _tags!;
+  }
+
+  void clearTagsCache() {
+    _tags = null;
+  }
+
   CachedValue<KdbxGroup>? _recycleBin;
 
   /// Returns the recycle bin, if it exists, null otherwise.
