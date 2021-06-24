@@ -31,8 +31,10 @@ class BrowserFieldModel {
       displayName: map['displayName'] as String?,
       name: map['name'] as String?,
       type: map['type'] as String?,
-      fieldId: map['id'] as String?,
-      page: map['page'] as int?,
+      // Should have been persisted as id for KPRPC.plgx compatability but
+      // PWA sometimes or always persists as fieldId by mistake.
+      fieldId: map['id'] as String? ?? map['fieldId'] as String?,
+      page: map['page'] as int? ?? -1,
       placeholderHandling: map['placeholderHandling'] as String?,
       value: map['value'] as String?,
     );
@@ -44,7 +46,7 @@ class BrowserFieldModel {
   String? name;
   String? type;
   String? fieldId;
-  int? page;
+  int page;
   String? placeholderHandling;
   String? value;
 
@@ -124,7 +126,6 @@ class BrowserFieldModel {
 //                 String fieldId = '';
 //                 int page = -1;
 //                 String placeholderHandling: 'Default'
-            
 
 /*
 
