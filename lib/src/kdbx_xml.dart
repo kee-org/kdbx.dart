@@ -207,20 +207,24 @@ class IconNode extends KdbxSubTextNode<KdbxIcon> {
   String encode(KdbxIcon value) => value.index.toString();
 }
 
+// _rgb is a 6 digit hex string
 class KdbxColor {
   const KdbxColor._fromRgbCode(this._rgb) : assert(_rgb != '');
   const KdbxColor._nullColor() : _rgb = '';
 
-  factory KdbxColor.parse(String rgb) =>
-      rgb.isEmpty ? nullColor : KdbxColor._fromRgbCode(rgb);
+  factory KdbxColor.parse(String rgb) => rgb.isEmpty
+      ? nullColor
+      : KdbxColor._fromRgbCode(rgb.replaceFirst('#', ''));
 
   static const nullColor = KdbxColor._nullColor();
 
   final String _rgb;
 
+  String get rgb => _rgb;
   bool get isNull => this == nullColor;
 }
 
+// Tolerates 6 digit hex strings but outputs more-compatible 7 char strings with leading #
 class ColorNode extends KdbxSubTextNode<KdbxColor> {
   ColorNode(KdbxNode node, String name) : super(node, name);
 
@@ -228,7 +232,7 @@ class ColorNode extends KdbxSubTextNode<KdbxColor> {
   KdbxColor decode(String value) => KdbxColor.parse(value);
 
   @override
-  String encode(KdbxColor value) => value.isNull ? '' : value._rgb;
+  String encode(KdbxColor value) => value.isNull ? '' : '#${value._rgb}';
 }
 
 class NullableBooleanNode extends KdbxSubTextNode<bool?> {
