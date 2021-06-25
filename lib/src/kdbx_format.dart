@@ -80,7 +80,7 @@ class KeyFileComposite implements Credentials {
 class KdbxReadWriteContext {
   KdbxReadWriteContext({
     required this.header,
-  })   : _binaries = [],
+  })  : _binaries = [],
         _deletedObjects = [];
 
   static final kdbxContext = Expando<KdbxReadWriteContext>();
@@ -161,6 +161,10 @@ class KdbxReadWriteContext {
     for (var index in reversedUnusedIndexes) {
       _binaries.removeAt(index);
     }
+  }
+
+  void recordObjectDeletion(KdbxObject kdbxObject) {
+    _deletedObjects.add(KdbxDeletedObject.create(this, kdbxObject.uuid));
   }
 }
 
@@ -332,7 +336,8 @@ class KdbxBody extends KdbxNode {
 
     for (final obj in other.ctx._deletedObjects) {
       if (!deleted.containsKey(obj.uuid)) {
-        final del = KdbxDeletedObject.create(ctx, obj.uuid);
+        final del = KdbxDeletedObject.create(ctx, obj.uuid,
+            deletionTime: obj.deletionTime.get());
         ctx._deletedObjects.add(del);
         incomingDeleted[del.uuid] = del;
         deleted[del.uuid] = del;
@@ -358,7 +363,13 @@ class KdbxBody extends KdbxNode {
     // remove deleted objects
     for (final incomingDelete in incomingDeleted.values) {
       final object = mergeContext.objectIndex[incomingDelete.uuid];
-      mergeContext.trackChange(object, debug: 'was deleted.');
+      if (object == null) {
+        _logger.info(
+            '${incomingDelete.uuid} was not found in current object index so could not be deleted. Probably this is because the object was created and deleted before this KDBX file ever saw it.');
+      } else {
+        object.file!.delete(object, alreadyTracked: true);
+        mergeContext.trackChange(object, debug: 'deleted');
+      }
     }
 
     cleanup();
@@ -509,7 +520,7 @@ class MergeContext implements OverwriteContext {
   }
 
   @override
-  void trackChange(KdbxNode? object, {String? node, String? debug}) {
+  void trackChange(KdbxNode object, {String? node, String? debug}) {
     changes.add(MergeChange(
       object: object,
       node: node,

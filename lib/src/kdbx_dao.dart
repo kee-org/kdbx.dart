@@ -23,12 +23,32 @@ extension KdbxDao on KdbxFile {
     throw StateError('Unable to find group with uuid $uuid');
   }
 
-  void deleteGroup(KdbxGroup group) {
-    move(group, getRecycleBinOrCreate());
+  void deleteGroup(KdbxGroup group, [bool permenant = false]) {
+    if (permenant) {
+      delete(group);
+    } else {
+      move(group, getRecycleBinOrCreate());
+    }
   }
 
-  void deleteEntry(KdbxEntry entry) {
-    move(entry, getRecycleBinOrCreate());
+  void deleteEntry(KdbxEntry entry, [bool permenant = false]) {
+    if (permenant) {
+      delete(entry);
+    } else {
+      move(entry, getRecycleBinOrCreate());
+    }
+  }
+
+  void delete(KdbxObject kdbxObject, {bool alreadyTracked = false}) {
+    if (kdbxObject is KdbxGroup) {
+      kdbxObject.parent!.internalRemoveGroup(kdbxObject);
+    } else if (kdbxObject is KdbxEntry) {
+      kdbxObject.parent.internalRemoveEntry(kdbxObject);
+    }
+    kdbxObject.detachFromParent();
+    if (!alreadyTracked) {
+      ctx.recordObjectDeletion(kdbxObject);
+    }
   }
 
   void move(KdbxObject kdbxObject, KdbxGroup toGroup) {

@@ -238,6 +238,10 @@ abstract class KdbxObject extends KdbxNode {
     modify(() => _parent = parent);
   }
 
+  void detachFromParent() {
+    modify(() => _parent = null);
+  }
+
   void merge(MergeContext mergeContext, covariant KdbxObject other);
 }
 

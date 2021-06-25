@@ -323,49 +323,42 @@ void main() {
       }),
     );
     test(
-        'Move different entries to new recycle bins in both files results in both in recycle bin',
-        () async => await withClock(fakeClock, () async {
-              final file = await TestUtil.createRealFile(proceedSeconds);
+      'Move different entries to new recycle bins in both files results in both in recycle bin',
+      () async => await withClock(fakeClock, () async {
+        final file = await TestUtil.createRealFile(proceedSeconds);
 
-              final fileMod = await TestUtil.saveAndRead(file);
+        final fileMod = await TestUtil.saveAndRead(file);
 
-              expect(file.recycleBin, isNull);
-              file.deleteEntry(file.body.rootGroup.entries.first);
-              expect(file.recycleBin, isNotNull);
+        expect(file.recycleBin, isNull);
+        file.deleteEntry(file.body.rootGroup.entries.first);
+        expect(file.recycleBin, isNotNull);
 
-              expect(fileMod.recycleBin, isNull);
-              fileMod.deleteEntry(
-                  fileMod.body.rootGroup.groups.first.entries.first);
-              expect(fileMod.recycleBin, isNotNull);
-              final fileLocal = await TestUtil.saveAndRead(file);
-              final fileRemote = await TestUtil.saveAndRead(fileMod);
+        expect(fileMod.recycleBin, isNull);
+        fileMod.deleteEntry(fileMod.body.rootGroup.groups.first.entries.first);
+        expect(fileMod.recycleBin, isNotNull);
+        final fileLocal = await TestUtil.saveAndRead(file);
+        final fileRemote = await TestUtil.saveAndRead(fileMod);
 
-              final merge = fileLocal.merge(fileRemote);
-              _logger.info('Merged file:\n'
-                  '${KdbxPrintUtils().catGroupToString(fileLocal.body.rootGroup)}');
-              final set = Set<KdbxUuid>.from(merge.merged.keys);
-              expect(set, hasLength(6));
-              expect(
-                  Set<KdbxNode>.from(
-                      merge.changes.map<KdbxNode?>((e) => e.object)),
-                  hasLength(2));
-              expect(fileLocal.recycleBin!.entries.length, 2);
-              expect(fileLocal.body.rootGroup.entries.length, 0);
-              expect(
-                  fileLocal.body.rootGroup.groups.values
-                      .toList()[0]
-                      .entries
-                      .length,
-                  0);
-              expect(
-                  fileLocal.body.rootGroup.groups.values
-                      .toList()[1]
-                      .entries
-                      .length,
-                  0);
-            }),
-        skip:
-            "Merge algorihm can't cope with this so we define the behaviour in the test below instead. Possibly can't ever be improved but it's something to aim for one day. Current behaviour at least ensures no data loss is possible.");
+        final merge = fileLocal.merge(fileRemote);
+        _logger.info('Merged file:\n'
+            '${KdbxPrintUtils().catGroupToString(fileLocal.body.rootGroup)}');
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(6));
+        expect(
+            Set<KdbxNode>.from(merge.changes.map<KdbxNode?>((e) => e.object)),
+            hasLength(2));
+        expect(fileLocal.recycleBin!.entries.length, 2);
+        expect(fileLocal.body.rootGroup.entries.length, 0);
+        expect(
+            fileLocal.body.rootGroup.groups.values.toList()[0].entries.length,
+            0);
+        expect(
+            fileLocal.body.rootGroup.groups.values.toList()[1].entries.length,
+            0);
+      }),
+      skip:
+          "Merge algorihm can't cope with this so we define the behaviour in the test below instead. Possibly can't ever be improved but it's something to aim for one day. Current behaviour at least ensures no data loss is possible.",
+    );
     test(
       'Move different entries to new recycle bins in both files leaves one in the recycle bin and the other in a new group called Trash',
       () async => await withClock(fakeClock, () async {
@@ -402,6 +395,83 @@ void main() {
         expect(
             fileLocal.body.rootGroup.groups.values.toList()[3].entries.length,
             1);
+      }),
+    );
+
+    test(
+      'Delete entry remotely also removes locally',
+      () async => await withClock(fakeClock, () async {
+        final file = await TestUtil.createSimpleFile(proceedSeconds);
+
+        final fileMod = await TestUtil.saveAndRead(file);
+        final removedUuid = fileMod.body.rootGroup.entries.first.uuid.uuid;
+
+        expect(fileMod.recycleBin, isNull);
+        fileMod.deleteEntry(fileMod.body.rootGroup.entries.first, true);
+        expect(fileMod.recycleBin, isNull);
+        final file2 = await TestUtil.saveAndRead(fileMod);
+        final merge = file.merge(file2);
+        _logger.info('Merged file:\n'
+            '${KdbxPrintUtils().catGroupToString(file.body.rootGroup)}');
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        final wasRemoved =
+            !file.body.rootGroup.getAllEntries().keys.contains(removedUuid);
+        expect(wasRemoved, true);
+        expect(set, hasLength(3));
+        expect(
+            Set<KdbxNode>.from(merge.changes.map<KdbxNode?>((e) => e.object)),
+            hasLength(1));
+      }),
+    );
+
+    test(
+      'Delete entry locally is not resurrected',
+      () async => await withClock(fakeClock, () async {
+        final file = await TestUtil.createSimpleFile(proceedSeconds);
+
+        final removedUuid = file.body.rootGroup.entries.first.uuid.uuid;
+        final file2 = await TestUtil.saveAndRead(file);
+
+        file.deleteEntry(file.body.rootGroup.entries.first, true);
+        expect(file.recycleBin, isNull);
+        final merge = file.merge(file2);
+        _logger.info('Merged file:\n'
+            '${KdbxPrintUtils().catGroupToString(file.body.rootGroup)}');
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        final isStillRemoved =
+            !file.body.rootGroup.getAllEntries().keys.contains(removedUuid);
+        expect(isStillRemoved, true);
+        expect(set, hasLength(3));
+        expect(
+            Set<KdbxNode>.from(merge.changes.map<KdbxNode?>((e) => e.object)),
+            hasLength(0));
+      }),
+    );
+
+    test(
+      'Delete entry both locally and remotely does not resurrect entry',
+      () async => await withClock(fakeClock, () async {
+        final file = await TestUtil.createSimpleFile(proceedSeconds);
+
+        final fileMod = await TestUtil.saveAndRead(file);
+        final removedUuid = fileMod.body.rootGroup.entries.first.uuid.uuid;
+
+        file.deleteEntry(file.body.rootGroup.entries.first, true);
+        fileMod.deleteEntry(fileMod.body.rootGroup.entries.first, true);
+        expect(file.recycleBin, isNull);
+        expect(fileMod.recycleBin, isNull);
+        final file2 = await TestUtil.saveAndRead(fileMod);
+        final merge = file.merge(file2);
+        _logger.info('Merged file:\n'
+            '${KdbxPrintUtils().catGroupToString(file.body.rootGroup)}');
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        final isStillRemoved =
+            !file.body.rootGroup.getAllEntries().keys.contains(removedUuid);
+        expect(isStillRemoved, true);
+        expect(set, hasLength(3));
+        expect(
+            Set<KdbxNode>.from(merge.changes.map<KdbxNode?>((e) => e.object)),
+            hasLength(0));
       }),
     );
     // test(
