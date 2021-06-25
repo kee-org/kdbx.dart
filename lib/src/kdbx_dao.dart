@@ -25,6 +25,12 @@ extension KdbxDao on KdbxFile {
 
   void deleteGroup(KdbxGroup group, [bool permenant = false]) {
     if (permenant) {
+      group.groups.values.toList().forEach((value) {
+        deleteGroup(value, true);
+      });
+      group.entries.values.toList().forEach((value) {
+        deleteEntry(value, true);
+      });
       delete(group);
     } else {
       move(group, getRecycleBinOrCreate());

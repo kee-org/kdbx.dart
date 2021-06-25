@@ -60,13 +60,14 @@ void main() {
     test(
       'Delete group creates a deletedObject',
       () async => await withClock(fakeClock, () async {
-        final file = await TestUtil.createSimpleFile(proceedSeconds);
-        final removedUuid = file.body.rootGroup.groups.first.uuid.uuid;
+        final file = await TestUtil.createRealFile(proceedSeconds);
+        final removedUuid =
+            file.body.rootGroup.groups.values.toList()[1].uuid.uuid;
 
         expect(file.recycleBin, isNull);
         expect(file.body.deletedObjects, hasLength(0));
 
-        file.deleteGroup(file.body.rootGroup.groups.first, true);
+        file.deleteGroup(file.body.rootGroup.groups.values.toList()[1], true);
         final wasRemoved =
             !file.body.rootGroup.getAllGroups().keys.contains(removedUuid);
         expect(wasRemoved, true);
@@ -76,6 +77,37 @@ void main() {
             file.body.deletedObjects
                 .any((deletedObj) => deletedObj.uuid.uuid == removedUuid),
             true);
+      }),
+    );
+    test(
+      'Deleting group recursively creates required deletedObjects',
+      () async => await withClock(fakeClock, () async {
+        final file = await TestUtil.createReursiveGroupFile(proceedSeconds);
+        final startGroup = file.body.rootGroup.groups.first;
+        final removedUuids = [
+          startGroup.uuid.uuid,
+          startGroup.entries.first.uuid.uuid,
+          startGroup.groups.first.uuid.uuid,
+          startGroup.groups.first.entries.first.uuid.uuid,
+        ];
+
+        expect(file.recycleBin, isNull);
+        expect(file.body.deletedObjects, hasLength(0));
+
+        file.deleteGroup(startGroup, true);
+
+        final remainingKeys = file.body.rootGroup.getAllGroups().keys;
+        expect(remainingKeys, isNot(contains(removedUuids[0])));
+        expect(remainingKeys, isNot(contains(removedUuids[1])));
+        expect(remainingKeys, isNot(contains(removedUuids[2])));
+        expect(remainingKeys, isNot(contains(removedUuids[3])));
+        expect(file.recycleBin, isNull);
+        expect(file.body.deletedObjects, hasLength(4));
+        final deletedObjects = file.body.deletedObjects.map((d) => d.uuid.uuid);
+        expect(deletedObjects, contains(removedUuids[0]));
+        expect(deletedObjects, contains(removedUuids[1]));
+        expect(deletedObjects, contains(removedUuids[2]));
+        expect(deletedObjects, contains(removedUuids[3]));
       }),
     );
   });
