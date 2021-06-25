@@ -197,6 +197,21 @@ abstract class KdbxObject extends KdbxNode {
 
   KdbxGroup? _parent;
 
+  bool get isInRecycleBin {
+    final bin = file!.recycleBin;
+    if (bin == null) {
+      return false;
+    }
+    var ancestor = _parent;
+    while (ancestor != null) {
+      if (ancestor == bin) {
+        return true;
+      }
+      ancestor = ancestor.parent;
+    }
+    return false;
+  }
+
   KdbxCustomIcon? get customIcon =>
       customIconUuid.get()?.let((uuid) => file!.body.meta.customIcons[uuid]);
 
