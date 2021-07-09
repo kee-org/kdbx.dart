@@ -23,6 +23,15 @@ extension KdbxDao on KdbxFile {
     throw StateError('Unable to find group with uuid $uuid');
   }
 
+  void emptyGroup(KdbxGroup group, [bool permenant = false]) {
+    group.groups.values.toList().forEach((subgroup) {
+      deleteGroup(subgroup, permenant);
+    });
+    group.entries.values.toList().forEach((entry) {
+      deleteEntry(entry, permenant);
+    });
+  }
+
   void deleteGroup(KdbxGroup group, [bool permenant = false]) {
     if (permenant) {
       group.groups.values.toList().forEach((value) {

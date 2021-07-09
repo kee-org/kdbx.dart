@@ -1,7 +1,8 @@
 name: kdbx
 description: KeepassX format implementation in pure dart. (kdbx 3.x and 4.x support).
-version: 0.5.7+7
+version: 0.5.8
 homepage: https://github.com/authpass/kdbx.dart
+publish_to: none
 
 environment:
   sdk: '>=2.12.0 <3.0.0'
