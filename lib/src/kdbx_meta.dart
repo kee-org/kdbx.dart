@@ -91,7 +91,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
 
   final Map<KdbxUuid, KdbxCustomIcon> _customIcons;
 
-  Map<KdbxUuid, KdbxCustomIcon> get customIcons =>
+  UnmodifiableMapView<KdbxUuid, KdbxCustomIcon> get customIcons =>
       UnmodifiableMapView(_customIcons);
 
   void addCustomIcon(KdbxCustomIcon customIcon) {
@@ -99,6 +99,13 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
       return;
     }
     modify(() => _customIcons[customIcon.uuid] = customIcon);
+  }
+
+  void removeCustomIcon(KdbxUuid id) {
+    if (!_customIcons.containsKey(id)) {
+      return;
+    }
+    modify(() => _customIcons.remove(id));
   }
 
   StringNode get generator => StringNode(this, 'Generator');

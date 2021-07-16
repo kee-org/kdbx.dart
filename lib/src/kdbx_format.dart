@@ -394,6 +394,7 @@ class KdbxBody extends KdbxNode {
         ? meta.historyMaxItems.get()
         : double.maxFinite as int;
     final usedCustomIcons = HashSet<KdbxUuid>();
+    final unusedCustomIcons = HashSet<KdbxUuid>();
     final usedBinaries = <int>{};
 
     void _trackEntryForCleanup(KdbxEntry e) {
@@ -425,9 +426,11 @@ class KdbxBody extends KdbxNode {
       if (!usedCustomIcons.contains(key)) {
         ctx._deletedObjects
             .add(KdbxDeletedObject.create(ctx, key, deletionTime: now));
-        meta.customIcons.remove(key);
+        unusedCustomIcons.add(key);
       }
     });
+
+    unusedCustomIcons.forEach(meta.removeCustomIcon);
 
     ctx.removeUnusedBinaries(usedBinaries);
   }
