@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:clock/clock.dart';
 import 'package:kdbx/kdbx.dart';
 import 'package:kdbx/src/utils/print_utils.dart';
@@ -5,6 +7,7 @@ import 'package:logging/logging.dart';
 import 'package:test/test.dart';
 
 import '../internal/test_utils.dart';
+import '../kdbx_binaries_test.dart';
 
 final _logger = Logger('kdbx_merge_test');
 
@@ -1005,6 +1008,100 @@ when merging, can look at this value to decide whether history entries from the 
             Credentials(ProtectedValue("asdf")).getHash());
         expect(file1.body.meta.masterKeyChanged.get(),
             DateTime.fromMillisecondsSinceEpoch(0, isUtc: true));
+      }),
+    );
+  });
+
+  group('Binary merges', () {
+    test(
+      'when entry with a binary is added remotely, merge results in local file with that binary included in the header',
+      () async => await withClock(fakeClock, () async {
+        final fileLocal = await TestUtil.createRealFile(proceedSeconds);
+        final fileMod = await TestUtil.saveAndRead(fileLocal);
+        final entry = KdbxEntry.create(fileMod, fileMod.body.rootGroup);
+        fileMod.body.rootGroup.addEntry(entry);
+        entry.createBinary(
+            isProtected: false,
+            name: 'testBin1',
+            bytes: Uint8List.fromList([1, 2, 3]));
+        final fileRemote = await TestUtil.saveAndRead(fileMod);
+        expect(fileLocal.ctx.binariesIterable.length, 0);
+        fileLocal.merge(fileRemote);
+        expect(fileLocal.ctx.binariesIterable.length, 1);
+        expect(fileLocal.body.rootGroup.entries.length, 2);
+        expect(fileLocal.ctx.binariesIterable.first.value,
+            Uint8List.fromList([1, 2, 3]));
+        expectBinary(fileLocal.body.rootGroup.entries.values.toList()[1],
+            'testBin1', hasLength(3));
+      }),
+    );
+
+    test(
+      'when binary is added to entry remotely, merge results in local file with that binary included in the header',
+      () async => await withClock(fakeClock, () async {
+        final fileLocal = await TestUtil.createRealFile(proceedSeconds);
+
+        final fileMod = await TestUtil.saveAndRead(fileLocal);
+        final entry = fileMod.body.rootGroup.entries.first;
+        entry.createBinary(
+            isProtected: false,
+            name: 'testBin1',
+            bytes: Uint8List.fromList([1, 2, 3]));
+        final fileRemote = await TestUtil.saveAndRead(fileMod);
+        expect(fileLocal.ctx.binariesIterable.length, 0);
+        fileLocal.merge(fileRemote);
+        expect(fileLocal.ctx.binariesIterable.length, 1);
+        expect(fileLocal.body.rootGroup.entries.length, 1);
+
+        expect(fileLocal.ctx.binariesIterable.first.value,
+            Uint8List.fromList([1, 2, 3]));
+        expectBinary(
+            fileLocal.body.rootGroup.entries.first, 'testBin1', hasLength(3));
+      }),
+    );
+
+    test(
+      'when entry with a binary is permanently deleted remotely, merge results in local file with that binary removed from the header',
+      () async => await withClock(fakeClock, () async {
+        final fileLocal =
+            await TestUtil.readKdbxFile('test/keepass2kdbx4binaries.kdbx');
+        final binaryThatShouldRemain = fileLocal.ctx.binariesIterable.last;
+
+        final fileMod =
+            await TestUtil.readKdbxFile('test/keepass2kdbx4binaries.kdbx');
+        final entry = fileMod.body.rootGroup.entries.first;
+        fileMod.deleteEntry(entry, true);
+        final fileRemote = await TestUtil.saveAndRead(fileMod);
+        expect(fileLocal.ctx.binariesIterable.length, 2);
+        fileLocal.merge(fileRemote);
+        expect(fileLocal.ctx.binariesIterable.length, 1);
+        expect(fileLocal.body.rootGroup.entries.length, 1);
+        expect(fileLocal.ctx.binariesIterable.first.value,
+            binaryThatShouldRemain.value);
+      }),
+    );
+
+    test(
+      'when entry A with a binary is in the recycle bin locally and remotely and entry B with a binary is permanently deleted remotely, merge results in local file with just entry B\'s binary removed from the header',
+      () async => await withClock(fakeClock, () async {
+        final fileBase =
+            await TestUtil.readKdbxFile('test/keepass2kdbx4binaries.kdbx');
+        final entryToRecycle = fileBase.body.rootGroup.entries.first;
+        fileBase.deleteEntry(entryToRecycle, false);
+        final fileLocal = await TestUtil.saveAndRead(fileBase);
+        final fileMod = await TestUtil.saveAndRead(fileBase);
+        final binaryThatShouldRemain = fileLocal.ctx.binariesIterable.first;
+        final entryToDelete = fileMod.body.rootGroup.entries.first;
+        fileMod.deleteEntry(entryToDelete, true);
+
+        // saving implicitly cleans out the old binary
+        final fileRemote = await TestUtil.saveAndRead(fileMod);
+        expect(fileLocal.ctx.binariesIterable.length, 2);
+        fileLocal.merge(fileRemote);
+        expect(fileLocal.ctx.binariesIterable.length, 1);
+        expect(fileLocal.body.rootGroup.entries.length, 0);
+        expect(fileLocal.ctx.binariesIterable.first.value,
+            binaryThatShouldRemain.value);
       }),
     );
   });

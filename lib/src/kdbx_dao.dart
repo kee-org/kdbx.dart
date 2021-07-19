@@ -60,6 +60,7 @@ extension KdbxDao on KdbxFile {
     } else if (kdbxObject is KdbxEntry) {
       kdbxObject.parent.internalRemoveEntry(kdbxObject);
     }
+    //TODO:f: This unnecessarily creates a history item on the entry that is about to be deleted.
     kdbxObject.detachFromParent();
     if (!alreadyTracked) {
       ctx.recordObjectDeletion(kdbxObject);

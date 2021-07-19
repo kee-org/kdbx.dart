@@ -199,14 +199,68 @@ void main() {
         // but now we remove that reference...
         entry.history.clear();
         expect(file.dirtyObjects, [entry]);
+        expect(entry.binaryEntries, hasLength(0));
+        expectBinary(file.body.rootGroup.entries.last, 'keepasslogo.jpeg',
+            hasLength(7092));
+        // Context is not updated until file is saved (or cleaned up)
+        expect(file.ctx.binariesIterable, hasLength(2));
         return await file.save();
       })();
       final file = await TestUtil.readKdbxFileBytes(saved);
-      final entry = file.body.rootGroup.entries.first;
-      expect(entry.binaryEntries, hasLength(0));
-      expectBinary(file.body.rootGroup.entries.last, 'keepasslogo.jpeg',
-          hasLength(7092));
       expect(file.ctx.binariesIterable, hasLength(1));
+    });
+
+    test('entry with attachment recycling retains binary in header', () async {
+      final fileBase =
+          await TestUtil.readKdbxFile('test/keepass2kdbx4binaries.kdbx');
+      final entryToRecycle = fileBase.body.rootGroup.entries.first;
+      fileBase.deleteEntry(entryToRecycle, false);
+      final bin0 = fileBase.ctx.binariesIterable.first;
+      final fileSaved = await TestUtil.saveAndRead(fileBase);
+      expect(fileSaved.body.rootGroup.entries.length, 1);
+
+      expectBinary(fileSaved.recycleBin!.entries.last, 'example2.txt',
+          IsUtf8String('content2 example\n\n'));
+      expect(fileSaved.ctx.binariesIterable.length, 2);
+      expect(fileSaved.ctx.binariesIterable.first.value, bin0.value);
+      expectBinary(fileSaved.body.rootGroup.entries.last, 'keepasslogo.jpeg',
+          hasLength(7092));
+    });
+
+    test(
+        'entry with attachment deleting removes binary from header after cleanup',
+        () async {
+      final fileBase =
+          await TestUtil.readKdbxFile('test/keepass2kdbx4binaries.kdbx');
+      final entryToDelete = fileBase.body.rootGroup.entries.first;
+      fileBase.deleteEntry(entryToDelete, true);
+      fileBase.body.cleanup();
+      expect(fileBase.body.rootGroup.entries.length, 1);
+      expect(fileBase.ctx.binariesIterable.length, 1);
+      expectBinary(fileBase.body.rootGroup.entries.last, 'keepasslogo.jpeg',
+          hasLength(7092));
+      final bin0 = fileBase.ctx.binariesIterable.first;
+      expect(bin0.value, hasLength(7092));
+      await TestUtil.saveAndRead(fileBase);
+    });
+
+    test(
+        'entry with attachment recycling and permanent deletion of another entry retains correct binary in header',
+        () async {
+      final fileBase =
+          await TestUtil.readKdbxFile('test/keepass2kdbx4binaries.kdbx');
+      final entryToRecycle = fileBase.body.rootGroup.entries.first;
+      fileBase.deleteEntry(entryToRecycle, false);
+      final bin0 = fileBase.ctx.binariesIterable.first;
+      final fileIntermediate = await TestUtil.saveAndRead(fileBase);
+      final entryToDelete = fileIntermediate.body.rootGroup.entries.first;
+      fileBase.deleteEntry(entryToDelete, true);
+      final fileSaved = await TestUtil.saveAndRead(fileIntermediate);
+      expect(fileSaved.body.rootGroup.entries.length, 0);
+      expectBinary(fileSaved.recycleBin!.entries.last, 'example2.txt',
+          IsUtf8String('content2 example\n\n'));
+      expect(fileSaved.ctx.binariesIterable.length, 1);
+      expect(fileSaved.ctx.binariesIterable.first.value, bin0.value);
     });
   }, tags: ['kdbx4']);
 }

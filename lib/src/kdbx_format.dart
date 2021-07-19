@@ -152,13 +152,14 @@ class KdbxReadWriteContext {
   }
 
   void removeUnusedBinaries(Set<int> usedIndexes) {
-    final reversedUnusedIndexes = _binaries
-        .whereIndexed((index, element) => !usedIndexes.contains(index))
-        .mapIndexed((index, element) => index)
-        .toList()
-        .reversed;
+    final unusedIndexes = <int>[];
+    _binaries.forEachIndexed((index, element) {
+      if (!usedIndexes.contains(index)) {
+        unusedIndexes.add(index);
+      }
+    });
     // ignore: prefer_foreach
-    for (var index in reversedUnusedIndexes) {
+    for (var index in unusedIndexes.reversed) {
       _binaries.removeAt(index);
     }
   }
