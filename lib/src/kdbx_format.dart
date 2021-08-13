@@ -373,12 +373,17 @@ class KdbxBody extends KdbxNode {
     for (final incomingDelete in incomingDeleted.values) {
       final object = mergeContext.objectIndex[incomingDelete.uuid];
       if (object == null) {
-        _logger.info(
+        mergeContext.trackWarning(
             '${incomingDelete.uuid} was not found in current object index so could not be deleted. Probably this is because the object was created and deleted before this KDBX file ever saw it.');
-      } else {
-        object.file!.delete(object, alreadyTracked: true);
-        mergeContext.trackChange(object, debug: 'deleted');
+        continue;
       }
+      if (object.parent == null) {
+        mergeContext.trackWarning('Unable to delete object $object - '
+            'already deleted? (${incomingDelete.uuid})');
+        continue;
+      }
+      object.file!.delete(object, alreadyTracked: true);
+      mergeContext.trackChange(object, debug: 'deleted');
     }
 
     cleanup();
@@ -516,12 +521,28 @@ class MergeChange {
   }
 }
 
+class MergeWarning {
+  MergeWarning(this.debug);
+
+  final String debug;
+
+  @override
+  String toString() {
+    return debug;
+  }
+}
+
 class MergeContext implements OverwriteContext {
   MergeContext({required this.objectIndex, required this.deletedObjects});
   final Map<KdbxUuid, KdbxObject> objectIndex;
   final Map<KdbxUuid, KdbxDeletedObject> deletedObjects;
   final Map<KdbxUuid, KdbxObject> merged = {};
   final List<MergeChange> changes = [];
+  final List<MergeWarning> warnings = [];
+
+  int totalChanges() {
+    return deletedObjects.length + changes.length;
+  }
 
   void markAsMerged(KdbxObject object) {
     if (merged.containsKey(object.uuid)) {
@@ -540,6 +561,11 @@ class MergeContext implements OverwriteContext {
     ));
   }
 
+  void trackWarning(String warning) {
+    _logger.warning(warning, StackTrace.current);
+    warnings.add(MergeWarning(warning));
+  }
+
   String debugChanges() {
     final group = changes.groupBy<KdbxNode, MergeChange>(
         ((MergeChange element) => element.object!));
@@ -549,6 +575,17 @@ class MergeContext implements OverwriteContext {
               ...e.value.map((e) => e.debugString()),
             ].join('\n    '))
         .join('\n');
+  }
+
+  String debugSummary() {
+    return 'Changes: ${changes.length}, '
+        'Deleted: ${deletedObjects.length}, '
+        'Warnings: ${warnings.isEmpty ? 'None' : warnings.join(', ')}';
+  }
+
+  @override
+  String toString() {
+    return '$runtimeType{${debugSummary()}}';
   }
 }
 
