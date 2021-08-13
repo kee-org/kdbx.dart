@@ -70,30 +70,30 @@ void main() {
         final first = file.body.rootGroup.entries.first;
         expect(file.header.version.major, 3);
         expect(first.getString(TestUtil.keyTitle)!.getText(), valueOrig);
-        await dirtyExpect.expectNext({first}, () {
+        await dirtyExpect.expectNext({first}, () async {
           first.setString(TestUtil.keyTitle, PlainValue(value1));
         });
       }
       expect(file.dirtyObjects, hasLength(1));
-      final f2 =
-          await dirtyExpect.expectNext({}, () => TestUtil.saveAndRead(file));
+      final f2 = await dirtyExpect
+          .expectNext({}, () async => TestUtil.saveAndRead(file));
       expect(file.dirtyObjects, isEmpty);
       {
         final first = f2.body.rootGroup.entries.first;
         expect(first.getString(TestUtil.keyTitle)!.getText(), value1);
         expect(first.history.last.getString(TestUtil.keyTitle)!.getText(),
             valueOrig);
-        await dirtyExpect.expectNext({}, () => file.save());
+        await dirtyExpect.expectNext({}, () async => file.save());
       }
 
       // edit the original file again, and there should be a second history
       {
         final first = file.body.rootGroup.entries.first;
         await dirtyExpect.expectNext({first},
-            () => first.setString(TestUtil.keyTitle, PlainValue(value2)));
+            () async => first.setString(TestUtil.keyTitle, PlainValue(value2)));
       }
-      final f3 =
-          await dirtyExpect.expectNext({}, () => TestUtil.saveAndRead(file));
+      final f3 = await dirtyExpect
+          .expectNext({}, () async => TestUtil.saveAndRead(file));
       expect(file.dirtyObjects, isEmpty);
       {
         final first = f3.body.rootGroup.entries.first;
@@ -103,7 +103,7 @@ void main() {
             first.history.last.getString(TestUtil.keyTitle)!.getText(), value1);
         expect(first.history.first.getString(TestUtil.keyTitle)!.getText(),
             valueOrig);
-        await dirtyExpect.expectNext({}, () => file.save());
+        await dirtyExpect.expectNext({}, () async => file.save());
       }
       file.dispose();
       await pumpEventQueue();
