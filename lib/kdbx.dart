@@ -18,6 +18,7 @@ export 'src/kdbx_entry.dart'
         BrowserEntrySettings,
         BrowserAutoFillBehaviour,
         MatchAccuracy;
+export 'src/kdbx_exceptions.dart';
 export 'src/kdbx_file.dart';
 export 'src/kdbx_format.dart'
     show
@@ -31,13 +32,7 @@ export 'src/kdbx_format.dart'
         KeyFileCredentials,
         PasswordCredentials;
 export 'src/kdbx_group.dart' show KdbxGroup;
-export 'src/kdbx_header.dart'
-    show
-        KdbxException,
-        KdbxInvalidKeyException,
-        KdbxCorruptedFileException,
-        KdbxUnsupportedException,
-        KdbxVersion;
+export 'src/kdbx_header.dart' show KdbxVersion;
 export 'src/kdbx_meta.dart';
 export 'src/kdbx_object.dart'
     show

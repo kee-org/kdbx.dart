@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:kdbx/src/crypto/key_encrypter_kdf.dart';
+import 'package:kdbx/src/kdbx_exceptions.dart';
 import 'package:kdbx/src/utils/byte_utils.dart';
 import 'package:kdbx/src/internal/consts.dart';
 import 'package:kdbx/src/kdbx_binary.dart';
@@ -381,7 +382,7 @@ class KdbxHeader {
     final sig1 = reader.readUint32();
     final sig2 = reader.readUint32();
     if (!(sig1 == Consts.FileMagic && sig2 == Consts.Sig2Kdbx)) {
-      throw UnsupportedError(
+      throw KdbxInvalidFileStructure(
           'Unsupported file structure. ${ByteUtils.toHex(sig1)}, '
           '${ByteUtils.toHex(sig2)}');
     }
@@ -553,32 +554,6 @@ class KdbxHeader {
   @override
   String toString() {
     return 'KdbxHeader{sig1: $sig1, sig2: $sig2, version: $version}';
-  }
-}
-
-class KdbxException implements Exception {}
-
-class KdbxInvalidKeyException implements KdbxException {}
-
-class KdbxCorruptedFileException implements KdbxException {
-  KdbxCorruptedFileException([this.message]);
-
-  final String? message;
-
-  @override
-  String toString() {
-    return 'KdbxCorruptedFileException{message: $message}';
-  }
-}
-
-class KdbxUnsupportedException implements KdbxException {
-  KdbxUnsupportedException(this.hint);
-
-  final String hint;
-
-  @override
-  String toString() {
-    return 'KdbxUnsupportedException{hint: $hint}';
   }
 }
 

@@ -10,6 +10,7 @@ import 'package:kdbx/src/internal/extension_utils.dart';
 import 'package:kdbx/src/kdbx_binary.dart';
 import 'package:kdbx/src/kdbx_custom_data.dart';
 import 'package:kdbx/src/kdbx_entry.dart';
+import 'package:kdbx/src/kdbx_exceptions.dart';
 import 'package:kdbx/src/kdbx_format.dart';
 import 'package:kdbx/src/kdbx_header.dart';
 import 'package:kdbx/src/kdbx_object.dart';

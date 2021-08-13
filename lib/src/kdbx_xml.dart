@@ -3,8 +3,8 @@ import 'dart:typed_data';
 
 import 'package:clock/clock.dart';
 import 'package:collection/collection.dart' show IterableExtension;
+import 'package:kdbx/src/kdbx_exceptions.dart';
 import 'package:kdbx/src/kdbx_format.dart';
-import 'package:kdbx/src/kdbx_header.dart';
 import 'package:kdbx/src/kdbx_object.dart';
 import 'package:kdbx/src/utils/byte_utils.dart';
 import 'package:kdbx/src/kdbx_consts.dart';
