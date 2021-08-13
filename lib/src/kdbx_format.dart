@@ -38,9 +38,9 @@ final _logger = Logger('kdbx.format');
 abstract class Credentials {
   factory Credentials(ProtectedValue password) =>
       Credentials.composite(password, null); //PasswordCredentials(password);
-  factory Credentials.composite(ProtectedValue password, Uint8List? keyFile) =>
+  factory Credentials.composite(ProtectedValue? password, Uint8List? keyFile) =>
       KeyFileComposite(
-        password: PasswordCredentials(password),
+        password: password?.let((that) => PasswordCredentials(that)),
         keyFile: keyFile == null ? null : KeyFileCredentials(keyFile),
       );
 
@@ -54,12 +54,12 @@ abstract class Credentials {
 class KeyFileComposite implements Credentials {
   KeyFileComposite({required this.password, required this.keyFile});
 
-  PasswordCredentials password;
+  PasswordCredentials? password;
   KeyFileCredentials? keyFile;
 
   @override
   Uint8List getHash() {
-    final buffer = [...password.getBinary(), ...?keyFile?.getBinary()];
+    final buffer = [...?password?.getBinary(), ...?keyFile?.getBinary()];
     return crypto.sha256.convert(buffer).bytes as Uint8List;
 
 //    final output = convert.AccumulatorSink<crypto.Digest>();
