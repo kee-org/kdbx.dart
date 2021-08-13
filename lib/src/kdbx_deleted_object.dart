@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:kdbx/src/kdbx_format.dart';
 import 'package:kdbx/src/kdbx_object.dart';
 import 'package:kdbx/src/kdbx_xml.dart';
@@ -7,7 +8,7 @@ class KdbxDeletedObject extends KdbxNode implements KdbxNodeContext {
   KdbxDeletedObject.create(this.ctx, KdbxUuid uuid, {DateTime? deletionTime})
       : super.create(NODE_NAME) {
     _uuid.set(uuid);
-    this.deletionTime.set(deletionTime ?? DateTime.now().toUtc());
+    this.deletionTime.set(deletionTime ?? clock.now().toUtc());
   }
 
   KdbxDeletedObject.read(XmlElement node, this.ctx) : super.read(node);

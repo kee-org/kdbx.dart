@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 
 import 'package:archive/archive.dart';
@@ -405,7 +406,7 @@ class KdbxBody extends KdbxNode {
   }
 
   void cleanup() {
-    final now = DateTime.now().toUtc();
+    final now = clock.now().toUtc();
     final historyMaxItems = (meta.historyMaxItems.get() ?? 0) > 0
         ? meta.historyMaxItems.get()
         : double.maxFinite as int;
