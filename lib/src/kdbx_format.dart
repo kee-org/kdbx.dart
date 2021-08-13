@@ -1043,6 +1043,8 @@ https://github.com/renggli/dart-xml/blob/main/example/xml_flatten.dart
     final decryptCipher = CBCBlockCipher(AESFastEngine());
     decryptCipher.init(
         false, ParametersWithIV(KeyParameter(masterKey), encryptionIv));
+    _logger.finer('decrypting ${encryptedPayload.length} with block size '
+        '${decryptCipher.blockSize}');
     final paddedDecrypted =
         AesHelper.processBlocks(decryptCipher, encryptedPayload);
 
@@ -1073,6 +1075,8 @@ https://github.com/renggli/dart-xml/blob/main/example/xml_flatten.dart
     final decryptCipher = CBCBlockCipher(AESFastEngine());
     decryptCipher.init(
         false, ParametersWithIV(KeyParameter(cipherKey), encryptionIv));
+    _logger.finer('decrypting ${encryptedPayload.length} with block size '
+        '${decryptCipher.blockSize}');
     final paddedDecrypted =
         AesHelper.processBlocks(decryptCipher, encryptedPayload);
 
