@@ -468,9 +468,6 @@ class KdbxEntry extends KdbxObject {
             file.body.meta.browserSettings.defaultMatchAccuracy);
   }
 
-  @override
-  KdbxGroup get parent => super.parent!;
-
   KdbxEntry.read(KdbxReadWriteContext ctx, KdbxGroup? parent, XmlElement node,
       {this.isHistoryEntry = false})
       : customData = node
@@ -514,6 +511,9 @@ class KdbxEntry extends KdbxObject {
             .toList() ??
         []);
   }
+
+  @override
+  KdbxGroup get parent => super.parent!;
 
   List<String> get androidPackageNames {
     final tempJson = customData['KeeVault.AndroidPackageNames'];
