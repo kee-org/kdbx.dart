@@ -212,9 +212,13 @@ abstract class KdbxObject extends KdbxNode {
     if (bin == null) {
       return false;
     }
+    return isInGroup(bin);
+  }
+
+  bool isInGroup(KdbxGroup group) {
     var ancestor = _parent;
     while (ancestor != null) {
-      if (ancestor == bin) {
+      if (ancestor == group) {
         return true;
       }
       ancestor = ancestor.parent;
