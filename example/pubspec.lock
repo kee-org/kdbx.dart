@@ -88,12 +88,10 @@ packages:
   isolate:
     dependency: transitive
     description:
-      path: "."
-      ref: master
-      resolved-ref: f961c1ca4a5efbfd324cd02495eaa505eb031ad5
-      url: "https://github.com/2ZeroSix/isolate"
-    source: git
-    version: "2.0.3"
+      name: isolate
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.1.1"
   kdbx:
     dependency: "direct main"
     description:
