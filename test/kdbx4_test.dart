@@ -18,6 +18,9 @@ void main() {
   Logger.root.level = Level.ALL;
   PrintAppender().attachToLogger(Logger.root);
   final kdbxFormat = TestUtil.kdbxFormat();
+  if (!kdbxFormat.argon2.isFfi) {
+    throw StateError('Expected ffi!');
+  }
   group('Reading', () {
     test('bubb', () async {
       final data = await File('test/keepassxcpasswords.kdbx').readAsBytes();
