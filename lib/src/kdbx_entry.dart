@@ -607,8 +607,8 @@ class KdbxEntry extends KdbxObject {
   }
 
   @override
-  void onBeforeModify() {
-    super.onBeforeModify();
+  void onBeforeFirstModify() {
+    super.onBeforeFirstModify();
     history.add(KdbxEntry.read(
       ctx,
       parent,

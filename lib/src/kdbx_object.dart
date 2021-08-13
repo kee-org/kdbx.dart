@@ -46,10 +46,15 @@ mixin Changeable<T> {
   /// from false to true)
   @protected
   @mustCallSuper
-  void onBeforeModify() {}
+  void onBeforeFirstModify() {}
 
   /// Called after the *first* modification (ie. after `isDirty` changed
   /// from false to true)
+  @protected
+  @mustCallSuper
+  void onAfterFirstModify({bool preserveModificationTime = false}) {}
+
+  /// Called after all modifications
   @protected
   @mustCallSuper
   void onAfterModify({bool preserveModificationTime = false}) {}
@@ -57,15 +62,20 @@ mixin Changeable<T> {
   RET modify<RET>(RET Function() modify,
       {bool preserveModificationTime = false}) {
     if (_isDirty || _isInModify) {
-      return modify();
+      try {
+        return modify();
+      } finally {
+        onAfterModify(preserveModificationTime: preserveModificationTime);
+      }
     }
     _isInModify = true;
-    onBeforeModify();
+    onBeforeFirstModify();
     try {
       return modify();
     } finally {
       _isDirty = true;
       _isInModify = false;
+      onAfterFirstModify(preserveModificationTime: preserveModificationTime);
       onAfterModify(preserveModificationTime: preserveModificationTime);
       _controller.add(ChangeEvent(object: this as T, isDirty: _isDirty));
     }
