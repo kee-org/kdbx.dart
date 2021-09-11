@@ -430,6 +430,7 @@ extension KdbxEntryInternal on KdbxEntry {
         ));
     _binaries.clear();
     _binaries.addAll(newBinaries);
+    customData.overwriteFrom(other.customData);
     times.overwriteFrom(other.times);
     if (includeHistory) {
       for (final historyEntry in other.history) {
@@ -471,7 +472,7 @@ class KdbxEntry extends KdbxObject {
   KdbxEntry.read(KdbxReadWriteContext ctx, KdbxGroup? parent, XmlElement node,
       {this.isHistoryEntry = false})
       : customData = node
-                .singleElement('CustomData')
+                .singleElement(KdbxXml.NODE_CUSTOM_DATA)
                 ?.let((e) => KdbxCustomData.read(e)) ??
             KdbxCustomData.create(),
         history = [],
@@ -598,8 +599,8 @@ class KdbxEntry extends KdbxObject {
 
   void addAndroidPackageName(String name) {
     if (!androidPackageNames.contains(name)) {
-      androidPackageNames.add(name);
-      androidPackageNames = androidPackageNames;
+      final updatedList = androidPackageNames..add(name);
+      androidPackageNames = updatedList;
     }
     browserSettings.hide = false;
     browserSettings = browserSettings;
@@ -619,7 +620,7 @@ class KdbxEntry extends KdbxObject {
 
   @override
   XmlElement toXml() {
-    final el = super.toXml();
+    final el = super.toXml()..replaceSingle(customData.toXml());
     XmlUtils.removeChildrenByName(el, KdbxXml.NODE_STRING);
     XmlUtils.removeChildrenByName(el, KdbxXml.NODE_HISTORY);
     XmlUtils.removeChildrenByName(el, KdbxXml.NODE_BINARY);

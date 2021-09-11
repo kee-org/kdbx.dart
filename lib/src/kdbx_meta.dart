@@ -40,7 +40,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
 
   KdbxMeta.read(xml.XmlElement node, this.ctx)
       : customData = node
-                .singleElement('CustomData')
+                .singleElement(KdbxXml.NODE_CUSTOM_DATA)
                 ?.let((e) => KdbxCustomData.read(e)) ??
             KdbxCustomData.create(),
         binaries = node
