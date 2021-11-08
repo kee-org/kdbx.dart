@@ -10,9 +10,9 @@ import 'package:archive/archive.dart';
 import 'package:kdbx/src/kdbx_entry.dart';
 import 'package:supercharged_dart/supercharged_dart.dart';
 import 'package:argon2_ffi_base/argon2_ffi_base.dart';
-import 'package:convert/convert.dart' as convert;
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:kdbx/kdbx.dart';
+import 'package:kdbx/src/credentials/credentials.dart';
 import 'package:kdbx/src/crypto/key_encrypter_kdf.dart';
 import 'package:kdbx/src/crypto/protected_salt_generator.dart';
 import 'package:kdbx/src/crypto/protected_value.dart';
@@ -37,47 +37,6 @@ import 'package:xml/xml.dart' as xml;
 import 'package:xml/xml.dart';
 
 final _logger = Logger('kdbx.format');
-
-abstract class Credentials {
-  factory Credentials(ProtectedValue password) =>
-      Credentials.composite(password, null); //PasswordCredentials(password);
-  factory Credentials.composite(ProtectedValue? password, Uint8List? keyFile) =>
-      KeyFileComposite(
-        password: password?.let((that) => PasswordCredentials(that)),
-        keyFile: keyFile == null ? null : KeyFileCredentials(keyFile),
-      );
-
-  factory Credentials.fromHash(Uint8List hash) => HashCredentials(hash);
-
-  void changePassword(ProtectedValue password);
-
-  Uint8List getHash();
-}
-
-class KeyFileComposite implements Credentials {
-  KeyFileComposite({required this.password, required this.keyFile});
-
-  PasswordCredentials? password;
-  KeyFileCredentials? keyFile;
-
-  @override
-  Uint8List getHash() {
-    final buffer = [...?password?.getBinary(), ...?keyFile?.getBinary()];
-    return crypto.sha256.convert(buffer).bytes as Uint8List;
-
-//    final output = convert.AccumulatorSink<crypto.Digest>();
-//    final input = crypto.sha256.startChunkedConversion(output);
-////    input.add(password.getHash());
-//    input.add(buffer);
-//    input.close();
-//    return output.events.single.bytes as Uint8List;
-  }
-
-  @override
-  void changePassword(ProtectedValue password) {
-    this.password = PasswordCredentials(password);
-  }
-}
 
 /// Context used during reading and writing.
 class KdbxReadWriteContext {
@@ -169,80 +128,6 @@ class KdbxReadWriteContext {
 
   void recordObjectDeletion(KdbxObject kdbxObject) {
     _deletedObjects.add(KdbxDeletedObject.create(this, kdbxObject.uuid));
-  }
-}
-
-abstract class CredentialsPart {
-  Uint8List getBinary();
-}
-
-class KeyFileCredentials implements CredentialsPart {
-  factory KeyFileCredentials(Uint8List keyFileContents) {
-    try {
-      final keyFileAsString = utf8.decode(keyFileContents);
-      if (_hexValuePattern.hasMatch(keyFileAsString)) {
-        return KeyFileCredentials._(
-            convert.hex.decode(keyFileAsString) as Uint8List);
-      }
-      final xmlContent = xml.XmlDocument.parse(keyFileAsString);
-      final metaVersion =
-          xmlContent.findAllElements('Version').singleOrNull?.text;
-      final key = xmlContent.findAllElements('Key').single;
-      final dataString = key.findElements('Data').single;
-      final encoded = dataString.text.replaceAll(RegExp(r'\s'), '');
-      Uint8List dataBytes;
-      if (metaVersion != null && metaVersion.startsWith('2.')) {
-        dataBytes = convert.hex.decode(encoded) as Uint8List;
-      } else {
-        dataBytes = base64.decode(encoded);
-      }
-      _logger.finer('Decoded base64 of keyfile.');
-      return KeyFileCredentials._(dataBytes);
-    } catch (e, stackTrace) {
-      _logger.warning(
-          'Unable to parse key file as hex or XML, use as is.', e, stackTrace);
-      final bytes = crypto.sha256.convert(keyFileContents).bytes as Uint8List;
-      return KeyFileCredentials._(bytes);
-    }
-  }
-
-  KeyFileCredentials._(this._keyFileValue);
-
-  static final RegExp _hexValuePattern =
-      RegExp(r'^[a-f\d]{64}', caseSensitive: false);
-
-  final Uint8List _keyFileValue;
-
-  @override
-  Uint8List getBinary() {
-    return _keyFileValue;
-//    return crypto.sha256.convert(_keyFileValue.binaryValue).bytes as Uint8List;
-  }
-}
-
-class PasswordCredentials implements CredentialsPart {
-  PasswordCredentials(this._password);
-
-  final ProtectedValue _password;
-
-  @override
-  Uint8List getBinary() {
-    return _password.hash;
-  }
-}
-
-class HashCredentials implements Credentials {
-  HashCredentials(this.hash);
-
-  Uint8List hash;
-
-  @override
-  Uint8List getHash() => hash;
-
-  @override
-  void changePassword(ProtectedValue password) {
-    final buffer = password.hash;
-    hash = crypto.sha256.convert(buffer).bytes as Uint8List;
   }
 }
 
