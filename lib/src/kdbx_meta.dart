@@ -1,11 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:collection/collection.dart';
-import 'package:logging/logging.dart';
-import 'package:quiver/iterables.dart';
-import 'package:uuid/uuid.dart';
-import 'package:xml/xml.dart' as xml;
-import 'package:xml/xml.dart';
 import 'package:kdbx/src/internal/extension_utils.dart';
 import 'package:kdbx/src/kdbx_binary.dart';
 import 'package:kdbx/src/kdbx_custom_data.dart';
@@ -15,6 +11,11 @@ import 'package:kdbx/src/kdbx_format.dart';
 import 'package:kdbx/src/kdbx_header.dart';
 import 'package:kdbx/src/kdbx_object.dart';
 import 'package:kdbx/src/kdbx_xml.dart';
+import 'package:logging/logging.dart';
+import 'package:quiver/iterables.dart';
+import 'package:uuid/uuid.dart';
+import 'package:xml/xml.dart' as xml;
+import 'package:xml/xml.dart';
 
 final _logger = Logger('kdbx_meta');
 

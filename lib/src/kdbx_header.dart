@@ -2,11 +2,11 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:kdbx/src/crypto/key_encrypter_kdf.dart';
-import 'package:kdbx/src/kdbx_exceptions.dart';
-import 'package:kdbx/src/utils/byte_utils.dart';
 import 'package:kdbx/src/internal/consts.dart';
 import 'package:kdbx/src/kdbx_binary.dart';
+import 'package:kdbx/src/kdbx_exceptions.dart';
 import 'package:kdbx/src/kdbx_var_dictionary.dart';
+import 'package:kdbx/src/utils/byte_utils.dart';
 import 'package:logging/logging.dart';
 import 'package:quiver/check.dart';
 import 'package:quiver/core.dart';

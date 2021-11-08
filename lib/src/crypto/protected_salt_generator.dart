@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:logging/logging.dart';
 import 'package:crypto/crypto.dart';
+import 'package:logging/logging.dart';
 import 'package:pointycastle/export.dart';
 
 final _logger = Logger('protected_salt_generator');

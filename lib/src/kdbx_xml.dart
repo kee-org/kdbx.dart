@@ -3,15 +3,14 @@ import 'dart:typed_data';
 
 import 'package:clock/clock.dart';
 import 'package:collection/collection.dart' show IterableExtension;
+import 'package:kdbx/src/kdbx_consts.dart';
 import 'package:kdbx/src/kdbx_exceptions.dart';
 import 'package:kdbx/src/kdbx_format.dart';
 import 'package:kdbx/src/kdbx_object.dart';
 import 'package:kdbx/src/utils/byte_utils.dart';
-import 'package:kdbx/src/kdbx_consts.dart';
+import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:xml/xml.dart';
-
-import 'package:logging/logging.dart';
 
 final _logger = Logger('kdbx_xml');
 

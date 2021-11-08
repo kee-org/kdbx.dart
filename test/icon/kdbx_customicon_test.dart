@@ -1,5 +1,5 @@
-import 'package:test/test.dart';
 import 'package:kdbx/kdbx.dart';
+import 'package:test/test.dart';
 
 import '../internal/test_utils.dart';
 

@@ -1,9 +1,8 @@
 @Tags(['kdbx4'])
-
 import 'package:clock/clock.dart';
+import 'package:kdbx/kdbx.dart';
 import 'package:logging/logging.dart';
 import 'package:test/test.dart';
-import 'package:kdbx/kdbx.dart';
 
 import 'internal/test_utils.dart';
 

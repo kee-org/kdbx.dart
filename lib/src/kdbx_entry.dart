@@ -258,14 +258,14 @@ class BrowserEntrySettings {
     final regExURLs = <String>[];
     final blockedURLs = <String>[];
     final regExBlockedURLs = <String>[];
-    for (var p in includeUrls) {
+    for (final p in includeUrls) {
       if (p is RegExp) {
         regExURLs.add(p.pattern);
       } else if (p is String) {
         altURLs.add(p);
       }
     }
-    for (var p in excludeUrls) {
+    for (final p in excludeUrls) {
       if (p is RegExp) {
         regExBlockedURLs.add(p.pattern);
       } else if (p is String) {
@@ -288,7 +288,7 @@ class BrowserEntrySettings {
       altUrls.forEach(includeUrls.add);
     }
     if (regExURLs != null && regExURLs is List<String>) {
-      for (var url in regExURLs) {
+      for (final url in regExURLs) {
         includeUrls.add(RegExp(url));
       }
     }
@@ -304,7 +304,7 @@ class BrowserEntrySettings {
       blockedURLs.forEach(excludeUrls.add);
     }
     if (regExBlockedURLs != null && regExBlockedURLs is List<String>) {
-      for (var url in regExBlockedURLs) {
+      for (final url in regExBlockedURLs) {
         excludeUrls.add(RegExp(url));
       }
     }
@@ -802,11 +802,11 @@ class KdbxEntry extends KdbxObject {
       List<KdbxEntry> otherHistory) {
     final dict = SplayTreeMap<DateTime?, KdbxEntry>();
 
-    for (var historyEntry in history) {
+    for (final historyEntry in history) {
       dict[historyEntry.times.lastModificationTime.get()] = historyEntry;
     }
 
-    for (var historyEntry in otherHistory) {
+    for (final historyEntry in otherHistory) {
       final key = historyEntry.times.lastModificationTime.get();
       if (!dict.containsKey(key)) {
         dict[key] = historyEntry.cloneInto(parent, toHistoryEntry: true);

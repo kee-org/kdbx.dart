@@ -3,38 +3,38 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:clock/clock.dart';
-import 'package:collection/collection.dart';
 
 import 'package:archive/archive.dart';
-import 'package:kdbx/src/kdbx_entry.dart';
-import 'package:supercharged_dart/supercharged_dart.dart';
 import 'package:argon2_ffi_base/argon2_ffi_base.dart';
+import 'package:clock/clock.dart';
+import 'package:collection/collection.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:kdbx/kdbx.dart';
 import 'package:kdbx/src/credentials/credentials.dart';
 import 'package:kdbx/src/crypto/key_encrypter_kdf.dart';
 import 'package:kdbx/src/crypto/protected_salt_generator.dart';
 import 'package:kdbx/src/crypto/protected_value.dart';
-import 'package:kdbx/src/internal/extension_utils.dart';
-import 'package:kdbx/src/internal/pointycastle_argon2.dart';
-import 'package:kdbx/src/kdbx_deleted_object.dart';
-import 'package:kdbx/src/kdbx_exceptions.dart';
-import 'package:kdbx/src/utils/byte_utils.dart';
 import 'package:kdbx/src/internal/consts.dart';
 import 'package:kdbx/src/internal/crypto_utils.dart';
+import 'package:kdbx/src/internal/extension_utils.dart';
+import 'package:kdbx/src/internal/pointycastle_argon2.dart';
 import 'package:kdbx/src/kdbx_binary.dart';
+import 'package:kdbx/src/kdbx_deleted_object.dart';
+import 'package:kdbx/src/kdbx_entry.dart';
+import 'package:kdbx/src/kdbx_exceptions.dart';
 import 'package:kdbx/src/kdbx_file.dart';
 import 'package:kdbx/src/kdbx_group.dart';
 import 'package:kdbx/src/kdbx_header.dart';
 import 'package:kdbx/src/kdbx_meta.dart';
 import 'package:kdbx/src/kdbx_object.dart';
 import 'package:kdbx/src/kdbx_xml.dart';
+import 'package:kdbx/src/utils/byte_utils.dart';
 import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:pointycastle/export.dart';
-import 'package:xml/xml.dart' as xml;
+import 'package:supercharged_dart/supercharged_dart.dart';
 import 'package:xml/xml.dart';
+import 'package:xml/xml.dart' as xml;
 
 final _logger = Logger('kdbx.format');
 
@@ -121,7 +121,7 @@ class KdbxReadWriteContext {
       }
     });
     // ignore: prefer_foreach
-    for (var index in unusedIndexes.reversed) {
+    for (final index in unusedIndexes.reversed) {
       _binaries.removeAt(index);
     }
   }

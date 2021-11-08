@@ -6,8 +6,6 @@ import 'package:quiver/iterables.dart';
 import 'package:test/expect.dart';
 import 'package:test/scaffolding.dart';
 
-import '../internal/test_utils.dart';
-
 final _logger = Logger('keyfile_create_test');
 
 void main() {
