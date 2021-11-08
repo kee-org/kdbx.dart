@@ -107,8 +107,8 @@ void main() {
         header: KdbxHeader.createV4(),
       );
       final rootGroup = kdbx.body.rootGroup;
-      _createEntry(kdbx, rootGroup, 'user1', 'LoremIpsum');
-      _createEntry(kdbx, rootGroup, 'user2', 'Second Password');
+      TestUtil.createEntry(kdbx, rootGroup, 'user1', 'LoremIpsum');
+      TestUtil.createEntry(kdbx, rootGroup, 'user2', 'Second Password');
       final saved = await kdbx.save();
 
       final loadedKdbx = await kdbxFormat.read(
@@ -127,7 +127,7 @@ void main() {
       final file = await kdbxFormat.read(
           data, Credentials(ProtectedValue.fromString('asdf')));
       expect(file.body.rootGroup.entries, hasLength(1));
-      _createEntry(file, file.body.rootGroup, 'user1', 'LoremIpsum');
+      TestUtil.createEntry(file, file.body.rootGroup, 'user1', 'LoremIpsum');
 
       // and try to write it.
       final output = await file.save();
@@ -150,13 +150,4 @@ void main() {
       expect(entry.parent, equals(file.recycleBin));
     });
   });
-}
-
-KdbxEntry _createEntry(
-    KdbxFile file, KdbxGroup group, String username, String password) {
-  final entry = KdbxEntry.create(file, group);
-  group.addEntry(entry);
-  entry.setString(KdbxKeyCommon.USER_NAME, PlainValue(username));
-  entry.setString(KdbxKeyCommon.PASSWORD, ProtectedValue.fromString(password));
-  return entry;
 }
