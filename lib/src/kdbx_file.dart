@@ -181,6 +181,11 @@ class KdbxFile {
     }
     return body.merge(other.body);
   }
+
+  /// Imports the given file into this file.
+  void import(KdbxFile other) {
+    return body.import(other.body);
+  }
 }
 
 extension KdbxInternal on KdbxFile {

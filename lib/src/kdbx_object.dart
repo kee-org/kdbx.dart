@@ -272,6 +272,7 @@ abstract class KdbxObject extends KdbxNode {
   }
 
   void merge(MergeContext mergeContext, covariant KdbxObject other);
+  void import(covariant KdbxObject other, Map<KdbxUuid, KdbxUuid> uuidMap);
 }
 
 class KdbxUuid {

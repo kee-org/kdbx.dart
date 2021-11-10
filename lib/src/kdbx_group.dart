@@ -126,6 +126,24 @@ class KdbxGroup extends KdbxObject {
   UuidNode get lastTopVisibleEntry => UuidNode(this, 'LastTopVisibleEntry');
 
   @override
+  void import(KdbxGroup other, Map<KdbxUuid, KdbxUuid> uuidMap) {
+    _importSubObjects<KdbxGroup>(
+      other._groups,
+      uuidMap,
+      importToHere: (other) =>
+          KdbxGroup.create(ctx: ctx, parent: this, name: other.name.get())
+            ..forceSetUuid(KdbxUuid.random())
+            ..let((x) => addGroup(x))
+            .._overwriteFrom(const OverwriteContextNoop(), other),
+    );
+    _importSubObjects<KdbxEntry>(
+      other._entries,
+      uuidMap,
+      importToHere: (other) => other.cloneInto(this, withNewUuid: true),
+    );
+  }
+
+  @override
   void merge(MergeContext mergeContext, KdbxGroup other) {
     assertSameUuid(other, 'merge');
 
@@ -150,6 +168,17 @@ class KdbxGroup extends KdbxObject {
       importToHere: (other) => other.cloneInto(this),
     );
     mergeContext.markAsMerged(this);
+  }
+
+  void _importSubObjects<T extends KdbxObject>(
+      LinkedHashMap<String, T> otherObjects, Map<KdbxUuid, KdbxUuid> uuidMap,
+      {required T Function(T obj) importToHere}) {
+    for (final otherObj in otherObjects.values) {
+      final originalUuid = otherObj.uuid;
+      final newMeObject = importToHere(otherObj);
+      uuidMap[originalUuid] = newMeObject.uuid;
+      newMeObject.import(otherObj, uuidMap);
+    }
   }
 
   void _mergeSubObjects<T extends KdbxObject>(MergeContext mergeContext,
@@ -212,8 +241,7 @@ class KdbxGroup extends KdbxObject {
         lastTopVisibleEntry,
       ];
 
-  void _overwriteFrom(MergeContext mergeContext, KdbxGroup other) {
-    assertSameUuid(other, 'overwrite');
+  void _overwriteFrom(OverwriteContext mergeContext, KdbxGroup other) {
     overwriteSubNodesFrom(mergeContext, _overwriteNodes, other._overwriteNodes);
     // we should probably check that [lastTopVisibleEntry] is still a
     // valid reference?

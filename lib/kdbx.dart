@@ -25,7 +25,7 @@ export 'src/kdbx_exceptions.dart';
 export 'src/kdbx_file.dart';
 export 'src/kdbx_format.dart' show KdbxBody, MergeContext, KdbxFormat;
 export 'src/kdbx_group.dart' show KdbxGroup;
-export 'src/kdbx_header.dart' show KdbxVersion;
+export 'src/kdbx_header.dart' show KdbxVersion, KdbxHeader;
 export 'src/kdbx_meta.dart';
 export 'src/kdbx_object.dart'
     show
@@ -35,4 +35,5 @@ export 'src/kdbx_object.dart'
         Changeable,
         ChangeEvent,
         KdbxNodeContext;
+export 'src/kdbx_var_dictionary.dart' show VarDictionary;
 export 'src/utils/byte_utils.dart' show ByteUtils;

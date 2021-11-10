@@ -290,6 +290,37 @@ class KdbxBody extends KdbxNode {
     return mergeContext;
   }
 
+  void import(KdbxBody other) {
+    // deleted objects from other are now cleared since no merge against them can happen
+
+    // import binaries
+    for (final binary in other.ctx.binariesIterable) {
+      if (ctx.findBinaryByValue(binary) == null) {
+        ctx.addBinary(binary);
+      }
+    }
+    meta.import(other.meta);
+
+    final importedUuidMap = <KdbxUuid, KdbxUuid>{};
+    final destGroup = KdbxGroup.create(
+        ctx: ctx, parent: rootGroup, name: 'Imported at ${clock.now()}');
+    rootGroup.addGroup(destGroup);
+    destGroup.import(other.rootGroup, importedUuidMap);
+
+    if ((other.meta.recycleBinEnabled.get() ?? false) &&
+        other.meta.recycleBinUUID.get() != null) {
+      final binUuid = importedUuidMap[other.meta.recycleBinUUID.get()];
+      if (binUuid != null) {
+        final importedBin =
+            destGroup.getAllGroups().filter((g) => g.key == binUuid.uuid).first;
+        importedBin.value.name.set('Imported bin');
+      }
+    }
+    cleanup();
+
+    _logger.info('Finished importing');
+  }
+
   void cleanup() {
     final now = clock.now().toUtc();
     final historyMaxItems = (meta.historyMaxItems.get() ?? 0) > 0

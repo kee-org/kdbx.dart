@@ -288,6 +288,15 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
       settingsChanged.set(other.settingsChanged.get());
     }
   }
+
+  // Import changes in [other] into this meta data.
+  void import(KdbxMeta other) {
+    // import custom icons
+    // Unused icons will be cleaned up later
+    for (final otherCustomIcon in other._customIcons.values) {
+      _customIcons[otherCustomIcon.uuid] ??= otherCustomIcon;
+    }
+  }
 }
 
 class KeeVaultEmbeddedConfig {
@@ -306,8 +315,17 @@ class KeeVaultEmbeddedConfig {
     return KeeVaultEmbeddedConfig(
       version: map['version'] as int? ?? 1,
       randomId: map['randomId'] as String?,
-      addon: Map<String, dynamic>.from(map['addon'] as Map<String, dynamic>),
-      vault: Map<String, dynamic>.from(map['vault'] as Map<String, dynamic>),
+      addon: map['addon'] != null
+          ? Map<String, dynamic>.from(map['addon'] as Map<String, dynamic>)
+          : <String, dynamic>{
+              'prefs': <String, dynamic>{},
+              'version': -1,
+            },
+      vault: map['vault'] != null
+          ? Map<String, dynamic>.from(map['vault'] as Map<String, dynamic>)
+          : <String, dynamic>{
+              'prefs': <String, dynamic>{},
+            },
     );
   }
 

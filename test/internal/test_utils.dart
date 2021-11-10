@@ -101,6 +101,14 @@ class TestUtil {
     return await TestUtil.saveAndRead(file);
   }
 
+  static Future<KdbxFile> createFileWithRecycledEntry(
+      Function proceedSeconds) async {
+    final file = await TestUtil.createSimpleFile(proceedSeconds);
+    file.deleteEntry(file.body.rootGroup.entries.values.elementAt(0), false);
+    proceedSeconds(10);
+    return await TestUtil.saveAndRead(file);
+  }
+
   static Future<KdbxFile> createRealFile(Function proceedSeconds) async {
     final file = TestUtil.createEmptyFile();
     createEntry(file, file.body.rootGroup, 'test1', 'test1');
@@ -145,6 +153,18 @@ class TestUtil {
     entry.setString(
         KdbxKeyCommon.PASSWORD, ProtectedValue.fromString(password));
     return entry;
+  }
+
+  static Future<KdbxFile> createRealFileWithBinary(
+      void Function(int seconds) proceedSeconds) async {
+    final file = await TestUtil.createRealFile(proceedSeconds);
+    final entry = KdbxEntry.create(file, file.body.rootGroup);
+    file.body.rootGroup.addEntry(entry);
+    entry.createBinary(
+        isProtected: false,
+        name: 'testBin1',
+        bytes: Uint8List.fromList([1, 2, 3]));
+    return await TestUtil.saveAndRead(file);
   }
 }
 

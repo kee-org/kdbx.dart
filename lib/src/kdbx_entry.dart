@@ -376,13 +376,14 @@ enum BrowserAutoFillBehaviour {
 enum MatchAccuracy { Exact, Hostname, Domain }
 
 extension KdbxEntryInternal on KdbxEntry {
-  KdbxEntry cloneInto(KdbxGroup otherGroup, {bool toHistoryEntry = false}) =>
+  KdbxEntry cloneInto(KdbxGroup otherGroup,
+          {bool toHistoryEntry = false, bool withNewUuid = false}) =>
       KdbxEntry.create(
         otherGroup.file!,
         otherGroup,
         isHistoryEntry: toHistoryEntry,
       )
-        ..forceSetUuid(uuid)
+        ..forceSetUuid(withNewUuid ? KdbxUuid.random() : uuid)
         ..let(toHistoryEntry ? (x) => null : otherGroup.addEntry)
         .._overwriteFrom(
           OverwriteContext.noop,
@@ -408,7 +409,6 @@ extension KdbxEntryInternal on KdbxEntry {
     checkArgument(!includeHistory || history.isEmpty,
         message:
             'We can only overwrite with history, if local history is empty.');
-    assertSameUuid(other, 'overwrite');
     overwriteSubNodesFrom(
       overwriteContext,
       _overwriteNodes,
@@ -769,6 +769,12 @@ class KdbxEntry extends KdbxObject {
           List<KdbxEntry> history, DateTime? lastModificationTime) =>
       history.firstWhereOrNull((history) =>
           history.times.lastModificationTime.get() == lastModificationTime);
+
+  @override
+  void import(KdbxEntry other, Map<KdbxUuid, KdbxUuid> uuidMap) {
+    return;
+    //_overwriteFrom(OverwriteContext.noop, other, includeHistory: true);
+  }
 
   @override
   void merge(MergeContext mergeContext, KdbxEntry other) {
