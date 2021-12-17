@@ -196,5 +196,27 @@ void main() {
             isNot(expectedFinalModifiedDate));
       }),
     );
+    test(
+      'reverts custom json field from history item',
+      () async => await withClock(fakeClock, () async {
+        final file =
+            await TestUtil.createFileWithJsonFieldHistory(proceedSeconds);
+        proceedSeconds(10);
+        final entry = file.body.rootGroup.entries.values.toList()[0];
+        expect(entry.browserSettings.fields.length, 0);
+        entry.revertToHistoryEntry(entry.history.length - 1);
+        final history = entry.history;
+        proceedSeconds(10);
+        expect(history.length, 2);
+        final history_1 = history.last;
+        final history_2 = history[history.length - 2];
+        expect(
+            history_1.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test2');
+        expect(
+            history_2.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test1');
+        expect(entry.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test1');
+        expect(entry.browserSettings.fields.length, 1);
+      }),
+    );
   }, tags: ['kdbx3']);
 }

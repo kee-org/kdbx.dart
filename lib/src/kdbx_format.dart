@@ -1000,7 +1000,7 @@ https://github.com/renggli/dart-xml/blob/main/example/xml_flatten.dart
   Uint8List _decryptContent(
       KdbxHeader header, Uint8List masterKey, Uint8List encryptedPayload) {
     final encryptionIv = header.fields[HeaderFields.EncryptionIV]!.bytes;
-    final decryptCipher = CBCBlockCipher(AESFastEngine());
+    final decryptCipher = CBCBlockCipher(AESEngine());
     decryptCipher.init(
         false, ParametersWithIV(KeyParameter(masterKey), encryptionIv));
     _logger.finer('decrypting ${encryptedPayload.length} with block size '
@@ -1032,7 +1032,7 @@ https://github.com/renggli/dart-xml/blob/main/example/xml_flatten.dart
       KdbxHeader header, Uint8List cipherKey, Uint8List encryptedPayload) {
     final encryptionIv = header.fields[HeaderFields.EncryptionIV]!.bytes;
 
-    final decryptCipher = CBCBlockCipher(AESFastEngine());
+    final decryptCipher = CBCBlockCipher(AESEngine());
     decryptCipher.init(
         false, ParametersWithIV(KeyParameter(cipherKey), encryptionIv));
     _logger.finer('decrypting ${encryptedPayload.length} with block size '
@@ -1068,7 +1068,7 @@ https://github.com/renggli/dart-xml/blob/main/example/xml_flatten.dart
 
   static Uint8List _encryptDataAes(
       Uint8List masterKey, Uint8List payload, Uint8List encryptionIv) {
-    final encryptCipher = CBCBlockCipher(AESFastEngine());
+    final encryptCipher = CBCBlockCipher(AESEngine());
     encryptCipher.init(
         true, ParametersWithIV(KeyParameter(masterKey), encryptionIv));
     return AesHelper.processBlocks(

@@ -414,6 +414,9 @@ extension KdbxEntryInternal on KdbxEntry {
       _overwriteNodes,
       other._overwriteNodes,
     );
+    // reset browserSettings for rebuild from potentially changed string
+    _browserSettings = null;
+
     // overwrite all strings
     final stringsDiff = _diffMap(_strings, other._strings);
     if (stringsDiff.isNotEmpty) {
