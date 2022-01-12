@@ -207,6 +207,9 @@ abstract class KdbxObject extends KdbxNode {
 
   KdbxGroup? _parent;
 
+  late final UuidNode previousParentGroup =
+      UuidNode(this, 'PreviousParentGroup');
+
   bool get isInRecycleBin {
     final bin = file!.recycleBin;
     if (bin == null) {
@@ -264,7 +267,10 @@ abstract class KdbxObject extends KdbxNode {
   }
 
   void internalChangeParent(KdbxGroup parent) {
-    modify(() => _parent = parent);
+    modify(() {
+      previousParentGroup.set(_parent?.uuid);
+      _parent = parent;
+    });
   }
 
   void detachFromParent() {

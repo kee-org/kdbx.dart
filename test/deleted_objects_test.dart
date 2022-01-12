@@ -33,6 +33,18 @@ void main() {
       expect(reload.body.deletedObjects, hasLength(1));
     });
   });
+  group('delete to trash', () {
+    test('move to trash, read previous parent', () {
+      final file = TestUtil.createEmptyFile();
+      final g = file.body.rootGroup;
+      final entry = TestUtil.createEntry(file, g, 'foo', 'bar');
+      expect(g.getAllGroups().length + g.getAllEntries().length, 2);
+      file.deleteEntry(entry);
+      // root group, entry and trash group.
+      expect(g.getAllGroups().length + g.getAllEntries().length, 3);
+      expect(entry.previousParentGroup.get(), g.uuid);
+    });
+  });
 
   group('deleting objects', () {
     test(
