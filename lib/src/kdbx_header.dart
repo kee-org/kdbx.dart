@@ -72,6 +72,7 @@ class KdbxVersion {
   static const V3 = KdbxVersion._(3, 0);
   static const V3_1 = KdbxVersion._(3, 1);
   static const V4 = KdbxVersion._(4, 0);
+  static const V4_1 = KdbxVersion._(4, 1);
 
   final int major;
   final int minor;
@@ -179,6 +180,26 @@ class KdbxHeader {
           endPos: null,
         );
 
+  KdbxHeader.createV4_1()
+      : this(
+          sig1: Consts.FileMagic,
+          sig2: Consts.Sig2Kdbx,
+          version: KdbxVersion.V4_1,
+          fields: _defaultFieldValuesV4(),
+          innerFields: _defaultInnerFieldValuesV4(),
+          endPos: null,
+        );
+
+  KdbxHeader.createV4Argon2id()
+      : this(
+          sig1: Consts.FileMagic,
+          sig2: Consts.Sig2Kdbx,
+          version: KdbxVersion.V4,
+          fields: _defaultFieldValuesV4(argonType: KdfType.Argon2id),
+          innerFields: _defaultInnerFieldValuesV4(),
+          endPos: null,
+        );
+
   static List<HeaderFields> _requiredFields(int majorVersion) {
     if (majorVersion < KdbxVersion.V3.major) {
       throw KdbxUnsupportedException('Unsupported version: $majorVersion');
@@ -203,10 +224,16 @@ class KdbxHeader {
     }
   }
 
-  static VarDictionary _createKdfDefaultParameters() {
+  static VarDictionary _createKdfDefaultParameters({KdfType? argonType}) {
+    if (argonType != null &&
+        argonType != KdfType.Argon2d &&
+        argonType != KdfType.Argon2id) {
+      throw Exception('Invalid Argon2 KDF type supplied');
+    }
     return VarDictionary([
-      KdfField.uuid
-          .item(KeyEncrypterKdf.kdfUuidForType(KdfType.Argon2).toBytes()),
+      KdfField.uuid.item(
+          KeyEncrypterKdf.kdfUuidForType(argonType ?? KdfType.Argon2d)
+              .toBytes()),
       KdfField.salt.item(ByteUtils.randomBytes(Consts.DefaultKdfSaltLength)),
       KdfField.parallelism.item(Consts.DefaultKdfParallelism),
       KdfField.iterations.item(Consts.DefaultKdfIterations),
@@ -354,16 +381,21 @@ class KdbxHeader {
                 .indexOf(ProtectedValueEncryption.salsa20)),
       });
 
-  static Map<HeaderFields, HeaderField> _defaultFieldValuesV4() =>
-      _headerFields({
-        HeaderFields.CipherID: CryptoConsts.CIPHER_IDS[Cipher.aes]!.toBytes(),
-        HeaderFields.CompressionFlags:
-            WriterHelper.singleUint32Bytes(Compression.gzip.id),
-        HeaderFields.KdfParameters: _createKdfDefaultParameters().write(),
-//        HeaderFields.InnerRandomStreamID: WriterHelper.singleUint32Bytes(
-//            ProtectedValueEncryption.values
-//                .indexOf(ProtectedValueEncryption.chaCha20)),
-      });
+  static Map<HeaderFields, HeaderField> _defaultFieldValuesV4(
+      {KdfType? argonType}) {
+    if (argonType != null &&
+        argonType != KdfType.Argon2d &&
+        argonType != KdfType.Argon2id) {
+      throw Exception('Invalid Argon2 KDF type supplied');
+    }
+    return _headerFields({
+      HeaderFields.CipherID: CryptoConsts.CIPHER_IDS[Cipher.aes]!.toBytes(),
+      HeaderFields.CompressionFlags:
+          WriterHelper.singleUint32Bytes(Compression.gzip.id),
+      HeaderFields.KdfParameters:
+          _createKdfDefaultParameters(argonType: argonType).write(),
+    });
+  }
 
   static Map<HeaderFields, HeaderField> _headerFields(
           Map<HeaderFields, Uint8List> headerFields) =>

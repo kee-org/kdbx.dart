@@ -63,8 +63,29 @@ class TestUtil {
         Credentials.composite(ProtectedValue.fromString('asdf'), null));
   }
 
+  static KdbxFile createEmptyFileV3() {
+    return createEmptyFileWithCredentialsV3(
+        Credentials.composite(ProtectedValue.fromString('asdf'), null));
+  }
+
+  static KdbxFile createEmptyFileV4Argon2Id() {
+    return createEmptyFileWithCredentialsV4Argon2Id(
+        Credentials.composite(ProtectedValue.fromString('asdf'), null));
+  }
+
   static KdbxFile createEmptyFileWithCredentials(Credentials credentials) {
     return kdbxFormat().create(credentials, 'example');
+  }
+
+  static KdbxFile createEmptyFileWithCredentialsV3(Credentials credentials) {
+    return kdbxFormat()
+        .create(credentials, 'example', header: KdbxHeader.createV3());
+  }
+
+  static KdbxFile createEmptyFileWithCredentialsV4Argon2Id(
+      Credentials credentials) {
+    return kdbxFormat()
+        .create(credentials, 'example', header: KdbxHeader.createV4Argon2id());
   }
 
   static Future<KdbxFile> createFileWithHistory(Function proceedSeconds) async {
@@ -102,6 +123,27 @@ class TestUtil {
 
   static Future<KdbxFile> createSimpleFile(Function proceedSeconds) async {
     final file = TestUtil.createEmptyFile();
+    createEntry(file, file.body.rootGroup, 'test1', 'test1');
+    final subGroup =
+        file.createGroup(parent: file.body.rootGroup, name: 'Sub Group');
+    createEntry(file, subGroup, 'test2', 'test2');
+    proceedSeconds(10);
+    return await TestUtil.saveAndRead(file);
+  }
+
+  static Future<KdbxFile> createSimpleFileV3(Function proceedSeconds) async {
+    final file = TestUtil.createEmptyFileV3();
+    createEntry(file, file.body.rootGroup, 'test1', 'test1');
+    final subGroup =
+        file.createGroup(parent: file.body.rootGroup, name: 'Sub Group');
+    createEntry(file, subGroup, 'test2', 'test2');
+    proceedSeconds(10);
+    return await TestUtil.saveAndRead(file);
+  }
+
+  static Future<KdbxFile> createSimpleFileV4Argon2Id(
+      Function proceedSeconds) async {
+    final file = TestUtil.createEmptyFileV4Argon2Id();
     createEntry(file, file.body.rootGroup, 'test1', 'test1');
     final subGroup =
         file.createGroup(parent: file.body.rootGroup, name: 'Sub Group');

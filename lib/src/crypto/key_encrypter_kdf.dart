@@ -13,7 +13,8 @@ import 'package:pointycastle/export.dart';
 final _logger = Logger('key_encrypter_kdf');
 
 enum KdfType {
-  Argon2,
+  Argon2d,
+  Argon2id,
   Aes,
 }
 
@@ -67,7 +68,8 @@ class KeyEncrypterKdf {
   KeyEncrypterKdf(this.argon2);
 
   static const kdfUuids = <String, KdfType>{
-    '72Nt34wpREuR96mkA+MKDA==': KdfType.Argon2,
+    '72Nt34wpREuR96mkA+MKDA==': KdfType.Argon2d,
+    'nimLGVbbR3OyPfw+xvCh5g==': KdfType.Argon2id,
     'ydnzmmKKRGC/dA0IwYpP6g==': KdfType.Aes,
   };
   static KdbxUuid kdfUuidForType(KdfType type) {
@@ -99,28 +101,32 @@ class KeyEncrypterKdf {
   Future<Uint8List> encrypt(Uint8List key, VarDictionary kdfParameters) async {
     final kdfType = kdfTypeFor(kdfParameters);
     switch (kdfType) {
-      case KdfType.Argon2:
-        _logger.fine('Must be using argon2');
-        return await encryptArgon2(key, kdfParameters);
+      case KdfType.Argon2d:
+        _logger.fine('KDF = argon2d');
+        return await encryptArgon2(key, kdfType, kdfParameters);
+      case KdfType.Argon2id:
+        _logger.fine('KDF = argon2id');
+        // return await encryptArgon2(key, kdfType, kdfParameters);
+        throw KdbxUnsupportedException(
+            'Argon2id KDF not supported. Please ensure the Key Derivation Function in your KDBX is either Argon2 or Argon2d.');
       case KdfType.Aes:
-        _logger.fine('Must be using aes');
+        _logger.fine('KDF = aes');
         return await encryptAes(key, kdfParameters);
       default:
-        throw UnsupportedError('unsupported KDF Type $kdfType.');
+        throw KdbxUnsupportedException('unsupported KDF Type $kdfType.');
     }
   }
 
   Future<Uint8List> encryptArgon2(
-      Uint8List key, VarDictionary kdfParameters) async {
+      Uint8List key, KdfType kdfType, VarDictionary kdfParameters) async {
     return await argon2!.argon2Async(Argon2Arguments(
       key,
       KdfField.salt.read(kdfParameters)!,
-//      65536, //KdfField.memory.read(kdfParameters),
       KdfField.memory.read(kdfParameters)! ~/ 1024,
       KdfField.iterations.read(kdfParameters)!,
       32,
       KdfField.parallelism.read(kdfParameters)!,
-      0,
+      kdfType == KdfType.Argon2id ? 2 : 0,
       KdfField.version.read(kdfParameters)!,
     ));
   }

@@ -14,7 +14,7 @@ void main() {
     final dict = VarDictionary([
       KdfField.rounds.item(99),
       KdfField.uuid
-          .item(KeyEncrypterKdf.kdfUuidForType(KdfType.Argon2).toBytes()),
+          .item(KeyEncrypterKdf.kdfUuidForType(KdfType.Argon2d).toBytes()),
     ]);
     final serialized = dict.write();
     _logger.fine('Serialized dictionary: ${ByteUtils.toHexList(serialized)}');

@@ -44,6 +44,30 @@ void main() {
       }),
     );
     test(
+      'Simple import v3.1',
+      () async => await withClock(fakeClock, () async {
+        final file = await TestUtil.createSimpleFile(proceedSeconds);
+        final file2 = await TestUtil.createSimpleFileV3(proceedSeconds);
+
+        file.import(file2);
+        expect(file.body.rootGroup.getAllEntries(), hasLength(4));
+        expect(file.body.rootGroup.getAllGroups(), hasLength(4));
+      }),
+    );
+    test(
+      'Simple import v4.1 with Argon2id',
+      () async => await withClock(fakeClock, () async {
+        final file = await TestUtil.createSimpleFile(proceedSeconds);
+        final file2 = await TestUtil.createSimpleFileV4Argon2Id(proceedSeconds);
+
+        file.import(file2);
+        expect(file.body.rootGroup.getAllEntries(), hasLength(4));
+        expect(file.body.rootGroup.getAllGroups(), hasLength(4));
+      }),
+      skip:
+          'Underlying argon ffi library does not produce correct results for 2id hashes (at least in Linux and Android)',
+    );
+    test(
       'Imports entries with history correctly',
       () async => await withClock(fakeClock, () async {
         final file = await TestUtil.createSimpleFile(proceedSeconds);
