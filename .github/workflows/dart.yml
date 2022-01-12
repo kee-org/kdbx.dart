@@ -7,37 +7,21 @@ jobs:
     strategy:
       matrix:
         os: ['ubuntu-latest', 'windows-2019', 'macos-latest']
-        dart_channel: ['stable']
+        sdk: ['stable', 'beta']
 
       fail-fast: false
     runs-on: ${{ matrix.os }}
     
     steps:
     - uses: actions/checkout@v1
-    - uses: cedx/setup-dart@v2
+    - uses: dart-lang/setup-dart@v1
       with:
-            release-channel: ${{ matrix.dart_channel }}
+            sdk: ${{ matrix.sdk }}
     - run: |
         which dart
         codesign --remove-signature $(which dart)
       if: startsWith(matrix.os, 'macos')
     - name: Install dependencies
-      run: pub get
+      run: dart pub get
     - name: Run tests
-      run: pub run test
-  coverage:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: cedx/setup-dart@v2
-        with:
-          release-channel: dev
-      - run: _tool/test-coverage.sh
-      - name: Coveralls
-        uses: coverallsapp/github-action@v1.1.1
-        env:
-          COVERALLS_FLAG_NAME: Unit
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: coverage/lcov.info
-#          base-path: .
+      run: dart pub run test

@@ -1,9 +1,12 @@
 # kdbx.dart
 
-KeepassX format implementation in pure dart.
+KDBX format implementation in pure dart.
 
-Check out [AuthPass Password Manager](https://authpass.app/) for an app
-which uses this library.
+Forked from https://github.com/authpass/kdbx.dart/ for modification and use in Kee Vault.
+
+Different consumers of the KDBX library have different requirements and it may or may not be possible to have a single Dart library to meet all needs. Feel free to open an issue if this seems close to what you need but you have suggestions for improvements.
+
+The rest of this Readme is unmodified from the original fork and unreviewed.
 
 ## Resources
 
