@@ -5,6 +5,7 @@ import 'package:argon2_ffi_base/argon2_ffi_base.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:isolate/isolate_runner.dart';
 import 'package:kdbx/kdbx.dart';
+import 'package:kdbx/src/internal/kdf_cache.dart';
 import 'package:kdbx/src/kdbx_var_dictionary.dart';
 import 'package:kdbx/src/utils/byte_utils.dart';
 import 'package:logging/logging.dart';
@@ -65,7 +66,7 @@ class KdfField<T> {
 }
 
 class KeyEncrypterKdf {
-  KeyEncrypterKdf(this.argon2);
+  KeyEncrypterKdf(this.argon2, this.cache);
 
   static const kdfUuids = <String, KdfType>{
     '72Nt34wpREuR96mkA+MKDA==': KdfType.Argon2d,
@@ -97,6 +98,7 @@ class KeyEncrypterKdf {
   }
 
   final Argon2? argon2;
+  final KdfCache cache;
 
   Future<Uint8List> encrypt(Uint8List key, VarDictionary kdfParameters) async {
     final kdfType = kdfTypeFor(kdfParameters);
@@ -119,7 +121,7 @@ class KeyEncrypterKdf {
 
   Future<Uint8List> encryptArgon2(
       Uint8List key, KdfType kdfType, VarDictionary kdfParameters) async {
-    return await argon2!.argon2Async(Argon2Arguments(
+    final args = Argon2Arguments(
       key,
       KdfField.salt.read(kdfParameters)!,
       KdfField.memory.read(kdfParameters)! ~/ 1024,
@@ -128,7 +130,8 @@ class KeyEncrypterKdf {
       KdfField.parallelism.read(kdfParameters)!,
       kdfType == KdfType.Argon2id ? 2 : 0,
       KdfField.version.read(kdfParameters)!,
-    ));
+    );
+    return (await cache.getResult(args)) ?? (await stretchAndCache(args));
   }
 
   Future<Uint8List> encryptAes(
@@ -171,6 +174,12 @@ class KeyEncrypterKdf {
       out2 = tmp;
     }
     return crypto.sha256.convert(out1).bytes as Uint8List;
+  }
+
+  Future<Uint8List> stretchAndCache(Argon2Arguments args) async {
+    final result = await argon2!.argon2Async(args);
+    await cache.putItem(args, result);
+    return result;
   }
 }
 

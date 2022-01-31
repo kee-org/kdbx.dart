@@ -6,6 +6,7 @@ import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:kdbx/kdbx.dart';
 import 'package:kdbx/src/crypto/protected_value.dart';
+import 'package:kdbx/src/internal/kdf_cache.dart';
 import 'package:kdbx/src/kdbx_format.dart';
 import 'package:kdbx/src/utils/print_utils.dart';
 import 'package:logging/logging.dart';
@@ -88,7 +89,7 @@ abstract class KdbxFileCommand extends Command<void> {
         keyFile == null ? null : await File(keyFile).readAsBytes();
 
     Argon2.resolveLibraryForceDynamic = true;
-    final file = await KdbxFormat(Argon2FfiFlutter()).read(
+    final file = await KdbxFormat(KdfCache(), Argon2FfiFlutter()).read(
       bytes,
       Credentials.composite(ProtectedValue.fromString(password), keyFileData),
     );

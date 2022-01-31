@@ -18,7 +18,7 @@ class TestUtil {
 
   static KdbxFormat kdbxFormat() {
     Argon2.resolveLibraryForceDynamic = true;
-    return KdbxFormat(Argon2FfiFlutter(resolveLibrary: (path) {
+    return KdbxFormat(null, Argon2FfiFlutter(resolveLibrary: (path) {
       final cwd = Directory('.').absolute.uri;
       final p = cwd.resolve(path);
       final filePath = p.toFilePath();

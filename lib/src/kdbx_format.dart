@@ -36,6 +36,8 @@ import 'package:supercharged_dart/supercharged_dart.dart';
 import 'package:xml/xml.dart';
 import 'package:xml/xml.dart' as xml;
 
+import 'internal/kdf_cache.dart';
+
 final _logger = Logger('kdbx.format');
 
 /// Context used during reading and writing.
@@ -516,13 +518,15 @@ class _KeysV4 {
 }
 
 class KdbxFormat {
-  KdbxFormat([Argon2? argon2])
+  KdbxFormat([KdfCache? cache, Argon2? argon2])
       : assert(kdbxKeyCommonAssertConsistency()),
         argon2 = argon2 == null || !argon2.isImplemented
             ? const PointyCastleArgon2()
-            : argon2;
+            : argon2,
+        cache = cache ?? KdfCache();
 
   final Argon2 argon2;
+  final KdfCache cache;
   static bool dartWebWorkaround = false;
 
   /// Creates a new, empty [KdbxFile] with default settings.
@@ -902,8 +906,8 @@ https://github.com/renggli/dart-xml/blob/main/example/xml_flatten.dart
     }
 
     final credentialHash = credentials.getHash();
-    final key =
-        await KeyEncrypterKdf(argon2).encrypt(credentialHash, kdfParameters);
+    final key = await KeyEncrypterKdf(argon2, cache)
+        .encrypt(credentialHash, kdfParameters);
 
 //    final keyWithSeed = Uint8List(65);
 //    keyWithSeed.replaceRange(0, masterSeed.length, masterSeed);
