@@ -179,12 +179,22 @@ class KdbxFile {
       _credentials = other.credentials;
       _logger.finest('Changing MasterKey.');
     }
-    return body.merge(other.body);
+    final ctx = body.merge(other.body);
+    // It's important that the merge operation above does not assume that the recycle
+    // bin UUID points to a valid group but once the entire merge is complete, we
+    // can safely clear the cache so that if it has been changed remotely, we reflect
+    // that in this file before the overall merge procedure is complete.
+    invalidateCachedValues();
+    return ctx;
   }
 
   /// Imports the given file into this file.
   void import(KdbxFile other) {
     return body.import(other.body);
+  }
+
+  void invalidateCachedValues() {
+    _recycleBin = null;
   }
 }
 

@@ -251,6 +251,8 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
       recycleBinEnabled.set(other.recycleBinEnabled.get());
       recycleBinUUID.set(other.recycleBinUUID.get());
       recycleBinChanged.set(other.recycleBinChanged.get());
+      // We assume that any client that has set a newer recycle bin UUID has also
+      // configured the group correctly (e.g. setting the Trash icon)
     }
     final otherIsNewer = other.settingsChanged.isAfter(settingsChanged);
 
