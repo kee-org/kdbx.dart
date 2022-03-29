@@ -52,23 +52,33 @@ class KdbxGroup extends KdbxObject {
   }
 
   /// Returns all groups plus this group itself.
-  LinkedHashMap<String, KdbxGroup> getAllGroups() {
+  LinkedHashMap<String, KdbxGroup> getAllGroups({bool enterRecycleBin = true}) {
     // ignore: prefer_collection_literals
     final flattenedGroups = LinkedHashMap<String, KdbxGroup>();
 
+    if (!enterRecycleBin && uuid == file?.recycleBin?.uuid) {
+      return flattenedGroups;
+    }
+
     groups.forEach((key, value) {
-      flattenedGroups.addAll(value.getAllGroups());
+      flattenedGroups
+          .addAll(value.getAllGroups(enterRecycleBin: enterRecycleBin));
     });
     return flattenedGroups..add(this);
   }
 
   /// Returns all entries of this group and all sub groups.
-  LinkedHashMap<String, KdbxEntry> getAllEntries() {
+  LinkedHashMap<String, KdbxEntry> getAllEntries(
+      {bool enterRecycleBin = true}) {
     // ignore: prefer_collection_literals
     final flattenedEntries = LinkedHashMap<String, KdbxEntry>();
+    final binUuid = file?.recycleBin?.uuid;
 
     groups.forEach((key, value) {
-      flattenedEntries.addAll(value.getAllEntries());
+      if (enterRecycleBin || value.uuid != binUuid) {
+        flattenedEntries
+            .addAll(value.getAllEntries(enterRecycleBin: enterRecycleBin));
+      }
     });
     return flattenedEntries..addAll(entries);
   }

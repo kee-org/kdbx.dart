@@ -42,6 +42,11 @@ void main() {
       file.deleteEntry(entry);
       // root group, entry and trash group.
       expect(g.getAllGroups().length + g.getAllEntries().length, 3);
+      // root group
+      expect(g.getAllGroups(enterRecycleBin: false).length, 1);
+      // hidden in root group
+      expect(g.getAllEntries(enterRecycleBin: false).length, 0);
+
       expect(entry.previousParentGroup.get(), g.uuid);
     });
   });
