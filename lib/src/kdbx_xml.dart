@@ -244,7 +244,17 @@ class NullableBooleanNode extends KdbxSubTextNode<bool?> {
     switch (value.toLowerCase()) {
       case 'null':
         return null;
+      case '':
+        return null;
       case 'true':
+        return true;
+      case 'yes':
+        return true;
+      case '1':
+        return true;
+      case 'enabled':
+        return true;
+      case 'checked':
         return true;
       case 'false':
         return false;
