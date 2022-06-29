@@ -3,7 +3,6 @@
 import 'dart:io';
 
 import 'package:kdbx/kdbx.dart';
-import 'package:kdbx/src/kdbx_header.dart';
 import 'package:logging/logging.dart';
 import 'package:logging_appenders/logging_appenders.dart';
 import 'package:test/test.dart';

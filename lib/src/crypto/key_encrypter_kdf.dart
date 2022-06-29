@@ -5,7 +5,6 @@ import 'package:argon2_ffi_base/argon2_ffi_base.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:isolate/isolate_runner.dart';
 import 'package:kdbx/kdbx.dart';
-import 'package:kdbx/src/internal/kdf_cache.dart';
 import 'package:kdbx/src/kdbx_var_dictionary.dart';
 import 'package:kdbx/src/utils/byte_utils.dart';
 import 'package:logging/logging.dart';

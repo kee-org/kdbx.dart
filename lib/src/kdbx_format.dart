@@ -10,23 +10,15 @@ import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:kdbx/kdbx.dart';
-import 'package:kdbx/src/credentials/credentials.dart';
 import 'package:kdbx/src/crypto/key_encrypter_kdf.dart';
 import 'package:kdbx/src/crypto/protected_salt_generator.dart';
-import 'package:kdbx/src/crypto/protected_value.dart';
 import 'package:kdbx/src/internal/consts.dart';
 import 'package:kdbx/src/internal/crypto_utils.dart';
 import 'package:kdbx/src/internal/extension_utils.dart';
 import 'package:kdbx/src/internal/pointycastle_argon2.dart';
-import 'package:kdbx/src/kdbx_binary.dart';
 import 'package:kdbx/src/kdbx_deleted_object.dart';
 import 'package:kdbx/src/kdbx_entry.dart';
-import 'package:kdbx/src/kdbx_exceptions.dart';
-import 'package:kdbx/src/kdbx_file.dart';
-import 'package:kdbx/src/kdbx_group.dart';
 import 'package:kdbx/src/kdbx_header.dart';
-import 'package:kdbx/src/kdbx_meta.dart';
-import 'package:kdbx/src/kdbx_object.dart';
 import 'package:kdbx/src/kdbx_xml.dart';
 import 'package:kdbx/src/utils/byte_utils.dart';
 import 'package:logging/logging.dart';
@@ -35,8 +27,6 @@ import 'package:pointycastle/export.dart';
 import 'package:supercharged_dart/supercharged_dart.dart';
 import 'package:xml/xml.dart';
 import 'package:xml/xml.dart' as xml;
-
-import 'internal/kdf_cache.dart';
 
 final _logger = Logger('kdbx.format');
 
@@ -167,7 +157,7 @@ class KdbxBody extends KdbxNode {
   }
 
   void writeV4(WriterHelper writer, KdbxFile kdbxFile,
-      ProtectedSaltGenerator saltGenerator, _KeysV4 keys) {
+      ProtectedSaltGenerator saltGenerator, KeysV4 keys) {
     final bodyWriter = WriterHelper();
     final xml = generateXml(saltGenerator);
     kdbxFile.header.innerHeader.updateBinaries(kdbxFile.ctx.binariesIterable);
@@ -510,8 +500,8 @@ class MergeContext implements OverwriteContext {
   }
 }
 
-class _KeysV4 {
-  _KeysV4(this.hmacKey, this.cipherKey);
+class KeysV4 {
+  KeysV4(this.hmacKey, this.cipherKey);
 
   final Uint8List hmacKey;
   final Uint8List cipherKey;
@@ -897,7 +887,7 @@ https://github.com/renggli/dart-xml/blob/main/example/xml_flatten.dart
     return hmacKeyStuff.convert(src);
   }
 
-  Future<_KeysV4> _computeKeysV4(
+  Future<KeysV4> _computeKeysV4(
       KdbxHeader header, Credentials credentials) async {
     final masterSeed = header.fields[HeaderFields.MasterSeed]!.bytes;
     final kdfParameters = header.readKdfParameters;
@@ -919,7 +909,7 @@ https://github.com/renggli/dart-xml/blob/main/example/xml_flatten.dart
     final cipher = crypto.sha256.convert(keyWithSeed.sublist(0, 64));
     final hmacKey = crypto.sha512.convert(keyWithSeed);
 
-    return _KeysV4(hmacKey.bytes as Uint8List, cipher.bytes as Uint8List);
+    return KeysV4(hmacKey.bytes as Uint8List, cipher.bytes as Uint8List);
   }
 
   ProtectedSaltGenerator _createProtectedSaltGenerator(KdbxHeader header) {

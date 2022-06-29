@@ -2,7 +2,6 @@ import 'dart:collection';
 
 import 'package:kdbx/kdbx.dart';
 import 'package:kdbx/src/internal/extension_utils.dart';
-import 'package:kdbx/src/kdbx_consts.dart';
 import 'package:kdbx/src/kdbx_entry.dart';
 import 'package:kdbx/src/kdbx_format.dart';
 import 'package:kdbx/src/kdbx_xml.dart';
