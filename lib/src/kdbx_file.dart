@@ -107,7 +107,7 @@ class KdbxFile {
         .getAllEntries()
         .values
         .map((e) => e.tags.get() ?? [])
-        .flatten()
+        .expand((element) => element)
         .toSet()
         .toList();
     return _tags!;
