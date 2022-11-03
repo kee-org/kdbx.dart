@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:clock/clock.dart';
 import 'package:kdbx/kdbx.dart';
 import 'package:logging/logging.dart';
 import 'package:logging_appenders/logging_appenders.dart';
@@ -20,6 +21,17 @@ void main() {
   if (!kdbxFormat.argon2.isFfi) {
     throw StateError('Expected ffi!');
   }
+  var now = DateTime.fromMillisecondsSinceEpoch(0);
+
+  final fakeClock = Clock(() => now);
+  void proceedSeconds(int seconds) {
+    now = now.add(Duration(seconds: seconds));
+  }
+
+  setUp(() {
+    now = DateTime.fromMillisecondsSinceEpoch(0);
+  });
+
   group('Reading', () {
     test('bubb', () async {
       final data = await File('test/keepassxcpasswords.kdbx').readAsBytes();
@@ -133,6 +145,35 @@ void main() {
       expect(output, isNotNull);
       File('test_output_chacha20.kdbx').writeAsBytesSync(output);
     });
+    test(
+      'Changes credentials and Argon2 salt',
+      () async => await withClock(fakeClock, () async {
+        final file = await TestUtil.createSimpleFile(proceedSeconds);
+        final initialSalt = KdfField.salt.read(file.header.readKdfParameters);
+        file.changePassword('newPass');
+
+        expect(file.credentials.getHash(),
+            Credentials(ProtectedValue('newPass')).getHash());
+        expect(initialSalt,
+            isNot(KdfField.salt.read(file.header.readKdfParameters)));
+        expect(file.body.meta.masterKeyChanged.get(),
+            DateTime.fromMillisecondsSinceEpoch(10000, isUtc: true));
+      }),
+    );
+    test(
+      'Argon2 salt is not changed on save',
+      () async => await withClock(fakeClock, () async {
+        // Contrary to other KDBX implementations, we do not regenerate a random
+        // salt every time we save the database. This is secure, and explained
+        // in more detail at https://github.com/kee-org/keevault2/issues/1#issuecomment-1302007808
+        final file = await TestUtil.createSimpleFile(proceedSeconds);
+        final initialSalt = KdfField.salt.read(file.header.readKdfParameters);
+
+        final fileMod = await TestUtil.saveAndRead(file);
+
+        expect(initialSalt, KdfField.salt.read(file.header.readKdfParameters));
+      }),
+    );
   });
   group('recycle bin test', () {
     test('empty recycle bin with "zero" uuid', () async {

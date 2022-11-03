@@ -125,8 +125,16 @@ class VarDictionary {
   }
 
   T? get<T>(ValueType<T> type, String key) => _dict[key]?._value as T?;
-  void set<T>(ValueType<T> type, String key, T value) =>
-      _dict[key] = VarDictionaryItem<T>(key, type, value);
+  void set<T>(ValueType<T> type, String key, T value) {
+    final newItem = VarDictionaryItem<T>(key, type, value);
+    _dict[key] = newItem;
+    final index = _items.indexWhere((element) => element._key == key);
+    if (index == -1) {
+      _items.add(newItem);
+    } else {
+      _items[index] = newItem;
+    }
+  }
 
   static VarDictionaryItem<dynamic>? _readItem(ReaderHelper reader) {
     final type = reader.readUint8();

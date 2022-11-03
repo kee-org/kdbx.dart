@@ -152,9 +152,4 @@ class KeyFileComposite implements Credentials {
 //    input.close();
 //    return output.events.single.bytes as Uint8List;
   }
-
-  @override
-  void changePassword(ProtectedValue password) {
-    this.password = PasswordCredentials(password);
-  }
 }

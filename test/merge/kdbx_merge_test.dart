@@ -979,6 +979,7 @@ when merging, can look at this value to decide whether history entries from the 
         fileMod.changePassword('newPass');
 
         final file2 = await TestUtil.saveAndRead(fileMod);
+        final initialSalt2 = KdfField.salt.read(file2.header.readKdfParameters);
         expect(file1.credentials.getHash(),
             Credentials(ProtectedValue('asdf')).getHash());
         final merge = file1.merge(file2);
@@ -988,17 +989,23 @@ when merging, can look at this value to decide whether history entries from the 
             Credentials(ProtectedValue('newPass')).getHash());
         expect(file1.body.meta.masterKeyChanged.get(),
             DateTime.fromMillisecondsSinceEpoch(10000, isUtc: true));
+        expect(
+            initialSalt2, KdfField.salt.read(file1.header.readKdfParameters));
+        expect(
+            initialSalt2, KdfField.salt.read(file2.header.readKdfParameters));
       }),
     );
     test(
       'Retains newer credentials',
       () async => await withClock(fakeClock, () async {
         final file1 = await TestUtil.createSimpleFile(proceedSeconds);
+        final initialSalt1 = KdfField.salt.read(file1.header.readKdfParameters);
 
         final fileMod = await TestUtil.saveAndRead(file1);
         fileMod.changePassword('newPass');
 
         final file2 = await TestUtil.saveAndRead(fileMod);
+        final initialSalt2 = KdfField.salt.read(file2.header.readKdfParameters);
         final merge = file2.merge(file1);
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(4));
@@ -1006,6 +1013,14 @@ when merging, can look at this value to decide whether history entries from the 
             Credentials(ProtectedValue('asdf')).getHash());
         expect(file1.body.meta.masterKeyChanged.get(),
             DateTime.fromMillisecondsSinceEpoch(0, isUtc: true));
+        expect(file2.credentials.getHash(),
+            Credentials(ProtectedValue('newPass')).getHash());
+        expect(file2.body.meta.masterKeyChanged.get(),
+            DateTime.fromMillisecondsSinceEpoch(10000, isUtc: true));
+        expect(
+            initialSalt1, KdfField.salt.read(file1.header.readKdfParameters));
+        expect(
+            initialSalt2, KdfField.salt.read(file2.header.readKdfParameters));
       }),
     );
   });
