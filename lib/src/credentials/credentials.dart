@@ -20,8 +20,6 @@ abstract class Credentials {
 
   factory Credentials.fromHash(Uint8List hash) => HashCredentials(hash);
 
-  void changePassword(ProtectedValue password);
-
   Uint8List getHash();
 }
 
@@ -43,10 +41,4 @@ class HashCredentials implements Credentials {
 
   @override
   Uint8List getHash() => hash;
-
-  @override
-  void changePassword(ProtectedValue password) {
-    final buffer = password.hash;
-    hash = crypto.sha256.convert(buffer).bytes as Uint8List;
-  }
 }

@@ -34,6 +34,7 @@ enum Compression {
   /// id: 1
   gzip,
 }
+
 const _compressionIds = {
   Compression.none: 0,
   Compression.gzip: 1,
@@ -270,6 +271,13 @@ class KdbxHeader {
     innerHeader.fields[field] = InnerHeaderField(field, bytes);
   }
 
+  void regenerateArgon2Salt() {
+    final kdfParameters = readKdfParameters;
+    KdfField.salt.write(
+        kdfParameters, ByteUtils.randomBytes(Consts.DefaultKdfSaltLength));
+    writeKdfParameters(kdfParameters);
+  }
+
   void generateSalts() {
     _setHeaderField(HeaderFields.MasterSeed, ByteUtils.randomBytes(32));
     fields.remove(HeaderFields.TransformSeed);
@@ -285,11 +293,6 @@ class KdbxHeader {
     } else if (version.major == KdbxVersion.V4.major) {
       _setInnerHeaderField(
           InnerHeaderFields.InnerRandomStreamKey, ByteUtils.randomBytes(64));
-      final kdfParameters = readKdfParameters;
-      KdfField.salt.write(
-          kdfParameters, ByteUtils.randomBytes(Consts.DefaultKdfSaltLength));
-      //         var ivLength = this.dataCipherUuid.toString() === Consts.CipherId.ChaCha20 ? 12 : 16;
-      //        this.encryptionIV = Random.getBytes(ivLength);
       final cipher = this.cipher;
       final ivLength = cipher == Cipher.chaCha20 ? 12 : 16;
       _setHeaderField(
