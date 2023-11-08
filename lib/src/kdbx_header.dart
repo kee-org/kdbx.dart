@@ -479,7 +479,7 @@ class KdbxHeader {
 //          'Read header ${fields[headerId]}: ${ByteUtils.toHexList(bodyBytes)}');
       if (headerId > 0) {
         final field = fields[headerId];
-        _logger.finest('Reading header $field ($headerId) (size: $bodySize)}');
+        _logger.finest('Reading header $field ($headerId) (size: $bodySize)');
         yield createField(field, bodyBytes);
         /* else {
           if (field == InnerHeaderFields.InnerRandomStreamID) {

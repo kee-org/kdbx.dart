@@ -19,12 +19,12 @@ import 'package:kdbx/src/internal/pointycastle_argon2.dart';
 import 'package:kdbx/src/kdbx_deleted_object.dart';
 import 'package:kdbx/src/kdbx_entry.dart';
 import 'package:kdbx/src/kdbx_header.dart';
+import 'package:kdbx/src/kdbx_object.dart';
 import 'package:kdbx/src/kdbx_xml.dart';
 import 'package:kdbx/src/utils/byte_utils.dart';
 import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:pointycastle/export.dart';
-import 'package:supercharged_dart/supercharged_dart.dart';
 import 'package:xml/xml.dart';
 import 'package:xml/xml.dart' as xml;
 
@@ -303,9 +303,8 @@ class KdbxBody extends KdbxNode {
         other.meta.recycleBinUUID.get() != null) {
       final binUuid = importedUuidMap[other.meta.recycleBinUUID.get()];
       if (binUuid != null) {
-        final importedBin =
-            destGroup.getAllGroups().filter((g) => g.key == binUuid.uuid).first;
-        importedBin.value.name.set('Imported bin');
+        final importedBin = destGroup.getAllGroups().findByUuid(binUuid);
+        importedBin?.name.set('Imported bin');
       }
     }
     cleanup();
@@ -478,8 +477,8 @@ class MergeContext implements OverwriteContext {
   }
 
   String debugChanges() {
-    final group = changes.groupBy<KdbxNode, MergeChange>(
-        ((MergeChange element) => element.object!));
+    final group = groupBy(changes, ((MergeChange element) => element.object!));
+
     return group.entries
         .map((e) => [
               e.key.toString(),
