@@ -829,8 +829,7 @@ class KdbxEntry extends KdbxObject {
 
   @override
   String toString() {
-    return 'KdbxEntry{uuid=$uuid,'
-        'name=${debugLabel()}}';
+    return 'KdbxEntry{uuid=$uuid}';
   }
 
   void revertToHistoryEntry(int index) {

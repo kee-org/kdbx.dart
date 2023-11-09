@@ -259,7 +259,7 @@ class KdbxGroup extends KdbxObject {
 
   @override
   String toString() {
-    return 'KdbxGroup{uuid=$uuid,name=${name.get()}}';
+    return 'KdbxGroup{uuid=$uuid}';
   }
 }
 
