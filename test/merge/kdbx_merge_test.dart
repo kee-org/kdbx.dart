@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_use_of_protected_member
+
 import 'dart:typed_data';
 
 import 'package:clock/clock.dart';
@@ -99,6 +101,84 @@ void main() {
         expect(setReverse, hasLength(5));
         expect(file2Reverse.body.meta.customData['custom1'], 'custom value 2');
         expect(file2Reverse.body.meta.customData['custom2'], 'custom value 3');
+      });
+    });
+
+    test('Local entry custom data wins', () async {
+      await withClock(fakeClock, () async {
+        final file = await TestUtil.createRealFile(proceedSeconds);
+
+        final fileMod = await TestUtil.saveAndRead(file);
+        final fileReverse = await TestUtil.saveAndRead(file);
+
+//TODO: check setcustomdata is really needed
+        fileMod.body.rootGroup.entries.first
+            .setCustomData('custom1', 'custom value 2');
+        proceedSeconds(10);
+        file.body.rootGroup.entries.first
+            .setCustomData('custom1', 'custom value 1');
+        fileMod.body.rootGroup.entries.first
+            .setCustomData('custom2', 'custom value 3');
+
+        // final fileSavedAndHopefullyDateUpdated =
+        //     await TestUtil.saveAndRead(file);
+        final file2 = await TestUtil.saveAndRead(fileMod);
+        final file2Reverse = await TestUtil.saveAndRead(fileMod);
+
+        final merge = file.merge(file2);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(5));
+        expect(file.body.rootGroup.entries.first.customData['custom1'],
+            'custom value 1');
+        expect(file.body.rootGroup.entries.first.customData['custom2'], null);
+
+        final mergeReverse = file2Reverse.merge(fileReverse);
+        final setReverse = Set<KdbxUuid>.from(mergeReverse.merged.keys);
+        expect(setReverse, hasLength(5));
+        expect(file2Reverse.body.rootGroup.entries.first.customData['custom1'],
+            'custom value 2');
+        expect(file2Reverse.body.rootGroup.entries.first.customData['custom2'],
+            'custom value 3');
+      });
+    });
+
+    test('Newer entry custom data wins', () async {
+      await withClock(fakeClock, () async {
+        final file = await TestUtil.createRealFile(proceedSeconds);
+
+        final fileMod = await TestUtil.saveAndRead(file);
+        final fileReverse = await TestUtil.saveAndRead(file);
+
+//TODO: check setcustomdata is really needed
+
+        file.body.rootGroup.entries.first
+            .setCustomData('custom1', 'custom value 1');
+        proceedSeconds(10);
+        fileMod.body.rootGroup.entries.first
+            .setCustomData('custom1', 'custom value 2');
+        fileMod.body.rootGroup.entries.first
+            .setCustomData('custom2', 'custom value 3');
+
+        // final fileSavedAndHopefullyDateUpdated =
+        //     await TestUtil.saveAndRead(file);
+        final file2 = await TestUtil.saveAndRead(fileMod);
+        final file2Reverse = await TestUtil.saveAndRead(fileMod);
+
+        final merge = file.merge(file2);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(5));
+        expect(file.body.rootGroup.entries.first.customData['custom1'],
+            'custom value 2');
+        expect(file.body.rootGroup.entries.first.customData['custom2'],
+            'custom value 3');
+
+        final mergeReverse = file2Reverse.merge(fileReverse);
+        final setReverse = Set<KdbxUuid>.from(mergeReverse.merged.keys);
+        expect(setReverse, hasLength(5));
+        expect(file2Reverse.body.rootGroup.entries.first.customData['custom1'],
+            'custom value 2');
+        expect(file2Reverse.body.rootGroup.entries.first.customData['custom2'],
+            'custom value 3');
       });
     });
 

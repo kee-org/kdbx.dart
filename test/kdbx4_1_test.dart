@@ -47,12 +47,41 @@ void main() {
     //     }
     //   });
 
-    test('Tags work on entries and groups', () async {
+    // Probably should do similar to make v3 more robust too but we don't use that and there's no risk of regression so not now.
+    test('New features fail on v4.0', () async {
       final credentials = Credentials(ProtectedValue.fromString('asdf'));
       final kdbx = kdbxFormat.create(
         credentials,
         'Test Keystore',
         header: KdbxHeader.createV4(),
+      );
+      final rootGroup = kdbx.body.rootGroup;
+      final e1 = TestUtil.createEntry(kdbx, rootGroup, 'user1', 'LoremIpsum');
+      final e2 =
+          TestUtil.createEntry(kdbx, rootGroup, 'user2', 'Second Password');
+      rootGroup.tags.set(['t1', 't2']);
+      e1.qualityCheck.set(true);
+      e2.qualityCheck.set(false);
+      final saved = await kdbx.save();
+
+      final loadedKdbx = await kdbxFormat.read(
+          saved, Credentials(ProtectedValue.fromString('asdf')));
+      //final file2 = await TestUtil.readKdbxFileBytes(saved);
+
+      _logger.fine('Successfully loaded kdbx $loadedKdbx');
+      final entry1 = loadedKdbx.body.rootGroup.entries.first;
+      final entry2 = loadedKdbx.body.rootGroup.entries.last;
+      expect(entry1.qualityCheck.get(), null);
+      expect(entry2.qualityCheck.get(), null);
+      expect(loadedKdbx.body.rootGroup.tags.get(), null);
+    });
+
+    test('Tags work on entries and groups', () async {
+      final credentials = Credentials(ProtectedValue.fromString('asdf'));
+      final kdbx = kdbxFormat.create(
+        credentials,
+        'Test Keystore',
+        header: KdbxHeader.createV4_1(),
       );
       final rootGroup = kdbx.body.rootGroup;
       final e = TestUtil.createEntry(kdbx, rootGroup, 'user1', 'LoremIpsum');
@@ -76,7 +105,7 @@ void main() {
       final kdbx = kdbxFormat.create(
         credentials,
         'Test Keystore',
-        header: KdbxHeader.createV4(),
+        header: KdbxHeader.createV4_1(),
       );
       final rootGroup = kdbx.body.rootGroup;
       final e1 = TestUtil.createEntry(kdbx, rootGroup, 'user1', 'LoremIpsum');
@@ -93,8 +122,8 @@ void main() {
       _logger.fine('Successfully loaded kdbx $loadedKdbx');
       final entry1 = loadedKdbx.body.rootGroup.entries.first;
       final entry2 = loadedKdbx.body.rootGroup.entries.last;
-      expect(entry1?.qualityCheck.get(), true);
-      expect(entry2?.qualityCheck.get(), false);
+      expect(entry1.qualityCheck.get(), true);
+      expect(entry2.qualityCheck.get(), false);
     });
   });
 }

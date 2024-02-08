@@ -61,6 +61,7 @@ class KdbxReadWriteContext {
   final KdbxHeader header;
 
   int get versionMajor => header.version.major;
+  KdbxVersion get version => header.version;
 
   void initContext(Iterable<KdbxBinary> binaries,
       Iterable<KdbxDeletedObject> deletedObjects) {

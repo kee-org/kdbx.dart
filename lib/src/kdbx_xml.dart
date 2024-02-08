@@ -31,6 +31,11 @@ class KdbxXml {
   static const NODE_PREVIOUS_PARENT_GROUP = 'PreviousParentGroup';
   static const NODE_CUSTOM_ICONS = 'CustomIcons';
   static const NODE_CUSTOM_DATA = 'CustomData';
+  static const NODE_QUALITY_CHECK = 'QualityCheck';
+  static const NODE_OVERRIDE_URL = 'OverrideURL';
+  static const NODE_BACKGROUND_COLOR = 'BackgroundColor';
+  static const NODE_FOREGROUND_COLOR = 'ForegroundColor';
+  static const NODE_TAGS = 'Tags';
 
   /// CustomIcons >> Icon
   static const NODE_ICON = 'Icon';

@@ -42,7 +42,13 @@ class KdbxGroup extends KdbxObject {
 
   @override
   XmlElement toXml() {
-    final el = super.toXml();
+    final el = super.toXml()..replaceSingle(customData.toXml());
+
+    if (ctx.version < KdbxVersion.V4_1) {
+      XmlUtils.removeChildrenByName(el, KdbxXml.NODE_TAGS);
+      XmlUtils.removeChildrenByName(el, KdbxXml.NODE_PREVIOUS_PARENT_GROUP);
+    }
+
     XmlUtils.removeChildrenByName(el, 'Group');
     XmlUtils.removeChildrenByName(el, 'Entry');
     el.children.addAll(groups.values.map((g) => g.toXml()));

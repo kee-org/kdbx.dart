@@ -17,6 +17,8 @@ import 'package:uuid/uuid.dart';
 import 'package:uuid/uuid_util.dart';
 import 'package:xml/xml.dart';
 
+import 'kdbx_custom_data.dart';
+
 // ignore: unused_element
 final _logger = Logger('kdbx.kdbx_object');
 
@@ -178,14 +180,19 @@ abstract class KdbxObject extends KdbxNode {
     this.file,
     String nodeName,
     KdbxGroup? parent,
-  )   : times = KdbxTimes.create(ctx),
+  )   : customData = KdbxCustomData.create(),
+        times = KdbxTimes.create(ctx),
         _parent = parent,
         super.create(nodeName) {
     _uuid.set(KdbxUuid.random());
   }
 
   KdbxObject.read(this.ctx, KdbxGroup? parent, XmlElement node)
-      : times = KdbxTimes.read(node.findElements('Times').single, ctx),
+      : customData = node
+                .singleElement(KdbxXml.NODE_CUSTOM_DATA)
+                ?.let((e) => KdbxCustomData.read(e)) ??
+            KdbxCustomData.create(),
+        times = KdbxTimes.read(node.findElements('Times').single, ctx),
         _parent = parent,
         super.read(node);
 
@@ -210,9 +217,31 @@ abstract class KdbxObject extends KdbxNode {
   KdbxGroup? _parent;
 
   late final UuidNode previousParentGroup =
-      UuidNode(this, 'PreviousParentGroup');
+      UuidNode(this, KdbxXml.NODE_PREVIOUS_PARENT_GROUP);
 
-  StringListNode get tags => StringListNode(this, 'Tags');
+  StringListNode get tags => StringListNode(this, KdbxXml.NODE_TAGS);
+
+  @protected
+  final KdbxCustomData customData;
+
+  String? getCustomData(String key) => customData[key];
+
+  void setCustomData(String key, String? value) {
+    if (customData[key] == value) {
+      _logger.finest('Custom data did not change for $key');
+      return;
+    }
+    // We have to call modify from here to ensure the correct overload of
+    // onAfterModify gets called. Otherwise direct changes to a KdbxCustomData
+    // node will not affect the modification date of the entry that contains that node.
+    modify(() {
+      if (value == null) {
+        customData.remove(key);
+      } else {
+        customData[key] = value;
+      }
+    });
+  }
 
   bool get isInRecycleBin {
     final bin = file!.recycleBin;

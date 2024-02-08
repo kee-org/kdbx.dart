@@ -30,6 +30,7 @@ class KdbxCustomData extends KdbxNode {
   }
 
   bool containsKey(String key) => _data.containsKey(key);
+  String? remove(String key) => _data.remove(key);
 
   @override
   xml.XmlElement toXml() {
