@@ -212,6 +212,8 @@ abstract class KdbxObject extends KdbxNode {
   late final UuidNode previousParentGroup =
       UuidNode(this, 'PreviousParentGroup');
 
+  StringListNode get tags => StringListNode(this, 'Tags');
+
   bool get isInRecycleBin {
     final bin = file!.recycleBin;
     if (bin == null) {

@@ -519,14 +519,14 @@ class KdbxFormat {
   static bool dartWebWorkaround = false;
 
   /// Creates a new, empty [KdbxFile] with default settings.
-  /// If [header] is not given by default a kdbx 4.0 file will be created.
+  /// If [header] is not given by default a kdbx 4.1 file will be created.
   KdbxFile create(
     Credentials credentials,
     String name, {
     String? generator,
     KdbxHeader? header,
   }) {
-    header ??= KdbxHeader.createV4();
+    header ??= KdbxHeader.createV4_1();
     final ctx = KdbxReadWriteContext(header: header);
     final meta = KdbxMeta.create(
       databaseName: name,

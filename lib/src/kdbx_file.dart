@@ -150,12 +150,14 @@ class KdbxFile {
     return recycleBin ?? _createRecycleBin();
   }
 
-  /// Upgrade v3 file to v4.
-  void upgrade(int majorVersion) {
+  /// Upgrade v3 file to v4.x
+  void upgrade(int majorVersion, int minorVersion) {
     checkArgument(majorVersion == 4, message: 'Must be majorVersion 4');
     body.meta.settingsChanged.setToNow();
     body.meta.headerHash.remove();
-    header.upgrade(majorVersion);
+    header.version.major == 4
+        ? header.upgradeMinor(majorVersion, minorVersion)
+        : header.upgrade(majorVersion, minorVersion);
   }
 
   /// Merges the given file into this file.

@@ -3,6 +3,7 @@ import 'package:kdbx/src/kdbx_object.dart';
 import 'package:kdbx/src/kdbx_xml.dart';
 import 'package:xml/xml.dart' as xml;
 
+//TODO: create KdbxFileCustomData with date too
 class KdbxCustomData extends KdbxNode {
   KdbxCustomData.create()
       : _data = {},

@@ -248,6 +248,7 @@ class KdbxGroup extends KdbxObject {
         enableAutoType,
         enableSearching,
         lastTopVisibleEntry,
+        //TODO: More fields for 4.1?
       ];
 
   void _overwriteFrom(OverwriteContext mergeContext, KdbxGroup other) {

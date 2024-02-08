@@ -561,7 +561,8 @@ class KdbxEntry extends KdbxObject {
   ColorNode get foregroundColor => ColorNode(this, 'ForegroundColor');
   ColorNode get backgroundColor => ColorNode(this, 'BackgroundColor');
   StringNode get overrideURL => StringNode(this, 'OverrideURL');
-  StringListNode get tags => StringListNode(this, 'Tags');
+  NullableBooleanNode get qualityCheck =>
+      NullableBooleanNode(this, 'QualityCheck');
 
   @override
   set file(KdbxFile? file) {
