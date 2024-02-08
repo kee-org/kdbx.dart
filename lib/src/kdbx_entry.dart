@@ -384,7 +384,7 @@ extension KdbxEntryInternal on KdbxEntry {
           includeHistory: !toHistoryEntry,
         );
 
-  List<KdbxSubNode> get _overwriteNodes => [
+  List<KdbxSubNode<dynamic>> get _overwriteNodes => [
         ...objectNodes,
         foregroundColor,
         backgroundColor,

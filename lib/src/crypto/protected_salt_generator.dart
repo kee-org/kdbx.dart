@@ -36,7 +36,7 @@ class ProtectedSaltGenerator {
   }
 
   String encryptToBase64(String plainValue) {
-    final encrypted = _cipher.process(utf8.encode(plainValue) as Uint8List);
+    final encrypted = _cipher.process(utf8.encode(plainValue));
     return base64.encode(encrypted);
   }
 }

@@ -149,8 +149,8 @@ class KdbxBody extends KdbxNode {
     final xml = generateXml(saltGenerator);
     final xmlBytes = utf8.encode(xml.toXmlString());
     final compressedBytes = (kdbxFile.header.compression == Compression.gzip
-        ? KdbxFormat._gzipEncode(xmlBytes as Uint8List)
-        : xmlBytes) as Uint8List;
+        ? KdbxFormat._gzipEncode(xmlBytes)
+        : xmlBytes);
 
     final encrypted = await _encryptV3(kdbxFile, compressedBytes);
     writer.writeBytes(encrypted);
@@ -162,7 +162,7 @@ class KdbxBody extends KdbxNode {
     final xml = generateXml(saltGenerator);
     kdbxFile.header.innerHeader.updateBinaries(kdbxFile.ctx.binariesIterable);
     kdbxFile.header.writeInnerHeader(bodyWriter);
-    bodyWriter.writeBytes(utf8.encode(xml.toXmlString()) as Uint8List);
+    bodyWriter.writeBytes(utf8.encode(xml.toXmlString()));
     final compressedBytes = (kdbxFile.header.compression == Compression.gzip
         ? KdbxFormat._gzipEncode(bodyWriter.output.toBytes())
         : bodyWriter.output.toBytes());
@@ -321,7 +321,7 @@ class KdbxBody extends KdbxNode {
     final unusedCustomIcons = HashSet<KdbxUuid>();
     final usedBinaries = <int>{};
 
-    void _trackEntryForCleanup(KdbxEntry e) {
+    void trackEntryForCleanup(KdbxEntry e) {
       e.binaryEntries.toList().forEach((b) {
         final id = ctx.findBinaryId(b.value);
         usedBinaries.add(id);
@@ -335,9 +335,9 @@ class KdbxBody extends KdbxNode {
       if (e.history.length > historyMaxItems!) {
         e.history.removeRange(0, e.history.length - historyMaxItems);
       }
-      _trackEntryForCleanup(e);
+      trackEntryForCleanup(e);
       e.history.toList().forEach((he) {
-        _trackEntryForCleanup(he);
+        trackEntryForCleanup(he);
       });
     });
     rootGroup.getAllGroups().values.forEach((g) {

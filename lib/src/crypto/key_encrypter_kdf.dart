@@ -18,7 +18,7 @@ enum KdfType {
   Aes,
 }
 
-class KdfField<T> {
+class KdfField<T extends Object> {
   KdfField(this.field, this.type);
 
   final String field;

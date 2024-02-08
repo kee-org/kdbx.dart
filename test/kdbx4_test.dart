@@ -172,6 +172,8 @@ void main() {
         final fileMod = await TestUtil.saveAndRead(file);
 
         expect(initialSalt, KdfField.salt.read(file.header.readKdfParameters));
+        expect(
+            initialSalt, KdfField.salt.read(fileMod.header.readKdfParameters));
       }),
     );
   });

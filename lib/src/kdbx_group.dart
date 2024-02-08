@@ -239,7 +239,7 @@ class KdbxGroup extends KdbxObject {
     // For 2, we handle it after merging all objects.
   }
 
-  List<KdbxSubNode> get _overwriteNodes => [
+  List<KdbxSubNode<dynamic>> get _overwriteNodes => [
         ...objectNodes,
         name,
         notes,

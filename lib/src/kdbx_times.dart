@@ -61,7 +61,7 @@ class KdbxTimes extends KdbxNode implements KdbxNodeContext {
     lastModificationTime.set(clock.now().toUtc());
   }
 
-  List<KdbxSubNode> get _nodes => [
+  List<KdbxSubNode<dynamic>> get _nodes => [
         creationTime,
         lastModificationTime,
         lastAccessTime,

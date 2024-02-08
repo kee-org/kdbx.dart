@@ -140,7 +140,7 @@ extension UnmodifiableMapViewKdbxObject<K extends String, V extends KdbxObject>
 }
 
 extension KdbxObjectInternal on KdbxObject {
-  List<KdbxSubNode> get objectNodes => [
+  List<KdbxSubNode<dynamic>> get objectNodes => [
         icon,
         customIconUuid,
       ];
@@ -158,8 +158,10 @@ extension KdbxObjectInternal on KdbxObject {
     }
   }
 
-  void overwriteSubNodesFrom(OverwriteContext overwriteContext,
-      List<KdbxSubNode> myNodes, List<KdbxSubNode> otherNodes) {
+  void overwriteSubNodesFrom(
+      OverwriteContext overwriteContext,
+      List<KdbxSubNode<dynamic>> myNodes,
+      List<KdbxSubNode<dynamic>> otherNodes) {
     for (final node in zip([myNodes, otherNodes])) {
       final me = node[0];
       final other = node[1];
