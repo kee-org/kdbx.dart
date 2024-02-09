@@ -389,7 +389,7 @@ extension KdbxEntryInternal on KdbxEntry {
         foregroundColor,
         backgroundColor,
         overrideURL,
-        tags,
+        qualityCheck,
       ];
 
   void _overwriteFrom(

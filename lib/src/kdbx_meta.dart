@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:kdbx/src/internal/extension_utils.dart';
 import 'package:kdbx/src/kdbx_binary.dart';
@@ -24,7 +25,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
     required String databaseName,
     required this.ctx,
     String? generator,
-  })  : customData = KdbxCustomData.create(),
+  })  : customData = KdbxMetaCustomData.create(),
         binaries = [],
         _customIcons = {},
         super.create('Meta') {
@@ -42,8 +43,8 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
   KdbxMeta.read(xml.XmlElement node, this.ctx)
       : customData = node
                 .singleElement(KdbxXml.NODE_CUSTOM_DATA)
-                ?.let((e) => KdbxCustomData.read(e)) ??
-            KdbxCustomData.create(),
+                ?.let((e) => KdbxMetaCustomData.read(e)) ??
+            KdbxMetaCustomData.create(),
         binaries = node
             .singleElement(KdbxXml.NODE_BINARIES)
             ?.let((el) sync* {
@@ -86,7 +87,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
   @override
   final KdbxReadWriteContext ctx;
 
-  final KdbxCustomData customData;
+  final KdbxMetaCustomData customData;
 
   /// only used in Kdbx 3
   final List<KdbxBinary>? binaries;
@@ -162,7 +163,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
   BrowserDbSettings? _browserSettings;
   BrowserDbSettings get browserSettings {
     if (_browserSettings == null) {
-      final tempJson = customData['KeePassRPC.Config'];
+      final tempJson = customData['KeePassRPC.Config']?.value;
 
       if (tempJson != null) {
         _browserSettings = BrowserDbSettings.fromJson(tempJson);
@@ -174,14 +175,15 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
   }
 
   set browserSettings(BrowserDbSettings settings) {
-    customData['KeePassRPC.Config'] = settings.toJson();
+    customData['KeePassRPC.Config'] =
+        (value: settings.toJson(), lastModified: clock.now().toUtc());
     settingsChanged.setToNow();
   }
 
   KeeVaultEmbeddedConfig? _keeVaultSettings;
   KeeVaultEmbeddedConfig get keeVaultSettings {
     if (_keeVaultSettings == null) {
-      final tempJson = customData['KeeVault.Config'];
+      final tempJson = customData['KeeVault.Config']?.value;
 
       if (tempJson != null) {
         _keeVaultSettings = KeeVaultEmbeddedConfig.fromJson(tempJson);
@@ -193,7 +195,8 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
   }
 
   set keeVaultSettings(KeeVaultEmbeddedConfig settings) {
-    customData['KeeVault.Config'] = settings.toJson();
+    customData['KeeVault.Config'] =
+        (value: settings.toJson(), lastModified: clock.now().toUtc());
     settingsChanged.setToNow();
   }
 

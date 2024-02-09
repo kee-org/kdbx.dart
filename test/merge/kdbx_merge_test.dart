@@ -82,10 +82,13 @@ void main() {
         final fileMod = await TestUtil.saveAndRead(file);
         final fileReverse = await TestUtil.saveAndRead(file);
 
-        fileMod.body.meta.customData['custom1'] = 'custom value 2';
+        fileMod.body.meta.customData['custom1'] =
+            (value: 'custom value 2', lastModified: null);
         proceedSeconds(10);
-        file.body.meta.customData['custom1'] = 'custom value 1';
-        fileMod.body.meta.customData['custom2'] = 'custom value 3';
+        file.body.meta.customData['custom1'] =
+            (value: 'custom value 1', lastModified: null);
+        fileMod.body.meta.customData['custom2'] =
+            (value: 'custom value 3', lastModified: null);
 
         final file2 = await TestUtil.saveAndRead(fileMod);
         final file2Reverse = await TestUtil.saveAndRead(fileMod);
@@ -93,14 +96,56 @@ void main() {
         final merge = file.merge(file2);
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(5));
-        expect(file.body.meta.customData['custom1'], 'custom value 1');
-        expect(file.body.meta.customData['custom2'], 'custom value 3');
+        expect(file.body.meta.customData['custom1'],
+            (value: 'custom value 1', lastModified: null));
+        expect(file.body.meta.customData['custom2'],
+            (value: 'custom value 3', lastModified: null));
 
         final mergeReverse = file2Reverse.merge(fileReverse);
         final setReverse = Set<KdbxUuid>.from(mergeReverse.merged.keys);
         expect(setReverse, hasLength(5));
-        expect(file2Reverse.body.meta.customData['custom1'], 'custom value 2');
-        expect(file2Reverse.body.meta.customData['custom2'], 'custom value 3');
+        expect(file2Reverse.body.meta.customData['custom1'],
+            (value: 'custom value 2', lastModified: null));
+        expect(file2Reverse.body.meta.customData['custom2'],
+            (value: 'custom value 3', lastModified: null));
+      });
+    });
+
+    test('Newer file custom data wins', () async {
+      await withClock(fakeClock, () async {
+        final file = await TestUtil.createRealFile(proceedSeconds);
+
+        final time1 = fakeClock.now().toUtc();
+        final fileMod = await TestUtil.saveAndRead(file);
+
+        fileMod.body.meta.customData['custom1'] =
+            (value: 'custom value 2', lastModified: time1);
+        proceedSeconds(10);
+        final time2 = fakeClock.now().toUtc();
+        file.body.meta.customData['custom1'] =
+            (value: 'custom value 1', lastModified: time2);
+        fileMod.body.meta.customData['custom2'] =
+            (value: 'custom value 3', lastModified: time2);
+
+        final fileReverse = await TestUtil.saveAndRead(file);
+        final file2 = await TestUtil.saveAndRead(fileMod);
+        final file2Reverse = await TestUtil.saveAndRead(fileMod);
+
+        final merge = file.merge(file2);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(5));
+        expect(file.body.meta.customData['custom1'],
+            (value: 'custom value 1', lastModified: time2));
+        expect(file.body.meta.customData['custom2'],
+            (value: 'custom value 3', lastModified: time2));
+
+        final mergeReverse = file2Reverse.merge(fileReverse);
+        final setReverse = Set<KdbxUuid>.from(mergeReverse.merged.keys);
+        expect(setReverse, hasLength(5));
+        expect(file2Reverse.body.meta.customData['custom1'],
+            (value: 'custom value 1', lastModified: time2));
+        expect(file2Reverse.body.meta.customData['custom2'],
+            (value: 'custom value 3', lastModified: time2));
       });
     });
 
@@ -109,9 +154,7 @@ void main() {
         final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
-        final fileReverse = await TestUtil.saveAndRead(file);
 
-//TODO: check setcustomdata is really needed
         fileMod.body.rootGroup.entries.first
             .setCustomData('custom1', 'custom value 2');
         proceedSeconds(10);
@@ -120,8 +163,7 @@ void main() {
         fileMod.body.rootGroup.entries.first
             .setCustomData('custom2', 'custom value 3');
 
-        // final fileSavedAndHopefullyDateUpdated =
-        //     await TestUtil.saveAndRead(file);
+        final fileReverse = await TestUtil.saveAndRead(file);
         final file2 = await TestUtil.saveAndRead(fileMod);
         final file2Reverse = await TestUtil.saveAndRead(fileMod);
 
@@ -147,9 +189,6 @@ void main() {
         final file = await TestUtil.createRealFile(proceedSeconds);
 
         final fileMod = await TestUtil.saveAndRead(file);
-        final fileReverse = await TestUtil.saveAndRead(file);
-
-//TODO: check setcustomdata is really needed
 
         file.body.rootGroup.entries.first
             .setCustomData('custom1', 'custom value 1');
@@ -159,8 +198,7 @@ void main() {
         fileMod.body.rootGroup.entries.first
             .setCustomData('custom2', 'custom value 3');
 
-        // final fileSavedAndHopefullyDateUpdated =
-        //     await TestUtil.saveAndRead(file);
+        final fileReverse = await TestUtil.saveAndRead(file);
         final file2 = await TestUtil.saveAndRead(fileMod);
         final file2Reverse = await TestUtil.saveAndRead(fileMod);
 

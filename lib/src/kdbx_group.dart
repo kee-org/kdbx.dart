@@ -254,13 +254,13 @@ class KdbxGroup extends KdbxObject {
         enableAutoType,
         enableSearching,
         lastTopVisibleEntry,
-        //TODO: More fields for 4.1?
       ];
 
   void _overwriteFrom(OverwriteContext mergeContext, KdbxGroup other) {
     overwriteSubNodesFrom(mergeContext, _overwriteNodes, other._overwriteNodes);
     // we should probably check that [lastTopVisibleEntry] is still a
     // valid reference?
+    customData.overwriteFrom(other.customData);
     times.overwriteFrom(other.times);
   }
 

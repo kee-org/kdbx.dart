@@ -36,6 +36,7 @@ class KdbxXml {
   static const NODE_BACKGROUND_COLOR = 'BackgroundColor';
   static const NODE_FOREGROUND_COLOR = 'ForegroundColor';
   static const NODE_TAGS = 'Tags';
+  static const NODE_LAST_MODIFICATION_TIME = 'LastModificationTime';
 
   /// CustomIcons >> Icon
   static const NODE_ICON = 'Icon';
@@ -275,8 +276,6 @@ class NullableBooleanNode extends KdbxSubTextNode<bool?> {
 class DateTimeUtcNode extends KdbxSubTextNode<DateTime?> {
   DateTimeUtcNode(KdbxNodeContext node, String name) : super(node, name);
 
-  static const EpochSeconds = 62135596800;
-
   KdbxReadWriteContext get _ctx => (node as KdbxNodeContext).ctx;
   static final minDate = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
 
@@ -298,13 +297,7 @@ class DateTimeUtcNode extends KdbxSubTextNode<DateTime?> {
         return DateTime.parse(value);
       }
       // kdbx 4.x uses base64 encoded date.
-      final decoded = base64.decode(value);
-
-      final secondsFrom00 = ReaderHelper(decoded).readUint64();
-
-      return DateTime.fromMillisecondsSinceEpoch(
-          (secondsFrom00 - EpochSeconds) * 1000,
-          isUtc: true);
+      return DateTimeUtils.fromBase64(value);
     } catch (e, stackTrace) {
       _logger.severe(
           'Error while parsing time for {$name}: {$value}', e, stackTrace);
@@ -317,11 +310,7 @@ class DateTimeUtcNode extends KdbxSubTextNode<DateTime?> {
     assert(value!.isUtc);
     if (_ctx.versionMajor >= 4) {
       // for kdbx v4 we need to support binary/base64
-      final secondsFrom00 =
-          (value!.millisecondsSinceEpoch ~/ 1000) + EpochSeconds;
-      final encoded = base64.encode(
-          (WriterHelper()..writeUint64(secondsFrom00)).output.toBytes());
-      return encoded;
+      return DateTimeUtils.toBase64(value!);
     }
     return DateTimeUtils.toIso8601StringSeconds(value!);
   }
@@ -344,6 +333,26 @@ class XmlUtils {
 }
 
 class DateTimeUtils {
+  static const EpochSeconds = 62135596800;
+  static String toBase64(DateTime dateTime) {
+    final secondsFrom00 =
+        (dateTime.millisecondsSinceEpoch ~/ 1000) + EpochSeconds;
+    final encoded = base64
+        .encode((WriterHelper()..writeUint64(secondsFrom00)).output.toBytes());
+
+    return encoded;
+  }
+
+  static DateTime fromBase64(String value) {
+    final decoded = base64.decode(value);
+
+    final secondsFrom00 = ReaderHelper(decoded).readUint64();
+
+    return DateTime.fromMillisecondsSinceEpoch(
+        (secondsFrom00 - EpochSeconds) * 1000,
+        isUtc: true);
+  }
+
   static String toIso8601StringSeconds(DateTime dateTime) {
     final y = _fourDigits(dateTime.year);
     final m = _twoDigits(dateTime.month);

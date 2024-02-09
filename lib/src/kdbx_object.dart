@@ -142,10 +142,8 @@ extension UnmodifiableMapViewKdbxObject<K extends String, V extends KdbxObject>
 }
 
 extension KdbxObjectInternal on KdbxObject {
-  List<KdbxSubNode<dynamic>> get objectNodes => [
-        icon,
-        customIconUuid,
-      ];
+  List<KdbxSubNode<dynamic>> get objectNodes =>
+      [icon, customIconUuid, previousParentGroup, tags];
 
   /// should only be used in internal code, used to clone
   /// from one kdbx file into another. (like merging).
@@ -180,7 +178,7 @@ abstract class KdbxObject extends KdbxNode {
     this.file,
     String nodeName,
     KdbxGroup? parent,
-  )   : customData = KdbxCustomData.create(),
+  )   : customData = KdbxObjectCustomData.create(),
         times = KdbxTimes.create(ctx),
         _parent = parent,
         super.create(nodeName) {
@@ -190,8 +188,8 @@ abstract class KdbxObject extends KdbxNode {
   KdbxObject.read(this.ctx, KdbxGroup? parent, XmlElement node)
       : customData = node
                 .singleElement(KdbxXml.NODE_CUSTOM_DATA)
-                ?.let((e) => KdbxCustomData.read(e)) ??
-            KdbxCustomData.create(),
+                ?.let((e) => KdbxObjectCustomData.read(e)) ??
+            KdbxObjectCustomData.create(),
         times = KdbxTimes.read(node.findElements('Times').single, ctx),
         _parent = parent,
         super.read(node);
@@ -222,7 +220,7 @@ abstract class KdbxObject extends KdbxNode {
   StringListNode get tags => StringListNode(this, KdbxXml.NODE_TAGS);
 
   @protected
-  final KdbxCustomData customData;
+  final KdbxObjectCustomData customData;
 
   String? getCustomData(String key) => customData[key];
 
@@ -232,7 +230,7 @@ abstract class KdbxObject extends KdbxNode {
       return;
     }
     // We have to call modify from here to ensure the correct overload of
-    // onAfterModify gets called. Otherwise direct changes to a KdbxCustomData
+    // onAfterModify gets called. Otherwise direct changes to a KdbxObjectCustomData
     // node will not affect the modification date of the entry that contains that node.
     modify(() {
       if (value == null) {
