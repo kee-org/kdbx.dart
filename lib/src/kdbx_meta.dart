@@ -260,15 +260,17 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
     final otherIsNewer = other.settingsChanged.isAfter(settingsChanged);
 
     // merge custom data
-    for (final otherCustomDataEntry in other.customData.entries) {
-      if ((otherIsNewer || !customData.containsKey(otherCustomDataEntry.key)) &&
-          !ctx.deletedObjects.containsKey(otherCustomDataEntry.key)) {
-        customData[otherCustomDataEntry.key] = otherCustomDataEntry.value;
-      }
-    }
+    // for (final otherCustomDataEntry in other.customData.entries) {
+    //   if ((otherIsNewer || !customData.containsKey(otherCustomDataEntry.key)) &&
+    //       !ctx.deletedObjects.containsKey(otherCustomDataEntry.key)) {
+    //     customData[otherCustomDataEntry.key] = otherCustomDataEntry.value;
+    //   }
+    // }
+    mergeKdbxMetaCustomDataWithDates(customData, other.customData, ctx, true);
 
     // merge custom icons
     // Unused icons will be cleaned up later
+    //TODO: Use modified dates for better merging?
     for (final otherCustomIcon in other._customIcons.values) {
       _customIcons[otherCustomIcon.uuid] ??= otherCustomIcon;
     }
@@ -291,6 +293,34 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
 
     if (otherIsNewer) {
       settingsChanged.set(other.settingsChanged.get());
+    }
+  }
+
+  void mergeKdbxMetaCustomDataWithDates(
+      KdbxMetaCustomData local,
+      KdbxMetaCustomData other,
+      MergeContext ctx,
+      bool assumeRemoteIsNewerWhenDatesMissing) {
+    for (final entry in other.entries) {
+      final otherKey = entry.key;
+      final otherItem = entry.value;
+      final existingItem = local[otherKey];
+      if (existingItem != null) {
+        if ((existingItem.lastModified == null ||
+                otherItem.lastModified == null) &&
+            assumeRemoteIsNewerWhenDatesMissing) {
+          local[otherKey] = (
+            value: otherItem.value,
+            lastModified: otherItem.lastModified ?? clock.now().toUtc(),
+          );
+        } else if (existingItem.lastModified != null &&
+            otherItem.lastModified != null &&
+            otherItem.lastModified!.isAfter(existingItem.lastModified!)) {
+          local[otherKey] = otherItem;
+        }
+      } else if (!ctx.deletedObjects.containsKey(otherKey)) {
+        local[otherKey] = otherItem;
+      }
     }
   }
 
