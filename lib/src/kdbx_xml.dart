@@ -44,6 +44,9 @@ class KdbxXml {
   /// CustomIcons >> Icon >> Data
   static const NODE_DATA = 'Data';
 
+  /// CustomIcons >> Icon >> Name
+  static const NODE_NAME = 'Name';
+
   /// Used for objects UUID and CustomIcons
   static const NODE_UUID = 'UUID';
 

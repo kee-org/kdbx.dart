@@ -225,7 +225,12 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
           (customIcon) => XmlUtils.createNode(KdbxXml.NODE_ICON, [
             XmlUtils.createTextNode(KdbxXml.NODE_UUID, customIcon.uuid.uuid),
             XmlUtils.createTextNode(
-                KdbxXml.NODE_DATA, base64.encode(customIcon.data))
+                KdbxXml.NODE_DATA, base64.encode(customIcon.data)),
+            if (ctx.version > KdbxVersion.V4 && customIcon.name != null)
+              XmlUtils.createTextNode(KdbxXml.NODE_NAME, customIcon.name!),
+            if (ctx.version > KdbxVersion.V4 && customIcon.lastModified != null)
+              XmlUtils.createTextNode(KdbxXml.NODE_LAST_MODIFICATION_TIME,
+                  DateTimeUtils.toBase64(customIcon.lastModified!)),
           ]),
         )),
     );
@@ -269,12 +274,14 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
     mergeKdbxMetaCustomDataWithDates(
         customData, other.customData, ctx, otherIsNewer);
 
+    mergeCustomIconsWithDates(
+        _customIcons, other._customIcons, ctx, otherIsNewer);
     // merge custom icons
     // Unused icons will be cleaned up later
-    //TODO: Use modified dates for better merging?
-    for (final otherCustomIcon in other._customIcons.values) {
-      _customIcons[otherCustomIcon.uuid] ??= otherCustomIcon;
-    }
+    // //TODO: Use modified dates for better merging?
+    // for (final otherCustomIcon in other._customIcons.values) {
+    //   _customIcons[otherCustomIcon.uuid] ??= otherCustomIcon;
+    // }
 
     if (other.entryTemplatesGroupChanged.isAfter(entryTemplatesGroupChanged)) {
       entryTemplatesGroup.set(other.entryTemplatesGroup.get());
@@ -313,6 +320,36 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
           local[otherKey] = (
             value: otherItem.value,
             lastModified: otherItem.lastModified ?? clock.now().toUtc(),
+          );
+        } else if (existingItem.lastModified != null &&
+            otherItem.lastModified != null &&
+            otherItem.lastModified!.isAfter(existingItem.lastModified!)) {
+          local[otherKey] = otherItem;
+        }
+      } else if (!ctx.deletedObjects.containsKey(otherKey)) {
+        local[otherKey] = otherItem;
+      }
+    }
+  }
+
+  void mergeCustomIconsWithDates(
+      Map<KdbxUuid, KdbxCustomIcon> local,
+      Map<KdbxUuid, KdbxCustomIcon> other,
+      MergeContext ctx,
+      bool assumeRemoteIsNewerWhenDatesMissing) {
+    for (final entry in other.entries) {
+      final otherKey = entry.key;
+      final otherItem = entry.value;
+      final existingItem = local[otherKey];
+      if (existingItem != null) {
+        if ((existingItem.lastModified == null ||
+                otherItem.lastModified == null) &&
+            assumeRemoteIsNewerWhenDatesMissing) {
+          local[otherKey] = KdbxCustomIcon(
+            uuid: otherItem.uuid,
+            data: otherItem.data,
+            lastModified: otherItem.lastModified ?? clock.now().toUtc(),
+            name: otherItem.name,
           );
         } else if (existingItem.lastModified != null &&
             otherItem.lastModified != null &&
@@ -546,11 +583,16 @@ class BrowserDbSettings {
 }
 
 class KdbxCustomIcon {
-  KdbxCustomIcon({required this.uuid, required this.data});
+  KdbxCustomIcon(
+      {required this.uuid, required this.data, this.name, this.lastModified});
 
   /// uuid of the icon, must be unique within each file.
   final KdbxUuid uuid;
 
   /// Encoded png data of the image. will be base64 encoded into the kdbx file.
   final Uint8List data;
+
+  final String? name;
+
+  final DateTime? lastModified;
 }

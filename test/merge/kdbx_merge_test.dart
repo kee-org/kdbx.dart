@@ -75,6 +75,33 @@ void main() {
 //TODO: https://github.com/authpass/authpass/issues/335
 
   group('Real merges', () {
+
+        final icon1 = KdbxCustomIcon(
+            uuid: KdbxUuid.random(),
+            data: Uint8List.fromList([1,2,3]),
+            lastModified: fakeClock.now().toUtc(),
+            name: 'icon1',
+          );
+        final icon2 = KdbxCustomIcon(
+            uuid: KdbxUuid.random(),
+            data: Uint8List.fromList([4,5,6]),
+            lastModified: fakeClock.now().add(const Duration(minutes: 5)).toUtc(),
+            name: 'icon2',
+          );
+        final icon3 = KdbxCustomIcon(
+            uuid: KdbxUuid.random(),
+            data: Uint8List.fromList([7,8,9]),
+            lastModified: fakeClock.now().add(const Duration(minutes: 10)).toUtc(),
+            name: 'icon3',
+          );
+        final icon4 = KdbxCustomIcon(
+            uuid: KdbxUuid.random(),
+            data: Uint8List.fromList([10,11,12]),
+          );
+        final icon5 = KdbxCustomIcon(
+            uuid: KdbxUuid.random(),
+            data: Uint8List.fromList([13,14,15]),
+          );
     test('Local file custom data wins', () async {
       await withClock(fakeClock, () async {
         final file = await TestUtil.createRealFile(proceedSeconds);
@@ -233,6 +260,79 @@ void main() {
           ),
         ),
       );
+    });
+
+    test('Local file custom icon wins', () async {
+      await withClock(fakeClock, () async {
+        final file = await TestUtil.createRealFile(proceedSeconds);
+
+        final fileMod = await TestUtil.saveAndRead(file);
+        final fileReverse = await TestUtil.saveAndRead(file);
+
+        fileMod.body.meta.addCustomIcon(icon4);
+        proceedSeconds(10);
+        file.body.meta.addCustomIcon(icon5);
+        .........................
+        fileMod.body.meta.customData['custom2'] =
+            (value: 'custom value 3', lastModified: null);
+
+        final file2 = await TestUtil.saveAndRead(fileMod);
+        final file2Reverse = await TestUtil.saveAndRead(fileMod);
+
+        final merge = file.merge(file2);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(5));
+        expect(file.body.meta.customData['custom1'],
+            (value: 'custom value 1', lastModified: null));
+        expect(file.body.meta.customData['custom2'],
+            (value: 'custom value 3', lastModified: null));
+
+        final mergeReverse = file2Reverse.merge(fileReverse);
+        final setReverse = Set<KdbxUuid>.from(mergeReverse.merged.keys);
+        expect(setReverse, hasLength(5));
+        expect(file2Reverse.body.meta.customData['custom1'],
+            (value: 'custom value 2', lastModified: null));
+        expect(file2Reverse.body.meta.customData['custom2'],
+            (value: 'custom value 3', lastModified: null));
+      });
+    });
+
+    test('Newer file custom icon wins', () async {
+      await withClock(fakeClock, () async {
+        final file = await TestUtil.createRealFile(proceedSeconds);
+
+        final time1 = fakeClock.now().toUtc();
+        final fileMod = await TestUtil.saveAndRead(file);
+
+        fileMod.body.meta.customData['custom1'] =
+            (value: 'custom value 2', lastModified: time1);
+        proceedSeconds(10);
+        final time2 = fakeClock.now().toUtc();
+        file.body.meta.customData['custom1'] =
+            (value: 'custom value 1', lastModified: time2);
+        fileMod.body.meta.customData['custom2'] =
+            (value: 'custom value 3', lastModified: time2);
+
+        final fileReverse = await TestUtil.saveAndRead(file);
+        final file2 = await TestUtil.saveAndRead(fileMod);
+        final file2Reverse = await TestUtil.saveAndRead(fileMod);
+
+        final merge = file.merge(file2);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(5));
+        expect(file.body.meta.customData['custom1'],
+            (value: 'custom value 1', lastModified: time2));
+        expect(file.body.meta.customData['custom2'],
+            (value: 'custom value 3', lastModified: time2));
+
+        final mergeReverse = file2Reverse.merge(fileReverse);
+        final setReverse = Set<KdbxUuid>.from(mergeReverse.merged.keys);
+        expect(setReverse, hasLength(5));
+        expect(file2Reverse.body.meta.customData['custom1'],
+            (value: 'custom value 1', lastModified: time2));
+        expect(file2Reverse.body.meta.customData['custom2'],
+            (value: 'custom value 3', lastModified: time2));
+      });
     });
   });
 
