@@ -266,7 +266,8 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
     //     customData[otherCustomDataEntry.key] = otherCustomDataEntry.value;
     //   }
     // }
-    mergeKdbxMetaCustomDataWithDates(customData, other.customData, ctx, true);
+    mergeKdbxMetaCustomDataWithDates(
+        customData, other.customData, ctx, otherIsNewer);
 
     // merge custom icons
     // Unused icons will be cleaned up later
