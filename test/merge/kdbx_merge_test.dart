@@ -72,8 +72,6 @@ void main() {
     );
   });
 
-//TODO: https://github.com/authpass/authpass/issues/335
-
   group('Real merges', () {
     final icon1 = KdbxCustomIcon(
       uuid: KdbxUuid.random(),
