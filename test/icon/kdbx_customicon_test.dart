@@ -23,5 +23,9 @@ void main() {
     file.body.cleanup();
     // actually deleted
     expect(file.body.meta.customIcons.length, 1);
+    expect(
+        file.body.deletedObjects.any((deletedObj) =>
+            deletedObj.uuid.uuid == entry.customIconUuid.get()?.uuid),
+        true);
   });
 }

@@ -72,11 +72,20 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
                 .singleElement(KdbxXml.NODE_CUSTOM_ICONS)
                 ?.let((el) sync* {
                   for (final iconNode in el.findElements(KdbxXml.NODE_ICON)) {
+                    final lastModified = iconNode
+                        .singleElement(KdbxXml.NODE_LAST_MODIFICATION_TIME)
+                        ?.innerText;
                     yield KdbxCustomIcon(
                         uuid: KdbxUuid(
                             iconNode.singleTextNode(KdbxXml.NODE_UUID)),
-                        data: base64.decode(
-                            iconNode.singleTextNode(KdbxXml.NODE_DATA)));
+                        data: base64
+                            .decode(iconNode.singleTextNode(KdbxXml.NODE_DATA)),
+                        name: iconNode
+                            .singleElement(KdbxXml.NODE_NAME)
+                            ?.innerText,
+                        lastModified: lastModified != null
+                            ? DateTimeUtils.fromBase64(lastModified)
+                            : null);
                   }
                 })
                 .map((e) => MapEntry(e.uuid, e))
@@ -101,6 +110,10 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
     if (_customIcons.containsKey(customIcon.uuid)) {
       return;
     }
+    modify(() => _customIcons[customIcon.uuid] = customIcon);
+  }
+
+  void modifyCustomIcon(KdbxCustomIcon customIcon) {
     modify(() => _customIcons[customIcon.uuid] = customIcon);
   }
 
@@ -274,8 +287,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
     mergeKdbxMetaCustomDataWithDates(
         customData, other.customData, ctx, otherIsNewer);
 
-    mergeCustomIconsWithDates(
-        _customIcons, other._customIcons, ctx, otherIsNewer);
+    mergeCustomIconsWithDates(_customIcons, other._customIcons, ctx);
     // merge custom icons
     // Unused icons will be cleaned up later
     // //TODO: Use modified dates for better merging?
@@ -333,31 +345,33 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
   }
 
   void mergeCustomIconsWithDates(
-      Map<KdbxUuid, KdbxCustomIcon> local,
-      Map<KdbxUuid, KdbxCustomIcon> other,
-      MergeContext ctx,
-      bool assumeRemoteIsNewerWhenDatesMissing) {
+    Map<KdbxUuid, KdbxCustomIcon> local,
+    Map<KdbxUuid, KdbxCustomIcon> other,
+    MergeContext ctx,
+  ) {
     for (final entry in other.entries) {
       final otherKey = entry.key;
       final otherItem = entry.value;
       final existingItem = local[otherKey];
       if (existingItem != null) {
-        if ((existingItem.lastModified == null ||
-                otherItem.lastModified == null) &&
-            assumeRemoteIsNewerWhenDatesMissing) {
+        if (existingItem.lastModified == null) {
           local[otherKey] = KdbxCustomIcon(
             uuid: otherItem.uuid,
             data: otherItem.data,
             lastModified: otherItem.lastModified ?? clock.now().toUtc(),
             name: otherItem.name,
           );
-        } else if (existingItem.lastModified != null &&
-            otherItem.lastModified != null &&
+        } else if (otherItem.lastModified != null &&
             otherItem.lastModified!.isAfter(existingItem.lastModified!)) {
           local[otherKey] = otherItem;
         }
       } else if (!ctx.deletedObjects.containsKey(otherKey)) {
-        local[otherKey] = otherItem;
+        local[otherKey] = KdbxCustomIcon(
+          uuid: otherItem.uuid,
+          data: otherItem.data,
+          lastModified: otherItem.lastModified ?? clock.now().toUtc(),
+          name: otherItem.name,
+        );
       }
     }
   }
