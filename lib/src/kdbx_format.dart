@@ -317,7 +317,8 @@ class KdbxBody extends KdbxNode {
     final now = clock.now().toUtc();
     final historyMaxItems = (meta.historyMaxItems.get() ?? 0) > 0
         ? meta.historyMaxItems.get()
-        : double.maxFinite as int;
+        : (double.maxFinite).toInt();
+
     final usedCustomIcons = HashSet<KdbxUuid>();
     final unusedCustomIcons = HashSet<KdbxUuid>();
     final usedBinaries = <int>{};

@@ -278,22 +278,12 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
     final otherIsNewer = other.settingsChanged.isAfter(settingsChanged);
 
     // merge custom data
-    // for (final otherCustomDataEntry in other.customData.entries) {
-    //   if ((otherIsNewer || !customData.containsKey(otherCustomDataEntry.key)) &&
-    //       !ctx.deletedObjects.containsKey(otherCustomDataEntry.key)) {
-    //     customData[otherCustomDataEntry.key] = otherCustomDataEntry.value;
-    //   }
-    // }
     mergeKdbxMetaCustomDataWithDates(
         customData, other.customData, ctx, otherIsNewer);
 
-    mergeCustomIconsWithDates(_customIcons, other._customIcons, ctx);
     // merge custom icons
     // Unused icons will be cleaned up later
-    // //TODO: Use modified dates for better merging?
-    // for (final otherCustomIcon in other._customIcons.values) {
-    //   _customIcons[otherCustomIcon.uuid] ??= otherCustomIcon;
-    // }
+    mergeCustomIconsWithDates(_customIcons, other._customIcons, ctx);
 
     if (other.entryTemplatesGroupChanged.isAfter(entryTemplatesGroupChanged)) {
       entryTemplatesGroup.set(other.entryTemplatesGroup.get());
@@ -597,8 +587,12 @@ class BrowserDbSettings {
 }
 
 class KdbxCustomIcon {
-  KdbxCustomIcon(
-      {required this.uuid, required this.data, this.name, this.lastModified});
+  KdbxCustomIcon({
+    required this.uuid,
+    required this.data,
+    this.name,
+    this.lastModified,
+  });
 
   /// uuid of the icon, must be unique within each file.
   final KdbxUuid uuid;

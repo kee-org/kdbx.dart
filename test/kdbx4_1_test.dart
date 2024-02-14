@@ -1,13 +1,9 @@
 @Tags(['kdbx4_1'])
 
-import 'dart:io';
-
-import 'package:clock/clock.dart';
 import 'package:kdbx/kdbx.dart';
 import 'package:logging/logging.dart';
 import 'package:logging_appenders/logging_appenders.dart';
 import 'package:test/test.dart';
-
 import 'internal/test_utils.dart';
 
 final _logger = Logger('kdbx4_1_test');
@@ -21,32 +17,8 @@ void main() {
   if (!kdbxFormat.argon2.isFfi) {
     throw StateError('Expected ffi!');
   }
-  var now = DateTime.fromMillisecondsSinceEpoch(0);
 
-  final fakeClock = Clock(() => now);
-  void proceedSeconds(int seconds) {
-    now = now.add(Duration(seconds: seconds));
-  }
-
-  setUp(() {
-    now = DateTime.fromMillisecondsSinceEpoch(0);
-  });
-
-  group('11111111111111', () {
-    //   test('TODO', () async {
-    //     final file = await TestUtil.readKdbxFile('test/kdbx4.kdbx');
-    //     //final file = await TestUtil.readKdbxFile('test/kdbx4_1.kdbx');
-    //     final firstEntry = file.body.rootGroup.entries.first;
-    //     final d = DateTime.utc(2020, 4, 5, 10, 0);
-    //     firstEntry.times.lastModificationTime.set(d);
-    //     final saved = await file.save();
-    //     {
-    //       final file2 = await TestUtil.readKdbxFileBytes(saved);
-    //       final firstEntry = file2.body.rootGroup.entries.first;
-    //       expect(firstEntry.times.lastModificationTime.get(), d);
-    //     }
-    //   });
-
+  group('Kdbx v4.1', () {
     // Probably should do similar to make v3 more robust too but we don't use that and there's no risk of regression so not now.
     test('New features fail on v4.0', () async {
       final credentials = Credentials(ProtectedValue.fromString('asdf'));
@@ -66,7 +38,6 @@ void main() {
 
       final loadedKdbx = await kdbxFormat.read(
           saved, Credentials(ProtectedValue.fromString('asdf')));
-      //final file2 = await TestUtil.readKdbxFileBytes(saved);
 
       _logger.fine('Successfully loaded kdbx $loadedKdbx');
       final entry1 = loadedKdbx.body.rootGroup.entries.first;
@@ -92,7 +63,6 @@ void main() {
 
       final loadedKdbx = await kdbxFormat.read(
           saved, Credentials(ProtectedValue.fromString('asdf')));
-      //final file2 = await TestUtil.readKdbxFileBytes(saved);
 
       _logger.fine('Successfully loaded kdbx $loadedKdbx');
       final firstEntry = loadedKdbx.body.rootGroup.entries.first;

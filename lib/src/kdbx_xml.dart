@@ -148,6 +148,13 @@ abstract class KdbxSubTextNode<T> extends KdbxSubNode<T?> {
   String toString() {
     return '$runtimeType{${_opt(name)?.text}}';
   }
+
+  void upgrade() {
+    final T? value = get();
+    if (value != null) {
+      _opt(name)?.innerText = encode(value) ?? '';
+    }
+  }
 }
 
 class IntNode extends KdbxSubTextNode<int?> {

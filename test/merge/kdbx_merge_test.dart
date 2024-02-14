@@ -261,6 +261,26 @@ void main() {
       );
     });
 
+    // We don't prevent merging into a newer KDBX version since that might be the only
+    // way to avoid permanent merge failures. However, updating each DB to the latest
+    // version before merging is probably safest, especially for major version differences.
+    test('Generates merge error when merging into an older KDBX version',
+        () async {
+      final file = await TestUtil.createRealFile(proceedSeconds);
+      final file2 = await TestUtil.saveAndRead(file);
+      file.header.upgradeMinor(4, 0);
+      expect(
+        () => file.merge(file2),
+        throwsA(
+          isA<KdbxUnsupportedException>().having(
+            (error) => error.hint,
+            'hint',
+            'Kdbx version of source is newer. Upgrade file version before attempting to merge.',
+          ),
+        ),
+      );
+    });
+
     test('Local v4.0 file gets all custom icons', () async {
       await withClock(fakeClock, () async {
         final file = await TestUtil.createRealFile(proceedSeconds);
@@ -290,6 +310,7 @@ void main() {
         expect(sutIcon5?.lastModified, null);
       });
     });
+
     test(
         'Local v4.1 file gets all custom icons and new modified date for merged icon',
         () async {

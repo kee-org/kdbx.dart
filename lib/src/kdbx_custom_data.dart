@@ -1,14 +1,12 @@
 import 'package:kdbx/src/internal/extension_utils.dart';
-import 'package:kdbx/src/kdbx_format.dart';
 import 'package:kdbx/src/kdbx_object.dart';
 import 'package:kdbx/src/kdbx_xml.dart';
 import 'package:xml/xml.dart' as xml;
-import 'package:collection/collection.dart';
 
 class KdbxObjectCustomData extends KdbxNode {
   KdbxObjectCustomData.create()
       : _data = {},
-        super.create(TAG_NAME);
+        super.create(KdbxXml.NODE_CUSTOM_DATA);
 
   KdbxObjectCustomData.read(xml.XmlElement node)
       : _data = Map.fromEntries(
@@ -18,8 +16,6 @@ class KdbxObjectCustomData extends KdbxNode {
           return MapEntry(key, value);
         })),
         super.read(node);
-
-  static const String TAG_NAME = KdbxXml.NODE_CUSTOM_DATA;
 
   final Map<String, String> _data;
 
@@ -31,7 +27,7 @@ class KdbxObjectCustomData extends KdbxNode {
   }
 
   bool containsKey(String key) => _data.containsKey(key);
-  String? remove(String key) => _data.remove(key);
+  String? remove(String key) => modify(() => _data.remove(key));
 
   @override
   xml.XmlElement toXml() {
@@ -61,7 +57,7 @@ typedef KdbxMetaCustomDataItem = ({
 class KdbxMetaCustomData extends KdbxNode {
   KdbxMetaCustomData.create()
       : _data = {},
-        super.create(TAG_NAME);
+        super.create(KdbxXml.NODE_CUSTOM_DATA);
 
   KdbxMetaCustomData.read(xml.XmlElement node)
       : _data = Map.fromEntries(
@@ -79,8 +75,6 @@ class KdbxMetaCustomData extends KdbxNode {
         })),
         super.read(node);
 
-  static const String TAG_NAME = KdbxXml.NODE_CUSTOM_DATA;
-
   final Map<String, KdbxMetaCustomDataItem> _data;
 
   Iterable<MapEntry<String, KdbxMetaCustomDataItem>> get entries =>
@@ -92,7 +86,7 @@ class KdbxMetaCustomData extends KdbxNode {
   }
 
   bool containsKey(String key) => _data.containsKey(key);
-  KdbxMetaCustomDataItem? remove(String key) => _data.remove(key);
+  KdbxMetaCustomDataItem? remove(String key) => modify(() => _data.remove(key));
 
   @override
   xml.XmlElement toXml() {
@@ -100,6 +94,9 @@ class KdbxMetaCustomData extends KdbxNode {
     el.children.clear();
     el.children.addAll(
       _data.entries.map((e) {
+        //TODO: We don't have any context here so have to output everything regardless
+        // of intended kdbx version. Maybe we can improve that one day to allow
+        // safer output of earlier kdbx versions?
         final d = e.value.lastModified != null
             ? DateTimeUtils.toBase64(e.value.lastModified!)
             : null;
