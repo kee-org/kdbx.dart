@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:kdbx/src/internal/extension_utils.dart';
 import 'package:kdbx/src/kdbx_binary.dart';
@@ -24,7 +25,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
     required String databaseName,
     required this.ctx,
     String? generator,
-  })  : customData = KdbxCustomData.create(),
+  })  : customData = KdbxMetaCustomData.create(),
         binaries = [],
         _customIcons = {},
         super.create('Meta') {
@@ -42,8 +43,8 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
   KdbxMeta.read(xml.XmlElement node, this.ctx)
       : customData = node
                 .singleElement(KdbxXml.NODE_CUSTOM_DATA)
-                ?.let((e) => KdbxCustomData.read(e)) ??
-            KdbxCustomData.create(),
+                ?.let((e) => KdbxMetaCustomData.read(e)) ??
+            KdbxMetaCustomData.create(),
         binaries = node
             .singleElement(KdbxXml.NODE_BINARIES)
             ?.let((el) sync* {
@@ -71,11 +72,20 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
                 .singleElement(KdbxXml.NODE_CUSTOM_ICONS)
                 ?.let((el) sync* {
                   for (final iconNode in el.findElements(KdbxXml.NODE_ICON)) {
+                    final lastModified = iconNode
+                        .singleElement(KdbxXml.NODE_LAST_MODIFICATION_TIME)
+                        ?.innerText;
                     yield KdbxCustomIcon(
                         uuid: KdbxUuid(
                             iconNode.singleTextNode(KdbxXml.NODE_UUID)),
-                        data: base64.decode(
-                            iconNode.singleTextNode(KdbxXml.NODE_DATA)));
+                        data: base64
+                            .decode(iconNode.singleTextNode(KdbxXml.NODE_DATA)),
+                        name: iconNode
+                            .singleElement(KdbxXml.NODE_NAME)
+                            ?.innerText,
+                        lastModified: lastModified != null
+                            ? DateTimeUtils.fromBase64(lastModified)
+                            : null);
                   }
                 })
                 .map((e) => MapEntry(e.uuid, e))
@@ -86,7 +96,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
   @override
   final KdbxReadWriteContext ctx;
 
-  final KdbxCustomData customData;
+  final KdbxMetaCustomData customData;
 
   /// only used in Kdbx 3
   final List<KdbxBinary>? binaries;
@@ -100,6 +110,10 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
     if (_customIcons.containsKey(customIcon.uuid)) {
       return;
     }
+    modify(() => _customIcons[customIcon.uuid] = customIcon);
+  }
+
+  void modifyCustomIcon(KdbxCustomIcon customIcon) {
     modify(() => _customIcons[customIcon.uuid] = customIcon);
   }
 
@@ -162,7 +176,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
   BrowserDbSettings? _browserSettings;
   BrowserDbSettings get browserSettings {
     if (_browserSettings == null) {
-      final tempJson = customData['KeePassRPC.Config'];
+      final tempJson = customData['KeePassRPC.Config']?.value;
 
       if (tempJson != null) {
         _browserSettings = BrowserDbSettings.fromJson(tempJson);
@@ -174,14 +188,15 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
   }
 
   set browserSettings(BrowserDbSettings settings) {
-    customData['KeePassRPC.Config'] = settings.toJson();
+    customData['KeePassRPC.Config'] =
+        (value: settings.toJson(), lastModified: clock.now().toUtc());
     settingsChanged.setToNow();
   }
 
   KeeVaultEmbeddedConfig? _keeVaultSettings;
   KeeVaultEmbeddedConfig get keeVaultSettings {
     if (_keeVaultSettings == null) {
-      final tempJson = customData['KeeVault.Config'];
+      final tempJson = customData['KeeVault.Config']?.value;
 
       if (tempJson != null) {
         _keeVaultSettings = KeeVaultEmbeddedConfig.fromJson(tempJson);
@@ -193,7 +208,8 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
   }
 
   set keeVaultSettings(KeeVaultEmbeddedConfig settings) {
-    customData['KeeVault.Config'] = settings.toJson();
+    customData['KeeVault.Config'] =
+        (value: settings.toJson(), lastModified: clock.now().toUtc());
     settingsChanged.setToNow();
   }
 
@@ -222,7 +238,12 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
           (customIcon) => XmlUtils.createNode(KdbxXml.NODE_ICON, [
             XmlUtils.createTextNode(KdbxXml.NODE_UUID, customIcon.uuid.uuid),
             XmlUtils.createTextNode(
-                KdbxXml.NODE_DATA, base64.encode(customIcon.data))
+                KdbxXml.NODE_DATA, base64.encode(customIcon.data)),
+            if (ctx.version > KdbxVersion.V4 && customIcon.name != null)
+              XmlUtils.createTextNode(KdbxXml.NODE_NAME, customIcon.name!),
+            if (ctx.version > KdbxVersion.V4 && customIcon.lastModified != null)
+              XmlUtils.createTextNode(KdbxXml.NODE_LAST_MODIFICATION_TIME,
+                  DateTimeUtils.toBase64(customIcon.lastModified!)),
           ]),
         )),
     );
@@ -257,18 +278,12 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
     final otherIsNewer = other.settingsChanged.isAfter(settingsChanged);
 
     // merge custom data
-    for (final otherCustomDataEntry in other.customData.entries) {
-      if ((otherIsNewer || !customData.containsKey(otherCustomDataEntry.key)) &&
-          !ctx.deletedObjects.containsKey(otherCustomDataEntry.key)) {
-        customData[otherCustomDataEntry.key] = otherCustomDataEntry.value;
-      }
-    }
+    mergeKdbxMetaCustomDataWithDates(
+        customData, other.customData, ctx, otherIsNewer);
 
     // merge custom icons
     // Unused icons will be cleaned up later
-    for (final otherCustomIcon in other._customIcons.values) {
-      _customIcons[otherCustomIcon.uuid] ??= otherCustomIcon;
-    }
+    mergeCustomIconsWithDates(_customIcons, other._customIcons, ctx);
 
     if (other.entryTemplatesGroupChanged.isAfter(entryTemplatesGroupChanged)) {
       entryTemplatesGroup.set(other.entryTemplatesGroup.get());
@@ -288,6 +303,66 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
 
     if (otherIsNewer) {
       settingsChanged.set(other.settingsChanged.get());
+    }
+  }
+
+  void mergeKdbxMetaCustomDataWithDates(
+      KdbxMetaCustomData local,
+      KdbxMetaCustomData other,
+      MergeContext ctx,
+      bool assumeRemoteIsNewerWhenDatesMissing) {
+    for (final entry in other.entries) {
+      final otherKey = entry.key;
+      final otherItem = entry.value;
+      final existingItem = local[otherKey];
+      if (existingItem != null) {
+        if ((existingItem.lastModified == null ||
+                otherItem.lastModified == null) &&
+            assumeRemoteIsNewerWhenDatesMissing) {
+          local[otherKey] = (
+            value: otherItem.value,
+            lastModified: otherItem.lastModified ?? clock.now().toUtc(),
+          );
+        } else if (existingItem.lastModified != null &&
+            otherItem.lastModified != null &&
+            otherItem.lastModified!.isAfter(existingItem.lastModified!)) {
+          local[otherKey] = otherItem;
+        }
+      } else if (!ctx.deletedObjects.containsKey(otherKey)) {
+        local[otherKey] = otherItem;
+      }
+    }
+  }
+
+  void mergeCustomIconsWithDates(
+    Map<KdbxUuid, KdbxCustomIcon> local,
+    Map<KdbxUuid, KdbxCustomIcon> other,
+    MergeContext ctx,
+  ) {
+    for (final entry in other.entries) {
+      final otherKey = entry.key;
+      final otherItem = entry.value;
+      final existingItem = local[otherKey];
+      if (existingItem != null) {
+        if (existingItem.lastModified == null) {
+          local[otherKey] = KdbxCustomIcon(
+            uuid: otherItem.uuid,
+            data: otherItem.data,
+            lastModified: otherItem.lastModified ?? clock.now().toUtc(),
+            name: otherItem.name,
+          );
+        } else if (otherItem.lastModified != null &&
+            otherItem.lastModified!.isAfter(existingItem.lastModified!)) {
+          local[otherKey] = otherItem;
+        }
+      } else if (!ctx.deletedObjects.containsKey(otherKey)) {
+        local[otherKey] = KdbxCustomIcon(
+          uuid: otherItem.uuid,
+          data: otherItem.data,
+          lastModified: otherItem.lastModified ?? clock.now().toUtc(),
+          name: otherItem.name,
+        );
+      }
     }
   }
 
@@ -512,11 +587,20 @@ class BrowserDbSettings {
 }
 
 class KdbxCustomIcon {
-  KdbxCustomIcon({required this.uuid, required this.data});
+  KdbxCustomIcon({
+    required this.uuid,
+    required this.data,
+    this.name,
+    this.lastModified,
+  });
 
   /// uuid of the icon, must be unique within each file.
   final KdbxUuid uuid;
 
   /// Encoded png data of the image. will be base64 encoded into the kdbx file.
   final Uint8List data;
+
+  final String? name;
+
+  final DateTime? lastModified;
 }

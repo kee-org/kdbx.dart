@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_use_of_protected_member
+
 import 'dart:typed_data';
 
 import 'package:clock/clock.dart';
@@ -71,6 +73,32 @@ void main() {
   });
 
   group('Real merges', () {
+    final icon1 = KdbxCustomIcon(
+      uuid: KdbxUuid.random(),
+      data: Uint8List.fromList([1, 2, 3]),
+      lastModified: fakeClock.now().toUtc(),
+      name: 'icon1',
+    );
+    final icon2 = KdbxCustomIcon(
+      uuid: KdbxUuid.random(),
+      data: Uint8List.fromList([4, 5, 6]),
+      lastModified: fakeClock.now().add(const Duration(minutes: 5)).toUtc(),
+      name: 'icon2',
+    );
+    final icon3 = KdbxCustomIcon(
+      uuid: KdbxUuid.random(),
+      data: Uint8List.fromList([7, 8, 9]),
+      lastModified: fakeClock.now().add(const Duration(minutes: 10)).toUtc(),
+      name: 'icon3',
+    );
+    final icon4 = KdbxCustomIcon(
+      uuid: KdbxUuid.random(),
+      data: Uint8List.fromList([10, 11, 12]),
+    );
+    final icon5 = KdbxCustomIcon(
+      uuid: KdbxUuid.random(),
+      data: Uint8List.fromList([13, 14, 15]),
+    );
     test('Local file custom data wins', () async {
       await withClock(fakeClock, () async {
         final file = await TestUtil.createRealFile(proceedSeconds);
@@ -78,10 +106,13 @@ void main() {
         final fileMod = await TestUtil.saveAndRead(file);
         final fileReverse = await TestUtil.saveAndRead(file);
 
-        fileMod.body.meta.customData['custom1'] = 'custom value 2';
+        fileMod.body.meta.customData['custom1'] =
+            (value: 'custom value 2', lastModified: null);
         proceedSeconds(10);
-        file.body.meta.customData['custom1'] = 'custom value 1';
-        fileMod.body.meta.customData['custom2'] = 'custom value 3';
+        file.body.meta.customData['custom1'] =
+            (value: 'custom value 1', lastModified: null);
+        fileMod.body.meta.customData['custom2'] =
+            (value: 'custom value 3', lastModified: null);
 
         final file2 = await TestUtil.saveAndRead(fileMod);
         final file2Reverse = await TestUtil.saveAndRead(fileMod);
@@ -89,14 +120,127 @@ void main() {
         final merge = file.merge(file2);
         final set = Set<KdbxUuid>.from(merge.merged.keys);
         expect(set, hasLength(5));
-        expect(file.body.meta.customData['custom1'], 'custom value 1');
-        expect(file.body.meta.customData['custom2'], 'custom value 3');
+        expect(file.body.meta.customData['custom1'],
+            (value: 'custom value 1', lastModified: null));
+        expect(file.body.meta.customData['custom2'],
+            (value: 'custom value 3', lastModified: null));
 
         final mergeReverse = file2Reverse.merge(fileReverse);
         final setReverse = Set<KdbxUuid>.from(mergeReverse.merged.keys);
         expect(setReverse, hasLength(5));
-        expect(file2Reverse.body.meta.customData['custom1'], 'custom value 2');
-        expect(file2Reverse.body.meta.customData['custom2'], 'custom value 3');
+        expect(file2Reverse.body.meta.customData['custom1'],
+            (value: 'custom value 2', lastModified: null));
+        expect(file2Reverse.body.meta.customData['custom2'],
+            (value: 'custom value 3', lastModified: null));
+      });
+    });
+
+    test('Newer file custom data wins', () async {
+      await withClock(fakeClock, () async {
+        final file = await TestUtil.createRealFile(proceedSeconds);
+
+        final time1 = fakeClock.now().toUtc();
+        final fileMod = await TestUtil.saveAndRead(file);
+
+        fileMod.body.meta.customData['custom1'] =
+            (value: 'custom value 2', lastModified: time1);
+        proceedSeconds(10);
+        final time2 = fakeClock.now().toUtc();
+        file.body.meta.customData['custom1'] =
+            (value: 'custom value 1', lastModified: time2);
+        fileMod.body.meta.customData['custom2'] =
+            (value: 'custom value 3', lastModified: time2);
+
+        final fileReverse = await TestUtil.saveAndRead(file);
+        final file2 = await TestUtil.saveAndRead(fileMod);
+        final file2Reverse = await TestUtil.saveAndRead(fileMod);
+
+        final merge = file.merge(file2);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(5));
+        expect(file.body.meta.customData['custom1'],
+            (value: 'custom value 1', lastModified: time2));
+        expect(file.body.meta.customData['custom2'],
+            (value: 'custom value 3', lastModified: time2));
+
+        final mergeReverse = file2Reverse.merge(fileReverse);
+        final setReverse = Set<KdbxUuid>.from(mergeReverse.merged.keys);
+        expect(setReverse, hasLength(5));
+        expect(file2Reverse.body.meta.customData['custom1'],
+            (value: 'custom value 1', lastModified: time2));
+        expect(file2Reverse.body.meta.customData['custom2'],
+            (value: 'custom value 3', lastModified: time2));
+      });
+    });
+
+    test('Local entry custom data wins', () async {
+      await withClock(fakeClock, () async {
+        final file = await TestUtil.createRealFile(proceedSeconds);
+
+        final fileMod = await TestUtil.saveAndRead(file);
+
+        fileMod.body.rootGroup.entries.first
+            .setCustomData('custom1', 'custom value 2');
+        proceedSeconds(10);
+        file.body.rootGroup.entries.first
+            .setCustomData('custom1', 'custom value 1');
+        fileMod.body.rootGroup.entries.first
+            .setCustomData('custom2', 'custom value 3');
+
+        final fileReverse = await TestUtil.saveAndRead(file);
+        final file2 = await TestUtil.saveAndRead(fileMod);
+        final file2Reverse = await TestUtil.saveAndRead(fileMod);
+
+        final merge = file.merge(file2);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(5));
+        expect(file.body.rootGroup.entries.first.customData['custom1'],
+            'custom value 1');
+        expect(file.body.rootGroup.entries.first.customData['custom2'], null);
+
+        final mergeReverse = file2Reverse.merge(fileReverse);
+        final setReverse = Set<KdbxUuid>.from(mergeReverse.merged.keys);
+        expect(setReverse, hasLength(5));
+        expect(file2Reverse.body.rootGroup.entries.first.customData['custom1'],
+            'custom value 2');
+        expect(file2Reverse.body.rootGroup.entries.first.customData['custom2'],
+            'custom value 3');
+      });
+    });
+
+    test('Newer entry custom data wins', () async {
+      await withClock(fakeClock, () async {
+        final file = await TestUtil.createRealFile(proceedSeconds);
+
+        final fileMod = await TestUtil.saveAndRead(file);
+
+        file.body.rootGroup.entries.first
+            .setCustomData('custom1', 'custom value 1');
+        proceedSeconds(10);
+        fileMod.body.rootGroup.entries.first
+            .setCustomData('custom1', 'custom value 2');
+        fileMod.body.rootGroup.entries.first
+            .setCustomData('custom2', 'custom value 3');
+
+        final fileReverse = await TestUtil.saveAndRead(file);
+        final file2 = await TestUtil.saveAndRead(fileMod);
+        final file2Reverse = await TestUtil.saveAndRead(fileMod);
+
+        final merge = file.merge(file2);
+        final set = Set<KdbxUuid>.from(merge.merged.keys);
+        expect(set, hasLength(5));
+        expect(file.body.rootGroup.entries.first.customData['custom1'],
+            'custom value 2');
+        expect(file.body.rootGroup.entries.first.customData['custom2'],
+            'custom value 3');
+
+        final mergeReverse = file2Reverse.merge(fileReverse);
+        final setReverse = Set<KdbxUuid>.from(mergeReverse.merged.keys);
+        expect(setReverse, hasLength(5));
+        expect(file2Reverse.body.rootGroup.entries.first.customData['custom1'],
+            'custom value 2');
+        expect(file2Reverse.body.rootGroup.entries.first.customData['custom2'],
+            'custom value 3');
       });
     });
 
@@ -113,6 +257,145 @@ void main() {
           ),
         ),
       );
+    });
+
+    // We don't prevent merging into a newer KDBX version since that might be the only
+    // way to avoid permanent merge failures. However, updating each DB to the latest
+    // version before merging is probably safest, especially for major version differences.
+    test('Generates merge error when merging into an older KDBX version',
+        () async {
+      final file = await TestUtil.createRealFile(proceedSeconds);
+      final file2 = await TestUtil.saveAndRead(file);
+      file.header.upgradeMinor(4, 0);
+      expect(
+        () => file.merge(file2),
+        throwsA(
+          isA<KdbxUnsupportedException>().having(
+            (error) => error.hint,
+            'hint',
+            'Kdbx version of source is newer. Upgrade file version before attempting to merge.',
+          ),
+        ),
+      );
+    });
+
+    test('Local v4.0 file gets all custom icons', () async {
+      await withClock(fakeClock, () async {
+        final file = await TestUtil.createRealFile(proceedSeconds);
+        file.header.upgradeMinor(4, 0);
+        final fileMod = await TestUtil.saveAndRead(file);
+
+        final allEntries = file.body.rootGroup.getAllEntries().values.toList();
+        final entry1 = allEntries[0];
+
+        final allEntriesMod =
+            fileMod.body.rootGroup.getAllEntries().values.toList();
+        final entry2Mod = allEntriesMod[1];
+
+        entry1.customIcon = icon4;
+        proceedSeconds(10);
+        entry2Mod.customIcon = icon5;
+
+        final file2 = await TestUtil.saveAndRead(fileMod);
+
+        file.merge(file2);
+        final sutFile = await TestUtil.saveAndRead(file);
+        final sutIcon4 = sutFile.body.meta.customIcons[icon4.uuid];
+        final sutIcon5 = sutFile.body.meta.customIcons[icon5.uuid];
+        expect(sutIcon4?.uuid.uuid, icon4.uuid.uuid);
+        expect(sutIcon4?.lastModified, null);
+        expect(sutIcon5?.uuid.uuid, icon5.uuid.uuid);
+        expect(sutIcon5?.lastModified, null);
+      });
+    });
+
+    test(
+        'Local v4.1 file gets all custom icons and new modified date for merged icon',
+        () async {
+      await withClock(fakeClock, () async {
+        final file = await TestUtil.createRealFile(proceedSeconds);
+        final fileMod = await TestUtil.saveAndRead(file);
+
+        final allEntries = file.body.rootGroup.getAllEntries().values.toList();
+        final entry1 = allEntries[0];
+        final entry2 = allEntries[1];
+
+        final allEntriesMod =
+            fileMod.body.rootGroup.getAllEntries().values.toList();
+        final entry2Mod = allEntriesMod[1];
+
+        entry1.customIcon = icon4;
+        entry2.customIcon = icon5;
+        proceedSeconds(10);
+        entry2Mod.customIcon = icon5;
+
+        final file2 = await TestUtil.saveAndRead(fileMod);
+
+        file.merge(file2);
+        final sutFile = await TestUtil.saveAndRead(file);
+        final sutIcon4 = sutFile.body.meta.customIcons[icon4.uuid];
+        final sutIcon5 = sutFile.body.meta.customIcons[icon5.uuid];
+        expect(sutIcon4?.uuid.uuid, icon4.uuid.uuid);
+        expect(sutIcon4?.lastModified, null);
+        expect(sutIcon5?.uuid.uuid, icon5.uuid.uuid);
+        expect(sutIcon5?.lastModified, isA<DateTime>());
+      });
+    });
+
+    test('Newer file custom icon wins', () async {
+      await withClock(fakeClock, () async {
+        final file = await TestUtil.createRealFile(proceedSeconds);
+        final fileMod = await TestUtil.saveAndRead(file);
+
+        final allEntries = file.body.rootGroup.getAllEntries().values.toList();
+        final entry1 = allEntries[0];
+        final entry2 = allEntries[1];
+
+        final allEntriesMod =
+            fileMod.body.rootGroup.getAllEntries().values.toList();
+        final entry2Mod = allEntriesMod[1];
+
+        entry1.customIcon = icon1;
+        entry2.customIcon = icon2;
+        proceedSeconds(10);
+        entry2Mod.customIcon = icon3;
+        final iconModTime =
+            icon2.lastModified?.add(const Duration(minutes: 1)).toUtc();
+        final iconModData = Uint8List.fromList([100, 101, 102]);
+        file.body.meta.modifyCustomIcon(KdbxCustomIcon(
+          uuid: icon2.uuid,
+          data: iconModData,
+          lastModified: iconModTime,
+          name: 'modified',
+        ));
+
+        final fileTarget = await TestUtil.saveAndRead(file);
+        final file2 = await TestUtil.saveAndRead(fileMod);
+
+        fileTarget.merge(file2);
+        final sutFile = await TestUtil.saveAndRead(fileTarget);
+        final sutIcon1 = sutFile.body.meta.customIcons[icon1.uuid];
+        final sutIcon2 = sutFile.body.meta.customIcons[icon2.uuid];
+        final sutIcon3 = sutFile.body.meta.customIcons[icon3.uuid];
+        expect(sutIcon1?.uuid.uuid, icon1.uuid.uuid);
+        expect(sutIcon1?.lastModified, icon1.lastModified);
+        expect(sutIcon2?.uuid.uuid, icon2.uuid.uuid);
+        expect(sutIcon2?.lastModified, iconModTime);
+        expect(sutIcon2?.data, iconModData);
+        expect(sutIcon2?.name, 'modified');
+        expect(sutIcon3?.uuid.uuid, icon3.uuid.uuid);
+        expect(sutIcon3?.lastModified, icon3.lastModified);
+        expect(sutIcon3?.name, icon3.name);
+        expect(sutIcon3?.data, icon3.data);
+        expect(
+            sutFile.body.rootGroup
+                .getAllEntries()
+                .values
+                .toList()[1]
+                .customIcon
+                ?.uuid,
+            icon3.uuid);
+      });
     });
   });
 
@@ -475,13 +758,6 @@ void main() {
             hasLength(0));
       }),
     );
-    // test(
-    //   'Adds binary to remote entry',
-    //   () async => await withClock(fakeClock, () async {
-    //     final file = await TestUtil.createRealFile(proceedSeconds);
-    //     await TestUtil.saveAndRead(file);
-    //   }),
-    // );
   });
 
   group('Group merges', () {
@@ -586,10 +862,6 @@ void main() {
       }),
     );
   });
-
-// meh?
-//  'merges binaries'
-  //('merges custom icons',
 
   group('History merges', () {
 /*
@@ -1118,24 +1390,4 @@ when merging, can look at this value to decide whether history entries from the 
       }),
     );
   });
-
-  // group('Kdbx4.1 merges', () {
-  //   Future<KdbxFile> TestUtil.createRealFile(proceedSeconds) async {
-  //     final file = TestUtil.createEmptyFile();
-  //     _createEntry(file, file.body.rootGroup, 'test1', 'test1');
-  //     final subGroup =
-  //         file.createGroup(parent: file.body.rootGroup, name: 'Sub Group');
-  //     _createEntry(file, subGroup, 'test2', 'test2');
-  //     proceedSeconds(10);
-  //     return await TestUtil.saveAndRead(file);
-  //   }
-
-  //   test('Newest file plugin data wins', () async {
-  //     await withClock(fakeClock, () async {
-  //       final file = await TestUtil.createRealFile(proceedSeconds);
-
-  //       final fileMod = await TestUtil.saveAndRead(file);
-  //     });
-  //   });
-  // });
 }

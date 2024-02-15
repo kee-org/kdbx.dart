@@ -61,6 +61,7 @@ class KdbxReadWriteContext {
   final KdbxHeader header;
 
   int get versionMajor => header.version.major;
+  KdbxVersion get version => header.version;
 
   void initContext(Iterable<KdbxBinary> binaries,
       Iterable<KdbxDeletedObject> deletedObjects) {
@@ -316,7 +317,8 @@ class KdbxBody extends KdbxNode {
     final now = clock.now().toUtc();
     final historyMaxItems = (meta.historyMaxItems.get() ?? 0) > 0
         ? meta.historyMaxItems.get()
-        : double.maxFinite as int;
+        : (double.maxFinite).toInt();
+
     final usedCustomIcons = HashSet<KdbxUuid>();
     final unusedCustomIcons = HashSet<KdbxUuid>();
     final usedBinaries = <int>{};
@@ -519,14 +521,14 @@ class KdbxFormat {
   static bool dartWebWorkaround = false;
 
   /// Creates a new, empty [KdbxFile] with default settings.
-  /// If [header] is not given by default a kdbx 4.0 file will be created.
+  /// If [header] is not given by default a kdbx 4.1 file will be created.
   KdbxFile create(
     Credentials credentials,
     String name, {
     String? generator,
     KdbxHeader? header,
   }) {
-    header ??= KdbxHeader.createV4();
+    header ??= KdbxHeader.createV4_1();
     final ctx = KdbxReadWriteContext(header: header);
     final meta = KdbxMeta.create(
       databaseName: name,

@@ -389,7 +389,7 @@ extension KdbxEntryInternal on KdbxEntry {
         foregroundColor,
         backgroundColor,
         overrideURL,
-        tags,
+        qualityCheck,
       ];
 
   void _overwriteFrom(
@@ -426,6 +426,8 @@ extension KdbxEntryInternal on KdbxEntry {
         ));
     _binaries.clear();
     _binaries.addAll(newBinaries);
+    // Dart doesn't know this is actually OK since it's an extension to a subclass
+    // ignore: invalid_use_of_protected_member
     customData.overwriteFrom(other.customData);
     times.overwriteFrom(other.times);
     if (includeHistory) {
@@ -456,8 +458,7 @@ class KdbxEntry extends KdbxObject {
     KdbxFile file,
     KdbxGroup parent, {
     this.isHistoryEntry = false,
-  })  : customData = KdbxCustomData.create(),
-        history = [],
+  })  : history = [],
         super.create(file.ctx, file, 'Entry', parent) {
     icon.set(KdbxIcon.Key);
     _browserSettings = BrowserEntrySettings(
@@ -467,11 +468,7 @@ class KdbxEntry extends KdbxObject {
 
   KdbxEntry.read(KdbxReadWriteContext ctx, KdbxGroup? parent, XmlElement node,
       {this.isHistoryEntry = false})
-      : customData = node
-                .singleElement(KdbxXml.NODE_CUSTOM_DATA)
-                ?.let((e) => KdbxCustomData.read(e)) ??
-            KdbxCustomData.create(),
-        history = [],
+      : history = [],
         super.read(ctx, parent, node) {
     _strings.addEntries(node.findElements(KdbxXml.NODE_STRING).map((el) {
       final key = KdbxKey(el.findElements(KdbxXml.NODE_KEY).single.text);
@@ -552,16 +549,17 @@ class KdbxEntry extends KdbxObject {
     _browserSettings = null;
   }
 
-  final KdbxCustomData customData;
-
   final bool isHistoryEntry;
 
   final List<KdbxEntry> history;
 
-  ColorNode get foregroundColor => ColorNode(this, 'ForegroundColor');
-  ColorNode get backgroundColor => ColorNode(this, 'BackgroundColor');
-  StringNode get overrideURL => StringNode(this, 'OverrideURL');
-  StringListNode get tags => StringListNode(this, 'Tags');
+  ColorNode get foregroundColor =>
+      ColorNode(this, KdbxXml.NODE_FOREGROUND_COLOR);
+  ColorNode get backgroundColor =>
+      ColorNode(this, KdbxXml.NODE_BACKGROUND_COLOR);
+  StringNode get overrideURL => StringNode(this, KdbxXml.NODE_OVERRIDE_URL);
+  NullableBooleanNode get qualityCheck =>
+      NullableBooleanNode(this, KdbxXml.NODE_QUALITY_CHECK);
 
   @override
   set file(KdbxFile? file) {
@@ -617,6 +615,12 @@ class KdbxEntry extends KdbxObject {
   @override
   XmlElement toXml() {
     final el = super.toXml()..replaceSingle(customData.toXml());
+
+    if (ctx.version < KdbxVersion.V4_1) {
+      XmlUtils.removeChildrenByName(el, KdbxXml.NODE_QUALITY_CHECK);
+      XmlUtils.removeChildrenByName(el, KdbxXml.NODE_PREVIOUS_PARENT_GROUP);
+    }
+
     XmlUtils.removeChildrenByName(el, KdbxXml.NODE_STRING);
     XmlUtils.removeChildrenByName(el, KdbxXml.NODE_HISTORY);
     XmlUtils.removeChildrenByName(el, KdbxXml.NODE_BINARY);

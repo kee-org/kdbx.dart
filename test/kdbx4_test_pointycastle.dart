@@ -33,7 +33,7 @@ void main() {
       final kdbx = kdbxFormat.create(
         credentials,
         'Test Keystore',
-        header: KdbxHeader.createV4(),
+        header: KdbxHeader.createV4_1(),
       );
       final rootGroup = kdbx.body.rootGroup;
       _createEntry(kdbx, rootGroup, 'user1', 'LoremIpsum');

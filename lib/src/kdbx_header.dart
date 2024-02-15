@@ -569,11 +569,18 @@ class KdbxHeader {
   void writeKdfParameters(VarDictionary kdfParameters) =>
       _setHeaderField(HeaderFields.KdfParameters, kdfParameters.write());
 
-  void upgrade(int majorVersion) {
+  void upgradeMinor(int majorVersion, int minorVersion) {
+    checkArgument(majorVersion == KdbxVersion.V4.major,
+        message: 'Can only upgrade v4');
+    _logger.info('Upgrading header to $minorVersion');
+    _version = KdbxVersion._(majorVersion, minorVersion);
+  }
+
+  void upgrade(int majorVersion, int minorVersion) {
     checkArgument(majorVersion == KdbxVersion.V4.major,
         message: 'Can only upgrade to 4');
-    _logger.info('Upgrading header to $majorVersion');
-    _version = KdbxVersion._(majorVersion, 0);
+    _logger.info('Upgrading header to $majorVersion.$minorVersion');
+    _version = KdbxVersion._(majorVersion, minorVersion);
     if (fields[HeaderFields.KdfParameters] == null) {
       _logger.fine('Creating kdf parameters.');
       writeKdfParameters(_createKdfDefaultParameters());

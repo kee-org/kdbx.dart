@@ -1,3 +1,7 @@
 tags:
   kdbx3: {}
   kdbx4: {}
+
+# macOs github runners are slower
+on_platform:
+  mac-os: {timeout: 2x}

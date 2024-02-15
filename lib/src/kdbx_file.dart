@@ -2,15 +2,8 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
-import 'package:kdbx/src/credentials/credentials.dart';
-import 'package:kdbx/src/crypto/protected_value.dart';
-import 'package:kdbx/src/kdbx_consts.dart';
-import 'package:kdbx/src/kdbx_dao.dart';
-import 'package:kdbx/src/kdbx_exceptions.dart';
+import 'package:kdbx/kdbx.dart';
 import 'package:kdbx/src/kdbx_format.dart';
-import 'package:kdbx/src/kdbx_group.dart';
-import 'package:kdbx/src/kdbx_header.dart';
-import 'package:kdbx/src/kdbx_object.dart';
 import 'package:logging/logging.dart';
 import 'package:quiver/check.dart';
 import 'package:synchronized/synchronized.dart';
@@ -150,17 +143,50 @@ class KdbxFile {
     return recycleBin ?? _createRecycleBin();
   }
 
-  /// Upgrade v3 file to v4.
-  void upgrade(int majorVersion) {
+  /// Upgrade v3 file to v4.x
+  void upgrade(int majorVersion, int minorVersion) {
     checkArgument(majorVersion == 4, message: 'Must be majorVersion 4');
-    body.meta.settingsChanged.setToNow();
     body.meta.headerHash.remove();
-    header.upgrade(majorVersion);
+    header.version.major == 4
+        ? header.upgradeMinor(majorVersion, minorVersion)
+        : header.upgrade(majorVersion, minorVersion);
+
+    upgradeDateTimeFormatV4();
+
+    body.meta.settingsChanged.setToNow();
+  }
+
+  void upgradeDateTimeFormatV4() {
+    body.meta.databaseNameChanged.upgrade();
+    body.meta.databaseDescriptionChanged.upgrade();
+    body.meta.defaultUserNameChanged.upgrade();
+    body.meta.masterKeyChanged.upgrade();
+    body.meta.recycleBinChanged.upgrade();
+    body.meta.entryTemplatesGroupChanged.upgrade();
+    body.meta.settingsChanged.upgrade();
+    body.rootGroup.getAllGroups().values.forEach(upgradeAllObjectTimesV4);
+    body.rootGroup.getAllEntries().values.forEach(upgradeAllObjectTimesV4);
+  }
+
+  void upgradeAllObjectTimesV4(KdbxObject obj) {
+    obj.times.creationTime.upgrade();
+    obj.times.lastModificationTime.upgrade();
+    obj.times.lastAccessTime.upgrade();
+    obj.times.expiryTime.upgrade();
+    obj.times.locationChanged.upgrade();
+
+    if (obj is KdbxEntry) {
+      obj.history.forEach(upgradeAllObjectTimesV4);
+    }
   }
 
   /// Merges the given file into this file.
   /// Both files must have the same origin (ie. same root group UUID).
   MergeContext merge(KdbxFile other) {
+    if (header.version < other.header.version) {
+      throw KdbxUnsupportedException(
+          'Kdbx version of source is newer. Upgrade file version before attempting to merge.');
+    }
     if (other.body.rootGroup.uuid != body.rootGroup.uuid) {
       throw KdbxUnsupportedException(
           'Root groups of source and dest file do not match.');

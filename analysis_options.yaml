@@ -11,6 +11,7 @@ analyzer:
     missing_return: warning
     # allow having TODOs in the code
     todo: ignore
+    invalid_use_of_protected_member: error
   language:
     strict-casts: true
     strict-raw-types: true
