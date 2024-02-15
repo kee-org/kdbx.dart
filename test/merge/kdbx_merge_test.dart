@@ -758,13 +758,6 @@ void main() {
             hasLength(0));
       }),
     );
-    // test(
-    //   'Adds binary to remote entry',
-    //   () async => await withClock(fakeClock, () async {
-    //     final file = await TestUtil.createRealFile(proceedSeconds);
-    //     await TestUtil.saveAndRead(file);
-    //   }),
-    // );
   });
 
   group('Group merges', () {
@@ -869,10 +862,6 @@ void main() {
       }),
     );
   });
-
-// meh?
-//  'merges binaries'
-  //('merges custom icons',
 
   group('History merges', () {
 /*
@@ -1401,24 +1390,4 @@ when merging, can look at this value to decide whether history entries from the 
       }),
     );
   });
-
-  // group('Kdbx4.1 merges', () {
-  //   Future<KdbxFile> TestUtil.createRealFile(proceedSeconds) async {
-  //     final file = TestUtil.createEmptyFile();
-  //     _createEntry(file, file.body.rootGroup, 'test1', 'test1');
-  //     final subGroup =
-  //         file.createGroup(parent: file.body.rootGroup, name: 'Sub Group');
-  //     _createEntry(file, subGroup, 'test2', 'test2');
-  //     proceedSeconds(10);
-  //     return await TestUtil.saveAndRead(file);
-  //   }
-
-  //   test('Newest file plugin data wins', () async {
-  //     await withClock(fakeClock, () async {
-  //       final file = await TestUtil.createRealFile(proceedSeconds);
-
-  //       final fileMod = await TestUtil.saveAndRead(file);
-  //     });
-  //   });
-  // });
 }

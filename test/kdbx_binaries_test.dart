@@ -24,13 +24,9 @@ Future<void> _testAddNewAttachment(String filePath) async {
     f.body.rootGroup.addEntry(entry);
     expect(entry.binaryEntries, hasLength(0));
     entry.createBinary(
-        isProtected: false,
-        name: 'test.txt',
-        bytes: utf8.encode('Content1'));
+        isProtected: false, name: 'test.txt', bytes: utf8.encode('Content1'));
     entry.createBinary(
-        isProtected: false,
-        name: 'test.txt',
-        bytes: utf8.encode('Content2'));
+        isProtected: false, name: 'test.txt', bytes: utf8.encode('Content2'));
     return await f.save();
   })();
   {
