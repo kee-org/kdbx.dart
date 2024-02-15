@@ -13,8 +13,9 @@ import 'package:kdbx/src/kdbx_xml.dart';
 import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:quiver/iterables.dart';
+import 'package:uuid/data.dart';
+import 'package:uuid/rng.dart';
 import 'package:uuid/uuid.dart';
-import 'package:uuid/uuid_util.dart';
 import 'package:xml/xml.dart';
 
 import 'kdbx_custom_data.dart';
@@ -324,8 +325,7 @@ class KdbxUuid {
   ///   128 bits set to zero.
   static const NIL = KdbxUuid('AAAAAAAAAAAAAAAAAAAAAA==');
 
-  static const Uuid uuidGenerator =
-      Uuid(options: <String, dynamic>{'grng': UuidUtil.cryptoRNG});
+  static Uuid uuidGenerator = Uuid(goptions: GlobalOptions(CryptoRNG()));
 
   /// base64 representation of uuid.
   final String uuid;
