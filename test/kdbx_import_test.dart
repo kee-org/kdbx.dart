@@ -55,7 +55,7 @@ void main() {
       }),
     );
     test(
-      'Simple import v4.1 with Argon2id',
+      'Simple import v4 with Argon2id',
       () async => await withClock(fakeClock, () async {
         final file = await TestUtil.createSimpleFile(proceedSeconds);
         final file2 = await TestUtil.createSimpleFileV4Argon2Id(proceedSeconds);
