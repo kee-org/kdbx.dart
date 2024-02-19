@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:argon2_ffi_base/argon2_ffi_base.dart';
 import 'package:kdbx/kdbx.dart';
+import 'package:kdbx/src/kee_vault_model/kee_vault_model.dart';
 import 'package:logging/logging.dart';
 import 'package:logging_appenders/logging_appenders.dart';
 
@@ -105,7 +106,7 @@ class TestUtil {
       Function proceedSeconds) async {
     final file = TestUtil.createEmptyFile();
     final entry = createEntry(file, file.body.rootGroup, 'test1', 'test1');
-    entry.browserSettings.fields.add(BrowserFieldModel(
+    entry.browserSettings.fields.add(BrowserFieldModelV1(
         displayName: 'test name',
         fieldId: 'id',
         name: 'form field name',

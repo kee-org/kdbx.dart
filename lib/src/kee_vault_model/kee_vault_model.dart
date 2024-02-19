@@ -1,18 +1,15 @@
 import 'dart:convert';
 
-enum FieldStorage { CUSTOM, JSON, BOTH }
+import 'package:collection/collection.dart';
 
-class FormFieldType {
-  static const String USERNAME = 'FFTusername';
-  static const String PASSWORD = 'FFTpassword';
-  static const String TEXT = 'FFTtext';
-  static const String RADIO = 'FFTradio';
-  static const String CHECKBOX = 'FFTcheckbox';
-  static const String SELECT = 'FFTselect';
-}
+import 'package:kdbx/src/kee_vault_model/entry_matcher.dart';
+import 'package:kdbx/src/kee_vault_model/enums.dart';
+import 'package:kdbx/src/kee_vault_model/form_field_type.dart';
 
-class BrowserFieldModel {
-  BrowserFieldModel({
+import 'field_matcher_config.dart';
+
+class BrowserFieldModelV1 {
+  BrowserFieldModelV1({
     this.displayName,
     this.name = '',
     this.type = FormFieldType.TEXT,
@@ -22,12 +19,12 @@ class BrowserFieldModel {
     this.value = '',
   });
 
-  factory BrowserFieldModel.fromMap(Map<String, dynamic>? map) {
+  factory BrowserFieldModelV1.fromMap(Map<String, dynamic>? map) {
     if (map == null) {
-      return BrowserFieldModel();
+      return BrowserFieldModelV1();
     }
 
-    return BrowserFieldModel(
+    return BrowserFieldModelV1(
       displayName: map['displayName'] as String?,
       name: map['name'] as String?,
       type: map['type'] as String?,
@@ -39,8 +36,8 @@ class BrowserFieldModel {
       value: map['value'] as String?,
     );
   }
-  factory BrowserFieldModel.fromJson(String source) =>
-      BrowserFieldModel.fromMap(json.decode(source) as Map<String, dynamic>?);
+  factory BrowserFieldModelV1.fromJson(String source) =>
+      BrowserFieldModelV1.fromMap(json.decode(source) as Map<String, dynamic>?);
 
   String? displayName;
   String? name;
@@ -57,7 +54,7 @@ class BrowserFieldModel {
       return true;
     }
 
-    return o is BrowserFieldModel &&
+    return o is BrowserFieldModelV1 &&
         o.displayName == displayName &&
         o.name == name &&
         o.type == type &&
@@ -78,7 +75,7 @@ class BrowserFieldModel {
         value.hashCode;
   }
 
-  BrowserFieldModel copyWith({
+  BrowserFieldModelV1 copyWith({
     String? displayName,
     String? name,
     String? type,
@@ -87,7 +84,7 @@ class BrowserFieldModel {
     String? placeholderHandling,
     String? value,
   }) {
-    return BrowserFieldModel(
+    return BrowserFieldModelV1(
       displayName: displayName ?? this.displayName,
       name: name ?? this.name,
       type: type ?? this.type,
@@ -117,6 +114,8 @@ class BrowserFieldModel {
     return 'BrowserFieldModel(displayName: $displayName, name: $name, type: $type, fieldId: $fieldId, page: $page, placeholderHandling: $placeholderHandling, value: $value)';
   }
 }
+
+//TODO: delete all below when configv2 is working
 
 // defaults...
 // class BrowserFieldModel(

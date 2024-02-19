@@ -12,11 +12,14 @@ import 'package:kdbx/src/kdbx_format.dart';
 import 'package:kdbx/src/kdbx_header.dart';
 import 'package:kdbx/src/kdbx_object.dart';
 import 'package:kdbx/src/kdbx_xml.dart';
+import 'package:kdbx/src/kee_vault_model/enums.dart';
 import 'package:logging/logging.dart';
 import 'package:quiver/iterables.dart';
 import 'package:uuid/uuid.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:xml/xml.dart';
+
+import 'kee_vault_model/kee_vault_model.dart';
 
 final _logger = Logger('kdbx_meta');
 
