@@ -5,11 +5,6 @@ import 'package:kdbx/src/kee_vault_model/entry_matcher_config.dart';
 import 'package:kdbx/src/kee_vault_model/enums.dart';
 import 'package:kdbx/src/kee_vault_model/field.dart';
 
-//TODO: EntryConfigV2
-//TODO: translate TS unit tests for migration
-//TODO: implement conversion between versions
-//TODO: kdbxswift too
-
 class BrowserEntrySettings {
   BrowserEntrySettings({
     this.version = 2,
