@@ -42,14 +42,16 @@ class Field {
 
   Map<String, dynamic> toMap() {
     return {
-      'uuid': uuid,
-      'name': name,
-      'valuePath': valuePath,
-      'value': value,
       'page': page,
+      'valuePath': valuePath,
+      'uuid': uuid,
       'type': type?.name,
-      'placeholderHandling': placeholderHandling?.name,
       'matcherConfigs': matcherConfigs?.map((x) => x.toMap()).toList(),
+      if (name?.isNotEmpty ?? false) 'name': name,
+      if (value?.isNotEmpty ?? false) 'value': value,
+      if (placeholderHandling != null &&
+          placeholderHandling != PlaceholderHandling.Default)
+        'placeholderHandling': placeholderHandling?.name,
     };
   }
 

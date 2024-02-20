@@ -41,15 +41,17 @@ class FieldMatcher {
 
   Map<String, dynamic> toMap() {
     return {
-      'matchLogic': matchLogic?.name,
-      'ids': ids,
-      'names': names,
-      'types': types,
-      'queries': queries,
-      'labels': labels,
-      'autocompleteValues': autocompleteValues,
-      'maxLength': maxLength,
-      'minLength': minLength,
+      if (matchLogic != null && matchLogic != MatcherLogic.Client)
+        'matchLogic': matchLogic?.name,
+      if (ids.isNotEmpty) 'ids': ids,
+      if (names.isNotEmpty) 'names': names,
+      if (types.isNotEmpty) 'types': types,
+      if (queries.isNotEmpty) 'queries': queries,
+      if (labels.isNotEmpty) 'labels': labels,
+      if (autocompleteValues.isNotEmpty)
+        'autocompleteValues': autocompleteValues,
+      if (maxLength != null) 'maxLength': maxLength,
+      if (minLength != null) 'minLength': minLength,
     };
   }
 

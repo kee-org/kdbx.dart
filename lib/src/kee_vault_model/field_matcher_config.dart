@@ -50,10 +50,11 @@ class FieldMatcherConfig {
 
   Map<String, dynamic> toMap() {
     return {
-      'matcherType': matcherType?.name,
-      'customMatcher': customMatcher?.toMap(),
-      'weight': weight,
-      'actionOnMatch': actionOnMatch?.name,
+      if (matcherType != null && matcherType != FieldMatcherType.Custom)
+        'matcherType': matcherType?.name,
+      if (customMatcher != null) 'customMatcher': customMatcher?.toMap(),
+      if (weight != null) 'weight': weight,
+      if (actionOnMatch != null) 'actionOnMatch': actionOnMatch?.name,
     };
   }
 

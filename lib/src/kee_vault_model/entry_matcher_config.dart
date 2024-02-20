@@ -41,11 +41,12 @@ class EntryMatcherConfig {
   Map<String, dynamic> toMap() {
     return {
       'matcherType': matcherType?.name,
-      'customMatcher': customMatcher?.toMap(),
-      'urlMatchMethod': urlMatchMethod?.name,
-      'weight': weight,
-      'actionOnMatch': actionOnMatch?.name,
-      'actionOnNoMatch': actionOnNoMatch?.name,
+      if (customMatcher != null) 'customMatcher': customMatcher?.toMap(),
+      if (urlMatchMethod != null && urlMatchMethod != MatchAccuracy.Domain)
+        'urlMatchMethod': urlMatchMethod?.name,
+      if (weight != null) 'weight': weight,
+      if (actionOnMatch != null) 'actionOnMatch': actionOnMatch?.name,
+      if (actionOnNoMatch != null) 'actionOnNoMatch': actionOnNoMatch?.name,
     };
   }
 

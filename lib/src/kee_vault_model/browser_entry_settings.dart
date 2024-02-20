@@ -173,10 +173,11 @@ class BrowserEntrySettings {
     return <String, dynamic>{
       'version': version,
       'authenticationMethods': authenticationMethods,
-      'hTTPRealm': realm,
-      if (fields != null) 'fields': fields?.map((x) => x.toMap()).toList(),
-      'behaviour': behaviour?.name,
+      if (realm?.isNotEmpty ?? false) 'hTTPRealm': realm,
       'matcherConfigs': matcherConfigs.map((x) => x.toMap()).toList(),
+      if (fields != null) 'fields': fields?.map((x) => x.toMap()).toList(),
+      if (behaviour != null && behaviour != BrowserAutoFillBehaviour.Default)
+        'behaviour': behaviour?.name,
       ...parseUrls(includeUrls, excludeUrls),
     };
   }

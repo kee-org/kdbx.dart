@@ -52,10 +52,14 @@ class BrowserEntrySettingsV1 {
   }
 
   factory BrowserEntrySettingsV1.fromJson(String source,
-          {required MatchAccuracy minimumMatchAccuracy}) =>
-      BrowserEntrySettingsV1.fromMap(
-          json.decode(source) as Map<String, dynamic>?,
-          minimumMatchAccuracy: minimumMatchAccuracy);
+      {required MatchAccuracy minimumMatchAccuracy}) {
+    if (source.isEmpty) {
+      return BrowserEntrySettingsV1(minimumMatchAccuracy: minimumMatchAccuracy);
+    }
+    return BrowserEntrySettingsV1.fromMap(
+        json.decode(source) as Map<String, dynamic>?,
+        minimumMatchAccuracy: minimumMatchAccuracy);
+  }
 
   int version;
   // enum
