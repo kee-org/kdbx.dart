@@ -1,12 +1,5 @@
 import 'dart:convert';
-
-import 'package:collection/collection.dart';
-
-import 'package:kdbx/src/kee_vault_model/entry_matcher.dart';
-import 'package:kdbx/src/kee_vault_model/enums.dart';
 import 'package:kdbx/src/kee_vault_model/form_field_type.dart';
-
-import 'field_matcher_config.dart';
 
 class BrowserFieldModelV1 {
   BrowserFieldModelV1({

@@ -1,6 +1,5 @@
 import 'package:kdbx/src/kee_vault_model/enums.dart';
 import 'package:kdbx/src/kee_vault_model/form_field_type.dart';
-import 'package:kdbx/src/kee_vault_model/kee_vault_model.dart';
 
 class Utilities {
   static String formFieldTypeToHtmlType(String fft) {

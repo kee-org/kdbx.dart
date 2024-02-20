@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:kdbx/src/kee_vault_model/browser_entry_settings.dart';
+import 'package:kdbx/src/kee_vault_model/browser_field_model_v1.dart';
 import 'package:kdbx/src/kee_vault_model/entry_matcher_config.dart';
 import 'package:kdbx/src/kee_vault_model/enums.dart';
 import 'package:kdbx/src/kee_vault_model/field.dart';
-import 'package:kdbx/src/kee_vault_model/kee_vault_model.dart';
 
 import '../utils/field_type_utils.dart';
 import '../utils/guid_service.dart';

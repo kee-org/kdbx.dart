@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:collection/collection.dart';
 import 'package:kdbx/src/kee_vault_model/browser_entry_settings_v1.dart';
-import 'package:kdbx/src/kee_vault_model/kee_vault_model.dart';
 import 'package:kdbx/src/internal/extension_utils.dart';
 import 'package:kdbx/src/kdbx_format.dart';
 import 'package:kdbx/src/kdbx_object.dart';

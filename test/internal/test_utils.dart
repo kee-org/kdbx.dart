@@ -5,7 +5,7 @@ import 'dart:typed_data';
 
 import 'package:argon2_ffi_base/argon2_ffi_base.dart';
 import 'package:kdbx/kdbx.dart';
-import 'package:kdbx/src/kee_vault_model/kee_vault_model.dart';
+import 'package:kdbx/src/kee_vault_model/browser_field_model_v1.dart';
 import 'package:logging/logging.dart';
 import 'package:logging_appenders/logging_appenders.dart';
 

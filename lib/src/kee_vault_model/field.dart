@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:collection/collection.dart';
+import 'package:kdbx/src/kee_vault_model/browser_field_model_v1.dart';
 import 'package:kdbx/src/kee_vault_model/enums.dart';
 import 'package:kdbx/src/kee_vault_model/field_matcher_config.dart';
 import 'package:kdbx/src/kee_vault_model/form_field_type.dart';
-import 'package:kdbx/src/kee_vault_model/kee_vault_model.dart';
 import 'package:kdbx/src/utils/field_type_utils.dart';
 
 class Field {

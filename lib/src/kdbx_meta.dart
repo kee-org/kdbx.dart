@@ -6,7 +6,6 @@ import 'package:collection/collection.dart';
 import 'package:kdbx/src/internal/extension_utils.dart';
 import 'package:kdbx/src/kdbx_binary.dart';
 import 'package:kdbx/src/kdbx_custom_data.dart';
-import 'package:kdbx/src/kdbx_entry.dart';
 import 'package:kdbx/src/kdbx_exceptions.dart';
 import 'package:kdbx/src/kdbx_format.dart';
 import 'package:kdbx/src/kdbx_header.dart';
@@ -18,8 +17,6 @@ import 'package:quiver/iterables.dart';
 import 'package:uuid/uuid.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:xml/xml.dart';
-
-import 'kee_vault_model/kee_vault_model.dart';
 
 final _logger = Logger('kdbx_meta');
 
