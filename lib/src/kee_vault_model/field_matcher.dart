@@ -15,6 +15,29 @@ class FieldMatcher {
     this.minLength,
   });
 
+  factory FieldMatcher.fromMap(Map<String, dynamic>? map) {
+    if (map == null) {
+      return FieldMatcher();
+    }
+
+    return FieldMatcher(
+      matchLogic: MatcherLogic.values
+          .firstWhereOrNull((v) => v.name == map['matchLogic']),
+      ids: (map['ids'] as List<dynamic>?)?.cast<String>() ?? [],
+      names: (map['names'] as List<dynamic>?)?.cast<String>() ?? [],
+      types: (map['types'] as List<dynamic>?)?.cast<String>() ?? [],
+      queries: (map['queries'] as List<dynamic>?)?.cast<String>() ?? [],
+      labels: (map['labels'] as List<dynamic>?)?.cast<String>() ?? [],
+      autocompleteValues:
+          (map['autocompleteValues'] as List<dynamic>?)?.cast<String>() ?? [],
+      maxLength: map['maxLength'] as int?,
+      minLength: map['minLength'] as int?,
+    );
+  }
+
+  factory FieldMatcher.fromJson(String source) =>
+      FieldMatcher.fromMap(json.decode(source) as Map<String, dynamic>?);
+
   FieldMatcher copyWith({
     MatcherLogic? matchLogic,
     List<String>? ids,
@@ -55,30 +78,7 @@ class FieldMatcher {
     };
   }
 
-  factory FieldMatcher.fromMap(Map<String, dynamic>? map) {
-    if (map == null) {
-      return FieldMatcher();
-    }
-
-    return FieldMatcher(
-      matchLogic: MatcherLogic.values
-          .firstWhereOrNull((v) => v.name == map['matchLogic']),
-      ids: (map['ids'] as List<dynamic>?)?.cast<String>() ?? [],
-      names: (map['names'] as List<dynamic>?)?.cast<String>() ?? [],
-      types: (map['types'] as List<dynamic>?)?.cast<String>() ?? [],
-      queries: (map['queries'] as List<dynamic>?)?.cast<String>() ?? [],
-      labels: (map['labels'] as List<dynamic>?)?.cast<String>() ?? [],
-      autocompleteValues:
-          (map['autocompleteValues'] as List<dynamic>?)?.cast<String>() ?? [],
-      maxLength: map['maxLength'] as int?,
-      minLength: map['minLength'] as int?,
-    );
-  }
-
   String toJson() => json.encode(toMap());
-
-  factory FieldMatcher.fromJson(String source) =>
-      FieldMatcher.fromMap(json.decode(source) as Map<String, dynamic>?);
 
   @override
   String toString() {

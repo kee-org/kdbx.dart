@@ -9,6 +9,22 @@ class EntryMatcher {
     this.pageTitles = const [],
   });
 
+  factory EntryMatcher.fromMap(Map<String, dynamic>? map) {
+    if (map == null) {
+      return EntryMatcher();
+    }
+
+    return EntryMatcher(
+      matchLogic: MatcherLogic.values
+          .firstWhereOrNull((v) => v.name == map['matchLogic']),
+      queries: (map['queries'] as List<dynamic>?)?.cast<String>() ?? [],
+      pageTitles: (map['pageTitles'] as List<dynamic>?)?.cast<String>() ?? [],
+    );
+  }
+
+  factory EntryMatcher.fromJson(String source) =>
+      EntryMatcher.fromMap(json.decode(source) as Map<String, dynamic>?);
+
   EntryMatcher copyWith({
     MatcherLogic? matchLogic,
     List<String>? queries,
@@ -29,23 +45,7 @@ class EntryMatcher {
     };
   }
 
-  factory EntryMatcher.fromMap(Map<String, dynamic>? map) {
-    if (map == null) {
-      return EntryMatcher();
-    }
-
-    return EntryMatcher(
-      matchLogic: MatcherLogic.values
-          .firstWhereOrNull((v) => v.name == map['matchLogic']),
-      queries: (map['queries'] as List<dynamic>?)?.cast<String>() ?? [],
-      pageTitles: (map['pageTitles'] as List<dynamic>?)?.cast<String>() ?? [],
-    );
-  }
-
   String toJson() => json.encode(toMap());
-
-  factory EntryMatcher.fromJson(String source) =>
-      EntryMatcher.fromMap(json.decode(source) as Map<String, dynamic>?);
 
   @override
   bool operator ==(Object other) {

@@ -30,7 +30,7 @@ class PlainValue implements StringValue {
 }
 
 class ProtectedValue extends PlainValue {
-  ProtectedValue(String text) : super(text);
+  ProtectedValue(super.text);
 
   factory ProtectedValue.fromString(String value) {
     return ProtectedValue(value);

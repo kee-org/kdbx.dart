@@ -13,6 +13,26 @@ class FieldMatcherConfig {
     this.actionOnMatch,
   });
 
+  factory FieldMatcherConfig.fromMap(Map<String, dynamic>? map) {
+    if (map == null) {
+      return FieldMatcherConfig();
+    }
+
+    return FieldMatcherConfig(
+      matcherType: FieldMatcherType.values
+          .firstWhereOrNull((v) => v.name == map['matchLogic']),
+      customMatcher: map['customMatcher'] != null
+          ? FieldMatcher.fromMap(map['customMatcher'] as Map<String, dynamic>)
+          : null,
+      weight: map['weight'] as int?,
+      actionOnMatch: MatchAction.values
+          .firstWhereOrNull((v) => v.name == map['actionOnMatch']),
+    );
+  }
+
+  factory FieldMatcherConfig.fromJson(String source) =>
+      FieldMatcherConfig.fromMap(json.decode(source) as Map<String, dynamic>?);
+
   FieldMatcherConfig.forSingleClientMatch(
     String fft, {
     String? id,
@@ -64,27 +84,7 @@ class FieldMatcherConfig {
     };
   }
 
-  factory FieldMatcherConfig.fromMap(Map<String, dynamic>? map) {
-    if (map == null) {
-      return FieldMatcherConfig();
-    }
-
-    return FieldMatcherConfig(
-      matcherType: FieldMatcherType.values
-          .firstWhereOrNull((v) => v.name == map['matchLogic']),
-      customMatcher: map['customMatcher'] != null
-          ? FieldMatcher.fromMap(map['customMatcher'] as Map<String, dynamic>)
-          : null,
-      weight: map['weight'] as int?,
-      actionOnMatch: MatchAction.values
-          .firstWhereOrNull((v) => v.name == map['actionOnMatch']),
-    );
-  }
-
   String toJson() => json.encode(toMap());
-
-  factory FieldMatcherConfig.fromJson(String source) =>
-      FieldMatcherConfig.fromMap(json.decode(source) as Map<String, dynamic>?);
 
   @override
   String toString() {

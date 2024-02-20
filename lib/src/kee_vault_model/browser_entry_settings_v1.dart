@@ -326,7 +326,7 @@ class BrowserEntrySettingsV1 {
     final List<Field> fields = [];
     bool usernameFound = false;
     bool passwordFound = false;
-    formFieldList.forEach((ff) {
+    for (final ff in formFieldList) {
       if (ff.value == '{USERNAME}') {
         usernameFound = true;
         final mc = !((ff.fieldId?.isNotEmpty ?? false) ||
@@ -393,7 +393,7 @@ class BrowserEntrySettingsV1 {
         }
         fields.add(f);
       }
-    });
+    }
 
     if (!usernameFound) {
       fields.add(Field(

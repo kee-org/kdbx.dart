@@ -7,6 +7,6 @@ abstract class IGuidService {
 class GuidService implements IGuidService {
   @override
   String newGuid() {
-    return Uuid().v4();
+    return const Uuid().v4();
   }
 }

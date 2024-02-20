@@ -18,6 +18,30 @@ class Field {
     this.matcherConfigs,
   });
 
+  factory Field.fromMap(Map<String, dynamic>? map) {
+    if (map == null) {
+      return Field();
+    }
+    return Field(
+      uuid: map['uuid'] as String?,
+      name: map['name'] as String?,
+      valuePath: map['valuePath'] as String?,
+      value: map['value'] as String?,
+      page: map['page'] as int? ?? 1,
+      type: FieldType.values.firstWhereOrNull((v) => v.name == map['type']),
+      placeholderHandling: PlaceholderHandling.values
+          .firstWhereOrNull((v) => v.name == map['placeholderHandling']),
+      matcherConfigs: List<FieldMatcherConfig>.from((map['matcherConfigs']
+                  as List<dynamic>?)
+              ?.cast<Map<String, dynamic>>()
+              .map<FieldMatcherConfig>((x) => FieldMatcherConfig.fromMap(x)) ??
+          <FieldMatcherConfig>[]),
+    );
+  }
+
+  factory Field.fromJson(String source) =>
+      Field.fromMap(json.decode(source) as Map<String, dynamic>?);
+
   Field copyWith({
     String? uuid,
     String? name,
@@ -55,31 +79,7 @@ class Field {
     };
   }
 
-  factory Field.fromMap(Map<String, dynamic>? map) {
-    if (map == null) {
-      return Field();
-    }
-    return Field(
-      uuid: map['uuid'] as String?,
-      name: map['name'] as String?,
-      valuePath: map['valuePath'] as String?,
-      value: map['value'] as String?,
-      page: map['page'] as int? ?? 1,
-      type: FieldType.values.firstWhereOrNull((v) => v.name == map['type']),
-      placeholderHandling: PlaceholderHandling.values
-          .firstWhereOrNull((v) => v.name == map['placeholderHandling']),
-      matcherConfigs: List<FieldMatcherConfig>.from((map['matcherConfigs']
-                  as List<dynamic>?)
-              ?.cast<Map<String, dynamic>>()
-              .map<FieldMatcherConfig>((x) => FieldMatcherConfig.fromMap(x)) ??
-          <FieldMatcherConfig>[]),
-    );
-  }
-
   String toJson() => json.encode(toMap());
-
-  factory Field.fromJson(String source) =>
-      Field.fromMap(json.decode(source) as Map<String, dynamic>?);
 
   @override
   String toString() {

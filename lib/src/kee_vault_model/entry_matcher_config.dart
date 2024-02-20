@@ -14,6 +14,30 @@ class EntryMatcherConfig {
     this.actionOnNoMatch,
   });
 
+  factory EntryMatcherConfig.fromMap(Map<String, dynamic>? map) {
+    if (map == null) {
+      return EntryMatcherConfig();
+    }
+
+    return EntryMatcherConfig(
+      matcherType: EntryMatcherType.values
+          .firstWhereOrNull((v) => v.name == map['matcherType']),
+      customMatcher: map['customMatcher'] != null
+          ? EntryMatcher.fromMap(map['customMatcher'] as Map<String, dynamic>)
+          : null,
+      urlMatchMethod: MatchAccuracy.values
+          .firstWhereOrNull((v) => v.name == map['urlMatchMethod']),
+      weight: map['weight'] as int?,
+      actionOnMatch: MatchAction.values
+          .firstWhereOrNull((v) => v.name == map['actionOnMatch']),
+      actionOnNoMatch: MatchAction.values
+          .firstWhereOrNull((v) => v.name == map['actionOnNoMatch']),
+    );
+  }
+
+  factory EntryMatcherConfig.fromJson(String source) =>
+      EntryMatcherConfig.fromMap(json.decode(source) as Map<String, dynamic>);
+
   EntryMatcherConfig.forDefaultUrlMatchBehaviour(MatchAccuracy ma)
       : this(
           matcherType: EntryMatcherType.Url,
@@ -50,31 +74,7 @@ class EntryMatcherConfig {
     };
   }
 
-  factory EntryMatcherConfig.fromMap(Map<String, dynamic>? map) {
-    if (map == null) {
-      return EntryMatcherConfig();
-    }
-
-    return EntryMatcherConfig(
-      matcherType: EntryMatcherType.values
-          .firstWhereOrNull((v) => v.name == map['matcherType']),
-      customMatcher: map['customMatcher'] != null
-          ? EntryMatcher.fromMap(map['customMatcher'] as Map<String, dynamic>)
-          : null,
-      urlMatchMethod: MatchAccuracy.values
-          .firstWhereOrNull((v) => v.name == map['urlMatchMethod']),
-      weight: map['weight'] as int?,
-      actionOnMatch: MatchAction.values
-          .firstWhereOrNull((v) => v.name == map['actionOnMatch']),
-      actionOnNoMatch: MatchAction.values
-          .firstWhereOrNull((v) => v.name == map['actionOnNoMatch']),
-    );
-  }
-
   String toJson() => json.encode(toMap());
-
-  factory EntryMatcherConfig.fromJson(String source) =>
-      EntryMatcherConfig.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {

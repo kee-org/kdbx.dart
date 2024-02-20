@@ -133,10 +133,10 @@ class KdbxBody extends KdbxNode {
   }
 
   KdbxBody.read(
-    xml.XmlElement node,
+    super.node,
     this.meta,
     this.rootGroup,
-  ) : super.read(node);
+  ) : super.read();
 
 //  final xml.XmlDocument xmlDocument;
   final KdbxMeta meta;

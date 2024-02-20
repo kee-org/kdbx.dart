@@ -1,17 +1,19 @@
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:collection/collection.dart';
-import 'package:kdbx/src/kee_vault_model/browser_entry_settings_v1.dart';
 import 'package:kdbx/src/internal/extension_utils.dart';
 import 'package:kdbx/src/kdbx_format.dart';
 import 'package:kdbx/src/kdbx_object.dart';
 import 'package:kdbx/src/kdbx_xml.dart';
+import 'package:kdbx/src/kee_vault_model/browser_entry_settings_v1.dart';
 import 'package:kdbx/src/utils/guid_service.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 import 'package:quiver/check.dart';
 import 'package:xml/xml.dart';
+
 import '../kdbx.dart';
 
 final _logger = Logger('kdbx.kdbx_entry');

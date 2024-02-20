@@ -40,7 +40,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
     historyMaxSize.set(Consts.DefaultHistoryMaxSize);
   }
 
-  KdbxMeta.read(xml.XmlElement node, this.ctx)
+  KdbxMeta.read(super.node, this.ctx)
       : customData = node
                 .singleElement(KdbxXml.NODE_CUSTOM_DATA)
                 ?.let((e) => KdbxMetaCustomData.read(e)) ??
@@ -91,7 +91,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
                 .map((e) => MapEntry(e.uuid, e))
                 .let((that) => Map.fromEntries(that)) ??
             {},
-        super.read(node);
+        super.read();
 
   @override
   final KdbxReadWriteContext ctx;
