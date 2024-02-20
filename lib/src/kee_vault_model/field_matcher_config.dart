@@ -13,8 +13,11 @@ class FieldMatcherConfig {
     this.actionOnMatch,
   });
 
-  FieldMatcherConfig.forSingleClientMatch(String? id, String? name, String fft)
-      : this(
+  FieldMatcherConfig.forSingleClientMatch(
+    String fft, {
+    String? id,
+    String? name,
+  }) : this(
           customMatcher: FieldMatcher(
             ids: id == null ? [] : [id],
             names: name == null ? [] : [name],
@@ -23,9 +26,12 @@ class FieldMatcherConfig {
           ),
         );
 
-  FieldMatcherConfig.forSingleClientMatchHtmlType(
-      String? id, String? name, String? htmlType, String? domSelector)
-      : this(
+  FieldMatcherConfig.forSingleClientMatchHtmlType({
+    String? id,
+    String? name,
+    String? htmlType,
+    String? domSelector,
+  }) : this(
           customMatcher: FieldMatcher(
             ids: id == null ? [] : [id],
             names: name == null ? [] : [name],

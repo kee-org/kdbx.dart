@@ -7,6 +7,7 @@ import 'package:kdbx/src/internal/extension_utils.dart';
 import 'package:kdbx/src/kdbx_format.dart';
 import 'package:kdbx/src/kdbx_object.dart';
 import 'package:kdbx/src/kdbx_xml.dart';
+import 'package:kdbx/src/utils/guid_service.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 import 'package:quiver/check.dart';
@@ -166,9 +167,12 @@ class KdbxEntry extends KdbxObject {
   })  : history = [],
         super.create(file.ctx, file, 'Entry', parent) {
     icon.set(KdbxIcon.Key);
-    _browserSettings = BrowserEntrySettingsV1(
-        minimumMatchAccuracy:
-            file.body.meta.browserSettings.defaultMatchAccuracy);
+    _browserSettings = BrowserEntrySettings(
+      matcherConfigs: [
+        EntryMatcherConfig.forDefaultUrlMatchBehaviour(
+            file.body.meta.browserSettings.defaultMatchAccuracy)
+      ],
+    );
   }
 
   KdbxEntry.read(KdbxReadWriteContext ctx, KdbxGroup? parent, XmlElement node,
@@ -228,29 +232,48 @@ class KdbxEntry extends KdbxObject {
     customData['KeeVault.AndroidPackageNames'] = json.encode(names);
   }
 
-  BrowserEntrySettingsV1? _browserSettings;
-  BrowserEntrySettingsV1 get browserSettings {
+  BrowserEntrySettings? _browserSettings;
+  BrowserEntrySettings get browserSettings {
     if (_browserSettings == null) {
-      final tempJson = stringEntries
-          .firstWhereOrNull((s) => s.key.key == 'KPRPC JSON')
-          ?.value;
+      final cdJson = getCustomData('KPRPC JSON');
 
-      if (tempJson != null) {
-        _browserSettings = BrowserEntrySettingsV1.fromJson(tempJson.getText(),
+      if (cdJson != null) {
+        _browserSettings = BrowserEntrySettings.fromJson(cdJson,
             minimumMatchAccuracy:
                 file!.body.meta.browserSettings.defaultMatchAccuracy);
       } else {
-        _browserSettings = BrowserEntrySettingsV1(
-            minimumMatchAccuracy:
-                file!.body.meta.browserSettings.defaultMatchAccuracy);
+        final stringJson = stringEntries
+            .firstWhereOrNull((s) => s.key.key == 'KPRPC JSON')
+            ?.value
+            ?.getText();
+
+        if (stringJson != null) {
+          final v1 = BrowserEntrySettingsV1.fromJson(stringJson,
+              minimumMatchAccuracy:
+                  file!.body.meta.browserSettings.defaultMatchAccuracy);
+          _browserSettings = v1.convertToV2(GuidService());
+        } else {
+          _browserSettings = BrowserEntrySettings(
+            matcherConfigs: [
+              EntryMatcherConfig.forDefaultUrlMatchBehaviour(
+                  file!.body.meta.browserSettings.defaultMatchAccuracy)
+            ],
+          );
+        }
       }
     }
     return _browserSettings!;
   }
 
-  set browserSettings(BrowserEntrySettingsV1 settings) {
-    setString(
-        KdbxKey('KPRPC JSON'), ProtectedValue.fromString(settings.toJson()));
+  set browserSettings(BrowserEntrySettings settings) {
+    setCustomData('KPRPC JSON', settings.toJson());
+    try {
+      final v1 = settings.convertToV1();
+      setString(KdbxKey('KPRPC JSON'), ProtectedValue.fromString(v1.toJson()));
+    } catch (ex) {
+      _logger.severe(
+          'String KPRPC JSON failed to convert or write. This may indicate a newer version of Kee Vault was used to create this configuration.');
+    }
     _browserSettings = null;
   }
 
@@ -291,7 +314,8 @@ class KdbxEntry extends KdbxObject {
         browserSettings.includeUrls.add(newUrl);
       }
     }
-    browserSettings.hide = false;
+    browserSettings.matcherConfigs
+        .removeWhere((mc) => mc.matcherType == EntryMatcherType.Hide);
     browserSettings = browserSettings;
     return;
   }
@@ -301,7 +325,8 @@ class KdbxEntry extends KdbxObject {
       final updatedList = androidPackageNames..add(name);
       androidPackageNames = updatedList;
     }
-    browserSettings.hide = false;
+    browserSettings.matcherConfigs
+        .removeWhere((mc) => mc.matcherType == EntryMatcherType.Hide);
     browserSettings = browserSettings;
     return;
   }

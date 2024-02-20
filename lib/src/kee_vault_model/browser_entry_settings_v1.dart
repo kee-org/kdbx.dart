@@ -334,7 +334,10 @@ class BrowserEntrySettingsV1 {
             ? FieldMatcherConfig(
                 matcherType: FieldMatcherType.UsernameDefaultHeuristic)
             : FieldMatcherConfig.forSingleClientMatch(
-                ff.fieldId, ff.name, FormFieldType.USERNAME);
+                FormFieldType.USERNAME,
+                id: ff.fieldId,
+                name: ff.name,
+              );
         final f = Field(
           valuePath: 'UserName',
           page: max(ff.page, 1),
@@ -354,7 +357,10 @@ class BrowserEntrySettingsV1 {
             ? FieldMatcherConfig(
                 matcherType: FieldMatcherType.PasswordDefaultHeuristic)
             : FieldMatcherConfig.forSingleClientMatch(
-                ff.fieldId, ff.name, FormFieldType.PASSWORD);
+                FormFieldType.PASSWORD,
+                id: ff.fieldId,
+                name: ff.name,
+              );
         final f = Field(
             valuePath: 'Password',
             page: max(ff.page, 1),
@@ -368,7 +374,10 @@ class BrowserEntrySettingsV1 {
         fields.add(f);
       } else {
         final mc = FieldMatcherConfig.forSingleClientMatch(
-            ff.fieldId, ff.name, ff.type ?? FormFieldType.TEXT);
+          ff.type ?? FormFieldType.TEXT,
+          id: ff.fieldId,
+          name: ff.name,
+        );
         final f = Field(
             name: ff.displayName,
             valuePath: '.',
