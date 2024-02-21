@@ -297,9 +297,9 @@ class BrowserEntrySettingsV1 {
         priority.hashCode ^
         hide.hashCode ^
         realm.hashCode ^
-        includeUrls.hashCode ^
-        excludeUrls.hashCode ^
-        fields.hashCode;
+        const ListEquality().hash(includeUrls) ^
+        const ListEquality().hash(excludeUrls) ^
+        const ListEquality().hash(fields);
   }
 
   BrowserEntrySettings convertToV2(IGuidService guidService) {

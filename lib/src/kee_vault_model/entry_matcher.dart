@@ -50,17 +50,19 @@ class EntryMatcher {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    final listEquals = const DeepCollectionEquality().equals;
+    final unOrdDeepEq = const DeepCollectionEquality.unordered().equals;
 
     return other is EntryMatcher &&
         other.matchLogic == matchLogic &&
-        listEquals(other.queries, queries) &&
-        listEquals(other.pageTitles, pageTitles);
+        unOrdDeepEq(other.queries, queries) &&
+        unOrdDeepEq(other.pageTitles, pageTitles);
   }
 
   @override
   int get hashCode {
-    return matchLogic.hashCode ^ queries.hashCode ^ pageTitles.hashCode;
+    return matchLogic.hashCode ^
+        const ListEquality().hash(queries) ^
+        const ListEquality().hash(pageTitles);
   }
 
   MatcherLogic? matchLogic; // default to Client initially

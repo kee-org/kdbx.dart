@@ -89,7 +89,7 @@ class Field {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    final listEquals = const DeepCollectionEquality().equals;
+    final unOrdDeepEq = const DeepCollectionEquality.unordered().equals;
 
     return other is Field &&
         other.uuid == uuid &&
@@ -99,7 +99,7 @@ class Field {
         other.page == page &&
         other.type == type &&
         other.placeholderHandling == placeholderHandling &&
-        listEquals(other.matcherConfigs, matcherConfigs);
+        unOrdDeepEq(other.matcherConfigs, matcherConfigs);
   }
 
   @override
@@ -111,7 +111,7 @@ class Field {
         page.hashCode ^
         type.hashCode ^
         placeholderHandling.hashCode ^
-        matcherConfigs.hashCode;
+        const ListEquality().hash(matcherConfigs);
   }
 
   String? uuid;

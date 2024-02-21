@@ -105,12 +105,12 @@ class FieldMatcher {
   @override
   int get hashCode {
     return matchLogic.hashCode ^
-        ids.hashCode ^
-        names.hashCode ^
-        types.hashCode ^
-        queries.hashCode ^
-        labels.hashCode ^
-        autocompleteValues.hashCode ^
+        const ListEquality().hash(ids) ^
+        const ListEquality().hash(names) ^
+        const ListEquality().hash(types) ^
+        const ListEquality().hash(queries) ^
+        const ListEquality().hash(labels) ^
+        const ListEquality().hash(autocompleteValues) ^
         maxLength.hashCode ^
         minLength.hashCode;
   }

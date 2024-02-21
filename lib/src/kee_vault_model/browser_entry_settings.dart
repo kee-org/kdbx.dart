@@ -194,7 +194,7 @@ class BrowserEntrySettings {
     return o is BrowserEntrySettings &&
         o.version == version &&
         o.behaviour == behaviour &&
-        o.authenticationMethods == authenticationMethods &&
+        unOrdDeepEq(o.authenticationMethods, authenticationMethods) &&
         o.realm == realm &&
         unOrdDeepEq(o.matcherConfigs, matcherConfigs) &&
         unOrdDeepEq(o.includeUrls, includeUrls) &&
@@ -206,11 +206,11 @@ class BrowserEntrySettings {
   int get hashCode {
     return version.hashCode ^
         behaviour.hashCode ^
-        authenticationMethods.hashCode ^
+        const ListEquality().hash(authenticationMethods) ^
         realm.hashCode ^
-        const ListEquality().hash(matcherConfigs) ^ //TODO: all other lists?
-        includeUrls.hashCode ^
-        excludeUrls.hashCode ^
-        fields.hashCode;
+        const ListEquality().hash(matcherConfigs) ^
+        const ListEquality().hash(includeUrls) ^
+        const ListEquality().hash(excludeUrls) ^
+        const ListEquality().hash(fields);
   }
 }

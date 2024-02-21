@@ -463,8 +463,8 @@ class KeeVaultEmbeddedConfig {
   int get hashCode {
     return version.hashCode ^
         randomId.hashCode ^
-        addon.hashCode ^
-        vault.hashCode;
+        const MapEquality().hash(addon) ^
+        const MapEquality().hash(vault);
   }
 }
 
@@ -582,7 +582,7 @@ class BrowserDbSettings {
         defaultPlaceholderHandling.hashCode ^
         displayPriorityField.hashCode ^
         displayGlobalPlaceholderOption.hashCode ^
-        matchedURLAccuracyOverrides.hashCode;
+        const MapEquality().hash(matchedURLAccuracyOverrides);
   }
 }
 
