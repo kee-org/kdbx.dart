@@ -208,7 +208,7 @@ class BrowserEntrySettings {
         behaviour.hashCode ^
         authenticationMethods.hashCode ^
         realm.hashCode ^
-        matcherConfigs.hashCode ^
+        const ListEquality().hash(matcherConfigs) ^ //TODO: all other lists?
         includeUrls.hashCode ^
         excludeUrls.hashCode ^
         fields.hashCode;

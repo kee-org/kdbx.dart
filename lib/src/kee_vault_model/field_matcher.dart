@@ -88,16 +88,16 @@ class FieldMatcher {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    final listEquals = const DeepCollectionEquality().equals;
+    final unOrdDeepEq = const DeepCollectionEquality.unordered().equals;
 
     return other is FieldMatcher &&
         other.matchLogic == matchLogic &&
-        listEquals(other.ids, ids) &&
-        listEquals(other.names, names) &&
-        listEquals(other.types, types) &&
-        listEquals(other.queries, queries) &&
-        listEquals(other.labels, labels) &&
-        listEquals(other.autocompleteValues, autocompleteValues) &&
+        unOrdDeepEq(other.ids, ids) &&
+        unOrdDeepEq(other.names, names) &&
+        unOrdDeepEq(other.types, types) &&
+        unOrdDeepEq(other.queries, queries) &&
+        unOrdDeepEq(other.labels, labels) &&
+        unOrdDeepEq(other.autocompleteValues, autocompleteValues) &&
         other.maxLength == maxLength &&
         other.minLength == minLength;
   }
