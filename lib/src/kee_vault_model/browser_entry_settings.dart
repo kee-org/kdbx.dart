@@ -107,36 +107,36 @@ class BrowserEntrySettings {
 
   static Map<String, List<String>> parseUrls(
       List<Pattern> includeUrls, List<Pattern> excludeUrls) {
-    final altURLs = <String>[];
-    final regExURLs = <String>[];
-    final blockedURLs = <String>[];
-    final regExBlockedURLs = <String>[];
+    final altUrls = <String>[];
+    final regExUrls = <String>[];
+    final blockedUrls = <String>[];
+    final regExBlockedUrls = <String>[];
     for (final p in includeUrls) {
       if (p is RegExp) {
-        regExURLs.add(p.pattern);
+        regExUrls.add(p.pattern);
       } else if (p is String) {
-        altURLs.add(p);
+        altUrls.add(p);
       }
     }
     for (final p in excludeUrls) {
       if (p is RegExp) {
-        regExBlockedURLs.add(p.pattern);
+        regExBlockedUrls.add(p.pattern);
       } else if (p is String) {
-        blockedURLs.add(p);
+        blockedUrls.add(p);
       }
     }
     return <String, List<String>>{
-      if (altURLs.isNotEmpty) 'altURLs': altURLs,
-      if (regExURLs.isNotEmpty) 'regExURLs': regExURLs,
-      if (blockedURLs.isNotEmpty) 'blockedURLs': blockedURLs,
-      if (regExBlockedURLs.isNotEmpty) 'regExBlockedURLs': regExBlockedURLs,
+      if (altUrls.isNotEmpty) 'altUrls': altUrls,
+      if (regExUrls.isNotEmpty) 'regExUrls': regExUrls,
+      if (blockedUrls.isNotEmpty) 'blockedUrls': blockedUrls,
+      if (regExBlockedUrls.isNotEmpty) 'regExBlockedUrls': regExBlockedUrls,
     };
   }
 
   static List<Pattern> getIncludeUrls(Map<String, dynamic> map) {
     final includeUrls = <Pattern>[];
-    final altUrls = (map['altURLs'] as List<dynamic>?)?.cast<String>();
-    final regExURLs = (map['regExURLs'] as List<dynamic>?)?.cast<String>();
+    final altUrls = (map['altUrls'] as List<dynamic>?)?.cast<String>();
+    final regExURLs = (map['regExUrls'] as List<dynamic>?)?.cast<String>();
     if (altUrls != null) {
       altUrls.forEach(includeUrls.add);
     }
@@ -150,9 +150,9 @@ class BrowserEntrySettings {
 
   static List<Pattern> getExcludeUrls(Map<String, dynamic> map) {
     final excludeUrls = <Pattern>[];
-    final blockedURLs = (map['blockedURLs'] as List<dynamic>?)?.cast<String>();
+    final blockedURLs = (map['blockedUrls'] as List<dynamic>?)?.cast<String>();
     final regExBlockedURLs =
-        (map['regExBlockedURLs'] as List<dynamic>?)?.cast<String>();
+        (map['regExBlockedUrls'] as List<dynamic>?)?.cast<String>();
     if (blockedURLs != null) {
       blockedURLs.forEach(excludeUrls.add);
     }
