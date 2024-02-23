@@ -151,6 +151,13 @@ class KdbxFile {
         ? header.upgradeMinor(majorVersion, minorVersion)
         : header.upgrade(majorVersion, minorVersion);
 
+    // Do this even we were already in v4.x since some KDBX software (including
+    // earlier versions of Kee Vault) skipped this step when upgrading from <v4.
+    // One probably won't call this upgrade function unless the version is <4.1
+    // so if there are some 4.1 files with this problem, they won't be fixed.
+    // If that happens we could develop a "force upgrade" feature in the
+    // user-facing software (such as Kee Vault) and tell users to activate that
+    // in order to fix export compatibility with strict clients like KeePass.
     upgradeDateTimeFormatV4();
 
     body.meta.settingsChanged.setToNow();

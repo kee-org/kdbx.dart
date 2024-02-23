@@ -1,6 +1,6 @@
 name: kdbx
 description: KeepassX format implementation in pure dart. (kdbx 3.x and 4.x support).
-version: 0.6.0+3
+version: 0.6.0+4
 homepage: https://github.com/kee-org/kdbx.dart
 publish_to: none
 
