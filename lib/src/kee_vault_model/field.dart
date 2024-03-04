@@ -156,6 +156,10 @@ class Field {
       ffValue = '{USERNAME}';
     }
 
+    if (displayName?.isEmpty ?? true) {
+      displayName = uuid;
+    }
+
     if (ffValue != '') {
       return BrowserFieldModelV1(
         name: htmlName,

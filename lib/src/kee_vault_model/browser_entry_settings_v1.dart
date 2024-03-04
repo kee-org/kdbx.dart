@@ -341,7 +341,7 @@ class BrowserEntrySettingsV1 {
         final f = Field(
           valuePath: 'UserName',
           page: max(ff.page, 1),
-          uuid: guidService.newGuid(),
+          uuid: guidService.newGuidAsBase64(),
           type: FieldType.Text,
           matcherConfigs: [mc],
         );
@@ -364,7 +364,7 @@ class BrowserEntrySettingsV1 {
         final f = Field(
             valuePath: 'Password',
             page: max(ff.page, 1),
-            uuid: guidService.newGuid(),
+            uuid: guidService.newGuidAsBase64(),
             type: FieldType.Password,
             matcherConfigs: [mc]);
         if (ff.placeholderHandling != PlaceholderHandling.Default.name) {
@@ -378,11 +378,14 @@ class BrowserEntrySettingsV1 {
           id: ff.fieldId,
           name: ff.name,
         );
+        final newUniqueId = guidService.newGuidAsBase64();
         final f = Field(
-            name: ff.displayName,
+            name: (ff.displayName?.isNotEmpty ?? false)
+                ? ff.displayName
+                : newUniqueId,
             valuePath: '.',
             page: max(ff.page, 1),
-            uuid: guidService.newGuid(),
+            uuid: newUniqueId,
             type: Utilities.formFieldTypeToFieldType(
                 ff.type ?? FormFieldType.TEXT),
             matcherConfigs: [mc],
@@ -398,7 +401,7 @@ class BrowserEntrySettingsV1 {
     if (!usernameFound) {
       fields.add(Field(
           valuePath: 'UserName',
-          uuid: guidService.newGuid(),
+          uuid: guidService.newGuidAsBase64(),
           type: FieldType.Text,
           matcherConfigs: [
             FieldMatcherConfig(
@@ -408,7 +411,7 @@ class BrowserEntrySettingsV1 {
     if (!passwordFound) {
       fields.add(Field(
           valuePath: 'Password',
-          uuid: guidService.newGuid(),
+          uuid: guidService.newGuidAsBase64(),
           type: FieldType.Password,
           matcherConfigs: [
             FieldMatcherConfig(
