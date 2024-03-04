@@ -20,7 +20,7 @@ class FieldMatcherConfig {
 
     return FieldMatcherConfig(
       matcherType: FieldMatcherType.values
-          .firstWhereOrNull((v) => v.name == map['matchLogic']),
+          .firstWhereOrNull((v) => v.name == map['matcherType']),
       customMatcher: map['customMatcher'] != null
           ? FieldMatcher.fromMap(map['customMatcher'] as Map<String, dynamic>)
           : null,

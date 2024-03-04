@@ -136,12 +136,13 @@ class Field {
     final customMatcherConfig =
         matcherConfigs?.firstWhereOrNull((mc) => mc.customMatcher != null);
     if (customMatcherConfig != null) {
-      htmlName = customMatcherConfig.customMatcher?.names[0] ?? '';
-      htmlId = customMatcherConfig.customMatcher?.ids[0] ?? '';
+      htmlName =
+          customMatcherConfig.customMatcher?.names.elementAtOrNull(0) ?? '';
+      htmlId = customMatcherConfig.customMatcher?.ids.elementAtOrNull(0) ?? '';
 
       if (customMatcherConfig.customMatcher?.types != null) {
         htmlType = Utilities.formFieldTypeFromHtmlTypeOrFieldType(
-            customMatcherConfig.customMatcher!.types[0],
+            customMatcherConfig.customMatcher!.types.elementAtOrNull(0) ?? '',
             type ?? FieldType.Text);
       }
     }

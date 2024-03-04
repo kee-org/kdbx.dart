@@ -54,6 +54,19 @@ void main() {
     expect(sut, expectedResult);
   }
 
+  void testCaseRT(String persistedV2) {
+    final bes = BrowserEntrySettings.fromJson(persistedV2,
+        minimumMatchAccuracy: MatchAccuracy.Domain);
+    final configV1 = bes.convertToV1();
+    final jsonV1 = configV1.toJson();
+    final besV1 = BrowserEntrySettingsV1.fromJson(jsonV1,
+        minimumMatchAccuracy: MatchAccuracy.Domain);
+    final configV2 = besV1.convertToV2(MockGuidService());
+    final sut = configV2.toJson();
+
+    expect(sut, persistedV2);
+  }
+
   group('BrowserEntrySettings', () {
     test('config v2->v1', () async {
       testCase(
@@ -65,8 +78,8 @@ void main() {
           '{"version":1,"priority":0,"hide":false,"hTTPRealm":"","formFieldList":[{"displayName":"KeePass password","name":"password","type":"FFTpassword","id":"password","page":-1,"placeholderHandling":"Default","value":"{PASSWORD}"},{"displayName":"KeePass username","name":"username","type":"FFTusername","id":"username","page":-1,"placeholderHandling":"Default","value":"{USERNAME}"}],"alwaysAutoFill":false,"alwaysAutoSubmit":false,"neverAutoFill":false,"neverAutoSubmit":false,"blockDomainOnlyMatch":false,"blockHostnameOnlyMatch":false,"altURLs":[],"regExURLs":[],"blockedURLs":[],"regExBlockedURLs":[]}');
 
       testCase(
-          '{"version":2,"altUrls":[],"authenticationMethods":["password"],"matcherConfigs":[{"matcherType":"Url"}],"fields":[{"page":-1,"valuePath":"Password","uuid":"AAAAAAAAAAAAAAAAAAAAAA==","type":"Password","matcherConfigs":[{"customMatcher":{"ids":["password"],"names":["password"],"types":["password"],"queries":[]}}]},{"page":-1,"valuePath":"UserName","uuid":"AAAAAAAAAAAAAAAAAAAAAA==","type":"Text","matcherConfigs":[{"customMatcher":{"ids":["username"],"names":["username"],"types":["text"],"queries":[]}}]}]}',
-          '{"version":1,"priority":0,"hide":false,"hTTPRealm":"","formFieldList":[{"displayName":"KeePass password","name":"password","type":"FFTpassword","id":"password","page":-1,"placeholderHandling":"Default","value":"{PASSWORD}"},{"displayName":"KeePass username","name":"username","type":"FFTusername","id":"username","page":-1,"placeholderHandling":"Default","value":"{USERNAME}"}],"alwaysAutoFill":false,"alwaysAutoSubmit":false,"neverAutoFill":false,"neverAutoSubmit":false,"blockDomainOnlyMatch":false,"blockHostnameOnlyMatch":false,"altURLs":[],"regExURLs":[],"blockedURLs":[],"regExBlockedURLs":[]}');
+          '{"version":2,"httpRealm":"re","altUrls":[],"authenticationMethods":["password"],"matcherConfigs":[{"matcherType":"Url"}],"fields":[{"page":-1,"valuePath":"Password","uuid":"AAAAAAAAAAAAAAAAAAAAAA==","type":"Password","matcherConfigs":[{"customMatcher":{"ids":["password"],"names":["password"],"types":["password"],"queries":[]}}]},{"page":-1,"valuePath":"UserName","uuid":"AAAAAAAAAAAAAAAAAAAAAA==","type":"Text","matcherConfigs":[{"customMatcher":{"ids":["username"],"names":["username"],"types":["text"],"queries":[]}}]}]}',
+          '{"version":1,"priority":0,"hide":false,"hTTPRealm":"re","formFieldList":[{"displayName":"KeePass password","name":"password","type":"FFTpassword","id":"password","page":-1,"placeholderHandling":"Default","value":"{PASSWORD}"},{"displayName":"KeePass username","name":"username","type":"FFTusername","id":"username","page":-1,"placeholderHandling":"Default","value":"{USERNAME}"}],"alwaysAutoFill":false,"alwaysAutoSubmit":false,"neverAutoFill":false,"neverAutoSubmit":false,"blockDomainOnlyMatch":false,"blockHostnameOnlyMatch":false,"altURLs":[],"regExURLs":[],"blockedURLs":[],"regExBlockedURLs":[]}');
 
       testCase(
           '{"version":2,"authenticationMethods":["password"],"matcherConfigs":[{"matcherType":"Url"}],"fields":[{"page":-1,"valuePath":"UserName","uuid":"AAAAAAAAAAAAAAAAAAAAAA==","type":"Text","matcherConfigs":[{"matcherType":"UsernameDefaultHeuristic"}]},{"page":-1,"valuePath":"Password","uuid":"AAAAAAAAAAAAAAAAAAAAAA==","type":"Password","matcherConfigs":[{"matcherType":"PasswordDefaultHeuristic"}]}]}',
@@ -91,8 +104,8 @@ void main() {
           '{"version":2,"authenticationMethods":["password"],"matcherConfigs":[{"matcherType":"Url"}],"fields":[{"page":1,"valuePath":"Password","uuid":"AAAAAAAAAAAAAAAAAAAAAA==","type":"Password","matcherConfigs":[{"customMatcher":{"ids":["password"],"names":["password"],"types":["password"]}}]},{"page":1,"valuePath":"UserName","uuid":"AAAAAAAAAAAAAAAAAAAAAA==","type":"Text","matcherConfigs":[{"customMatcher":{"ids":["username"],"names":["username"],"types":["text"]}}]}]}');
 
       testCaseToV2(
-          '{"version":1,"hTTPRealm":"","formFieldList":[{"name":"password","displayName":"KeePass password","value":"{PASSWORD}","type":"FFTpassword","id":"password","page":-1,"placeholderHandling":"Default"},{"name":"username","displayName":"KeePass username","value":"{USERNAME}","type":"FFTusername","id":"username","page":-1,"placeholderHandling":"Default"}],"alwaysAutoFill":false,"neverAutoFill":false,"alwaysAutoSubmit":false,"neverAutoSubmit":false,"priority":0,"altURLs":[],"hide":false,"blockHostnameOnlyMatch":false,"blockDomainOnlyMatch":false}',
-          '{"version":2,"authenticationMethods":["password"],"matcherConfigs":[{"matcherType":"Url"}],"fields":[{"page":1,"valuePath":"Password","uuid":"AAAAAAAAAAAAAAAAAAAAAA==","type":"Password","matcherConfigs":[{"customMatcher":{"ids":["password"],"names":["password"],"types":["password"]}}]},{"page":1,"valuePath":"UserName","uuid":"AAAAAAAAAAAAAAAAAAAAAA==","type":"Text","matcherConfigs":[{"customMatcher":{"ids":["username"],"names":["username"],"types":["text"]}}]}]}');
+          '{"version":1,"hTTPRealm":"re","formFieldList":[{"name":"password","displayName":"KeePass password","value":"{PASSWORD}","type":"FFTpassword","id":"password","page":-1,"placeholderHandling":"Default"},{"name":"username","displayName":"KeePass username","value":"{USERNAME}","type":"FFTusername","id":"username","page":-1,"placeholderHandling":"Default"}],"alwaysAutoFill":false,"neverAutoFill":false,"alwaysAutoSubmit":false,"neverAutoSubmit":false,"priority":0,"altURLs":[],"hide":false,"blockHostnameOnlyMatch":false,"blockDomainOnlyMatch":false}',
+          '{"version":2,"authenticationMethods":["password"],"httpRealm":"re","matcherConfigs":[{"matcherType":"Url"}],"fields":[{"page":1,"valuePath":"Password","uuid":"AAAAAAAAAAAAAAAAAAAAAA==","type":"Password","matcherConfigs":[{"customMatcher":{"ids":["password"],"names":["password"],"types":["password"]}}]},{"page":1,"valuePath":"UserName","uuid":"AAAAAAAAAAAAAAAAAAAAAA==","type":"Text","matcherConfigs":[{"customMatcher":{"ids":["username"],"names":["username"],"types":["text"]}}]}]}');
 
       testCaseToV2(
           '{"version":1,"hTTPRealm":"","formFieldList":[{"name":"password","displayName":"KeePass password","value":"{PASSWORD}","type":"FFTpassword","id":"password","page":-1,"placeholderHandling":"Default"},{"name":"username","displayName":"KeePass username","value":"{USERNAME}","type":"FFTusername","id":"username","page":-1,"placeholderHandling":"Default"}],"alwaysAutoFill":false,"neverAutoFill":false,"alwaysAutoSubmit":false,"neverAutoSubmit":false,"priority":0,"altURLs":["http://test.com/1","http://test.com/2"],"regExURLs":["3","4"],"blockedURLs":["5","6"],"regExBlockedURLs":["7","8"],"hide":false,"blockHostnameOnlyMatch":false,"blockDomainOnlyMatch":false}',

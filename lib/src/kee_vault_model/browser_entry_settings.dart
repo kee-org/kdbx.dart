@@ -32,7 +32,7 @@ class BrowserEntrySettings {
       version: map['version'] as int? ?? 2,
       includeUrls: getIncludeUrls(map),
       excludeUrls: getExcludeUrls(map),
-      realm: map['hTTPRealm'] as String?,
+      realm: map['httpRealm'] as String?,
       authenticationMethods:
           (map['authenticationMethods'] as List<dynamic>?)?.cast<String>() ??
               [],
@@ -168,7 +168,7 @@ class BrowserEntrySettings {
     return <String, dynamic>{
       'version': version,
       'authenticationMethods': authenticationMethods,
-      if (realm?.isNotEmpty ?? false) 'hTTPRealm': realm,
+      if (realm?.isNotEmpty ?? false) 'httpRealm': realm,
       'matcherConfigs': matcherConfigs.map((x) => x.toMap()).toList(),
       if (fields != null) 'fields': fields?.map((x) => x.toMap()).toList(),
       if (behaviour != null && behaviour != BrowserAutoFillBehaviour.Default)
