@@ -4,7 +4,6 @@ import 'package:kdbx/src/utils/byte_utils.dart';
 import 'package:uuid/uuid.dart';
 
 abstract class IGuidService {
-  //String newGuid();
   String newGuidAsBase64();
 }
 

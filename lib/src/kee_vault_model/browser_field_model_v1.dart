@@ -21,7 +21,7 @@ class BrowserFieldModelV1 {
       displayName: map['displayName'] as String?,
       name: map['name'] as String?,
       type: map['type'] as String?,
-      // Should have been persisted as id for KPRPC.plgx compatability but
+      // Should have been persisted as id for KPRPC.plgx compatibility but
       // PWA sometimes or always persists as fieldId by mistake.
       fieldId: map['id'] as String? ?? map['fieldId'] as String?,
       page: map['page'] as int? ?? -1,
@@ -107,32 +107,3 @@ class BrowserFieldModelV1 {
     return 'BrowserFieldModel(displayName: $displayName, name: $name, type: $type, fieldId: $fieldId, page: $page, placeholderHandling: $placeholderHandling, value: $value)';
   }
 }
-
-//TODO: delete all below when configv2 is working
-
-// defaults...
-// class BrowserFieldModel(
-//                 String displayName: this.getBrowserFieldDisplayNameDefault(),
-//                 String name: '',
-//                 String type: this.getBrowserFieldTypeDefault(),
-//                 String fieldId = '';
-//                 int page = -1;
-//                 String placeholderHandling: 'Default'
-
-/*
-
-for when outputting to json (persistence or kepassrpc):
-$Password etc is old way of identifying the user and pass common fields in KeeWeb . probably useless now.
-
-    getBrowserFieldDisplayNameDefault: function() {
-        if (this.model.name === '$Password') return 'KeePass password';
-        else if (this.model.name === '$UserName') return 'KeePass username';
-        else return '';
-    },
-
-    getBrowserFieldTypeDefault: function() {
-        if (this.model.name === '$Password') return 'FFTpassword';
-        else if (this.model.name === '$UserName') return 'FFTusername';
-        else return 'FFTtext';
-    },
-    */
