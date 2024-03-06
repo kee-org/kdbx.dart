@@ -1,15 +1,19 @@
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:collection/collection.dart';
 import 'package:kdbx/src/internal/extension_utils.dart';
 import 'package:kdbx/src/kdbx_format.dart';
 import 'package:kdbx/src/kdbx_object.dart';
 import 'package:kdbx/src/kdbx_xml.dart';
+import 'package:kdbx/src/kee_vault_model/browser_entry_settings_v1.dart';
+import 'package:kdbx/src/utils/guid_service.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 import 'package:quiver/check.dart';
 import 'package:xml/xml.dart';
+
 import '../kdbx.dart';
 
 final _logger = Logger('kdbx.kdbx_entry');
@@ -71,302 +75,6 @@ class KdbxKey {
     return 'KdbxKey{key: $key}';
   }
 }
-
-class BrowserEntrySettings {
-  BrowserEntrySettings({
-    this.version = 1,
-    this.behaviour = BrowserAutoFillBehaviour.Default,
-    required this.minimumMatchAccuracy,
-    this.priority = 0,
-    this.hide = false,
-    this.realm = '',
-    List<Pattern>? includeUrls,
-    List<Pattern>? excludeUrls,
-    List<BrowserFieldModel>? fields,
-  })  : includeUrls = includeUrls ?? [],
-        excludeUrls = excludeUrls ?? [],
-        fields = fields ?? [];
-
-  factory BrowserEntrySettings.fromMap(Map<String, dynamic>? map,
-      {required MatchAccuracy minimumMatchAccuracy}) {
-    if (map == null) {
-      return BrowserEntrySettings(minimumMatchAccuracy: minimumMatchAccuracy);
-    }
-
-    return BrowserEntrySettings(
-      version: map['version'] as int? ?? 1,
-      behaviour: getBehaviour(map),
-      minimumMatchAccuracy: getMam(map),
-      priority: map['priority'] as int? ?? 0,
-      hide: map['hide'] as bool? ?? false,
-      realm: map['hTTPRealm'] as String?,
-      includeUrls: getIncludeUrls(map),
-      excludeUrls: getExcludeUrls(map),
-      fields: List<BrowserFieldModel>.from((map['formFieldList']
-                  as List<dynamic>?)
-              ?.cast<Map<String, dynamic>>()
-              .map<BrowserFieldModel>((x) => BrowserFieldModel.fromMap(x)) ??
-          <BrowserFieldModel>[]),
-    );
-  }
-
-  factory BrowserEntrySettings.fromJson(String source,
-          {required MatchAccuracy minimumMatchAccuracy}) =>
-      BrowserEntrySettings.fromMap(json.decode(source) as Map<String, dynamic>?,
-          minimumMatchAccuracy: minimumMatchAccuracy);
-
-  int version;
-  // enum
-  BrowserAutoFillBehaviour behaviour;
-  // enum
-  MatchAccuracy minimumMatchAccuracy;
-  int priority; // always 0
-  bool hide;
-  String? realm;
-  List<Pattern> includeUrls;
-  List<Pattern> excludeUrls;
-  List<BrowserFieldModel> fields;
-
-  BrowserEntrySettings copyWith({
-    int? version,
-    BrowserAutoFillBehaviour? behaviour,
-    MatchAccuracy? minimumMatchAccuracy,
-    int? priority,
-    bool? hide,
-    String? realm,
-    List<Pattern>? includeUrls,
-    List<Pattern>? excludeUrls,
-    List<BrowserFieldModel>? fields,
-  }) {
-    return BrowserEntrySettings(
-      version: version ?? this.version,
-      behaviour: behaviour ?? this.behaviour,
-      minimumMatchAccuracy: minimumMatchAccuracy ?? this.minimumMatchAccuracy,
-      priority: priority ?? this.priority,
-      hide: hide ?? this.hide,
-      realm: realm ?? this.realm,
-      includeUrls: includeUrls ?? this.includeUrls,
-      excludeUrls: excludeUrls ?? this.excludeUrls,
-      fields: fields ?? this.fields,
-    );
-  }
-
-  static BrowserAutoFillBehaviour getBehaviour(Map<String, dynamic> map) {
-    if (map['neverAutoFill'] as bool? ?? false) {
-      return BrowserAutoFillBehaviour.NeverAutoFillNeverAutoSubmit;
-    } else if (map['alwaysAutoSubmit'] as bool? ?? false) {
-      return BrowserAutoFillBehaviour.AlwaysAutoFillAlwaysAutoSubmit;
-    } else if ((map['alwaysAutoFill'] as bool? ?? false) &&
-        (map['neverAutoSubmit'] as bool? ?? false)) {
-      return BrowserAutoFillBehaviour.AlwaysAutoFillNeverAutoSubmit;
-    } else if (map['neverAutoSubmit'] as bool? ?? false) {
-      return BrowserAutoFillBehaviour.NeverAutoSubmit;
-    } else if (map['alwaysAutoFill'] as bool? ?? false) {
-      return BrowserAutoFillBehaviour.AlwaysAutoFill;
-    } else {
-      return BrowserAutoFillBehaviour.Default;
-    }
-  }
-
-  static MatchAccuracy getMam(Map<String, dynamic> map) {
-    if (map['blockHostnameOnlyMatch'] as bool? ?? false) {
-      return MatchAccuracy.Exact;
-    } else if (map['blockDomainOnlyMatch'] as bool? ?? false) {
-      return MatchAccuracy.Hostname;
-    } else {
-      return MatchAccuracy.Domain;
-    }
-  }
-
-  static Map<String, bool> parseBehaviour(BrowserAutoFillBehaviour behaviour) {
-    switch (behaviour) {
-      case BrowserAutoFillBehaviour.AlwaysAutoFill:
-        return {
-          'alwaysAutoFill': true,
-          'alwaysAutoSubmit': false,
-          'neverAutoFill': false,
-          'neverAutoSubmit': false,
-        };
-      case BrowserAutoFillBehaviour.NeverAutoSubmit:
-        return {
-          'alwaysAutoFill': false,
-          'alwaysAutoSubmit': false,
-          'neverAutoFill': false,
-          'neverAutoSubmit': true,
-        };
-      case BrowserAutoFillBehaviour.AlwaysAutoFillAlwaysAutoSubmit:
-        return {
-          'alwaysAutoFill': true,
-          'alwaysAutoSubmit': true,
-          'neverAutoFill': false,
-          'neverAutoSubmit': false,
-        };
-      case BrowserAutoFillBehaviour.NeverAutoFillNeverAutoSubmit:
-        return {
-          'alwaysAutoFill': false,
-          'alwaysAutoSubmit': false,
-          'neverAutoFill': true,
-          'neverAutoSubmit': true,
-        };
-      case BrowserAutoFillBehaviour.AlwaysAutoFillNeverAutoSubmit:
-        return {
-          'alwaysAutoFill': true,
-          'alwaysAutoSubmit': false,
-          'neverAutoFill': false,
-          'neverAutoSubmit': true,
-        };
-      case BrowserAutoFillBehaviour.Default:
-        return {
-          'alwaysAutoFill': false,
-          'alwaysAutoSubmit': false,
-          'neverAutoFill': false,
-          'neverAutoSubmit': false,
-        };
-    }
-  }
-
-  static Map<String, bool> parseMam(MatchAccuracy mam) {
-    switch (mam) {
-      case MatchAccuracy.Domain:
-        return {
-          'blockDomainOnlyMatch': false,
-          'blockHostnameOnlyMatch': false,
-        };
-      case MatchAccuracy.Hostname:
-        return {
-          'blockDomainOnlyMatch': true,
-          'blockHostnameOnlyMatch': false,
-        };
-      default:
-        return {
-          'blockDomainOnlyMatch': false,
-          'blockHostnameOnlyMatch': true,
-        };
-    }
-  }
-
-  static Map<String, List<String>> parseUrls(
-      List<Pattern> includeUrls, List<Pattern> excludeUrls) {
-    final altURLs = <String>[];
-    final regExURLs = <String>[];
-    final blockedURLs = <String>[];
-    final regExBlockedURLs = <String>[];
-    for (final p in includeUrls) {
-      if (p is RegExp) {
-        regExURLs.add(p.pattern);
-      } else if (p is String) {
-        altURLs.add(p);
-      }
-    }
-    for (final p in excludeUrls) {
-      if (p is RegExp) {
-        regExBlockedURLs.add(p.pattern);
-      } else if (p is String) {
-        blockedURLs.add(p);
-      }
-    }
-    return <String, List<String>>{
-      'altURLs': altURLs,
-      'regExURLs': regExURLs,
-      'blockedURLs': blockedURLs,
-      'regExBlockedURLs': regExBlockedURLs,
-    };
-  }
-
-  static List<Pattern> getIncludeUrls(Map<String, dynamic> map) {
-    final includeUrls = <Pattern>[];
-    final altUrls = (map['altURLs'] as List<dynamic>?)?.cast<String>();
-    final regExURLs = (map['regExURLs'] as List<dynamic>?)?.cast<String>();
-    if (altUrls != null) {
-      altUrls.forEach(includeUrls.add);
-    }
-    if (regExURLs != null) {
-      for (final url in regExURLs) {
-        includeUrls.add(RegExp(url));
-      }
-    }
-    return includeUrls;
-  }
-
-  static List<Pattern> getExcludeUrls(Map<String, dynamic> map) {
-    final excludeUrls = <Pattern>[];
-    final blockedURLs = (map['blockedURLs'] as List<dynamic>?)?.cast<String>();
-    final regExBlockedURLs =
-        (map['regExBlockedURLs'] as List<dynamic>?)?.cast<String>();
-    if (blockedURLs != null) {
-      blockedURLs.forEach(excludeUrls.add);
-    }
-    if (regExBlockedURLs != null) {
-      for (final url in regExBlockedURLs) {
-        excludeUrls.add(RegExp(url));
-      }
-    }
-    return excludeUrls;
-  }
-
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'version': version,
-      'priority': priority,
-      'hide': hide,
-      'hTTPRealm': realm,
-      'formFieldList': fields.map((x) => x.toMap()).toList(),
-      ...parseBehaviour(behaviour),
-      ...parseMam(minimumMatchAccuracy),
-      ...parseUrls(includeUrls, excludeUrls),
-    };
-  }
-
-  String toJson() => json.encode(toMap());
-
-  @override
-  String toString() {
-    return 'BrowserSettingsModel(version: $version, behaviour: $behaviour, minimumMatchAccuracy: $minimumMatchAccuracy, priority: $priority, hide: $hide, realm: $realm, includeUrls: $includeUrls, excludeUrls: $excludeUrls, fields: $fields)';
-  }
-
-  @override
-  // ignore: avoid_renaming_method_parameters
-  bool operator ==(Object o) {
-    if (identical(this, o)) {
-      return true;
-    }
-    final unOrdDeepEq = const DeepCollectionEquality.unordered().equals;
-    return o is BrowserEntrySettings &&
-        o.version == version &&
-        o.behaviour == behaviour &&
-        o.minimumMatchAccuracy == minimumMatchAccuracy &&
-        o.priority == priority &&
-        o.hide == hide &&
-        o.realm == realm &&
-        unOrdDeepEq(o.includeUrls, includeUrls) &&
-        unOrdDeepEq(o.excludeUrls, excludeUrls) &&
-        unOrdDeepEq(o.fields, fields);
-  }
-
-  @override
-  int get hashCode {
-    return version.hashCode ^
-        behaviour.hashCode ^
-        minimumMatchAccuracy.hashCode ^
-        priority.hashCode ^
-        hide.hashCode ^
-        realm.hashCode ^
-        includeUrls.hashCode ^
-        excludeUrls.hashCode ^
-        fields.hashCode;
-  }
-}
-
-enum BrowserAutoFillBehaviour {
-  Default,
-  AlwaysAutoFill,
-  NeverAutoSubmit,
-  AlwaysAutoFillNeverAutoSubmit,
-  AlwaysAutoFillAlwaysAutoSubmit,
-  NeverAutoFillNeverAutoSubmit
-}
-
-enum MatchAccuracy { Exact, Hostname, Domain }
 
 extension KdbxEntryInternal on KdbxEntry {
   KdbxEntry cloneInto(KdbxGroup otherGroup,
@@ -462,8 +170,11 @@ class KdbxEntry extends KdbxObject {
         super.create(file.ctx, file, 'Entry', parent) {
     icon.set(KdbxIcon.Key);
     _browserSettings = BrowserEntrySettings(
-        minimumMatchAccuracy:
-            file.body.meta.browserSettings.defaultMatchAccuracy);
+      matcherConfigs: [
+        EntryMatcherConfig.forDefaultUrlMatchBehaviour(
+            file.body.meta.browserSettings.defaultMatchAccuracy)
+      ],
+    );
   }
 
   KdbxEntry.read(KdbxReadWriteContext ctx, KdbxGroup? parent, XmlElement node,
@@ -526,26 +237,45 @@ class KdbxEntry extends KdbxObject {
   BrowserEntrySettings? _browserSettings;
   BrowserEntrySettings get browserSettings {
     if (_browserSettings == null) {
-      final tempJson = stringEntries
-          .firstWhereOrNull((s) => s.key.key == 'KPRPC JSON')
-          ?.value;
+      final cdJson = getCustomData('KPRPC JSON');
 
-      if (tempJson != null) {
-        _browserSettings = BrowserEntrySettings.fromJson(tempJson.getText(),
+      if (cdJson != null) {
+        _browserSettings = BrowserEntrySettings.fromJson(cdJson,
             minimumMatchAccuracy:
                 file!.body.meta.browserSettings.defaultMatchAccuracy);
       } else {
-        _browserSettings = BrowserEntrySettings(
-            minimumMatchAccuracy:
-                file!.body.meta.browserSettings.defaultMatchAccuracy);
+        final stringJson = stringEntries
+            .firstWhereOrNull((s) => s.key.key == 'KPRPC JSON')
+            ?.value
+            ?.getText();
+
+        if (stringJson != null) {
+          final v1 = BrowserEntrySettingsV1.fromJson(stringJson,
+              minimumMatchAccuracy:
+                  file!.body.meta.browserSettings.defaultMatchAccuracy);
+          _browserSettings = v1.convertToV2(GuidService());
+        } else {
+          _browserSettings = BrowserEntrySettings(
+            matcherConfigs: [
+              EntryMatcherConfig.forDefaultUrlMatchBehaviour(
+                  file!.body.meta.browserSettings.defaultMatchAccuracy)
+            ],
+          );
+        }
       }
     }
     return _browserSettings!;
   }
 
   set browserSettings(BrowserEntrySettings settings) {
-    setString(
-        KdbxKey('KPRPC JSON'), ProtectedValue.fromString(settings.toJson()));
+    setCustomData('KPRPC JSON', settings.toJson());
+    try {
+      final v1 = settings.convertToV1();
+      setString(KdbxKey('KPRPC JSON'), ProtectedValue.fromString(v1.toJson()));
+    } catch (ex) {
+      _logger.severe(
+          'String KPRPC JSON failed to convert or write. This may indicate a newer version of Kee Vault was used to create this configuration.');
+    }
     _browserSettings = null;
   }
 
@@ -586,7 +316,8 @@ class KdbxEntry extends KdbxObject {
         browserSettings.includeUrls.add(newUrl);
       }
     }
-    browserSettings.hide = false;
+    browserSettings.matcherConfigs
+        .removeWhere((mc) => mc.matcherType == EntryMatcherType.Hide);
     browserSettings = browserSettings;
     return;
   }
@@ -596,7 +327,8 @@ class KdbxEntry extends KdbxObject {
       final updatedList = androidPackageNames..add(name);
       androidPackageNames = updatedList;
     }
-    browserSettings.hide = false;
+    browserSettings.matcherConfigs
+        .removeWhere((mc) => mc.matcherType == EntryMatcherType.Hide);
     browserSettings = browserSettings;
     return;
   }

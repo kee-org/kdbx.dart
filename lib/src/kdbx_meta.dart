@@ -6,12 +6,12 @@ import 'package:collection/collection.dart';
 import 'package:kdbx/src/internal/extension_utils.dart';
 import 'package:kdbx/src/kdbx_binary.dart';
 import 'package:kdbx/src/kdbx_custom_data.dart';
-import 'package:kdbx/src/kdbx_entry.dart';
 import 'package:kdbx/src/kdbx_exceptions.dart';
 import 'package:kdbx/src/kdbx_format.dart';
 import 'package:kdbx/src/kdbx_header.dart';
 import 'package:kdbx/src/kdbx_object.dart';
 import 'package:kdbx/src/kdbx_xml.dart';
+import 'package:kdbx/src/kee_vault_model/enums.dart';
 import 'package:logging/logging.dart';
 import 'package:quiver/iterables.dart';
 import 'package:uuid/uuid.dart';
@@ -40,7 +40,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
     historyMaxSize.set(Consts.DefaultHistoryMaxSize);
   }
 
-  KdbxMeta.read(xml.XmlElement node, this.ctx)
+  KdbxMeta.read(super.node, this.ctx)
       : customData = node
                 .singleElement(KdbxXml.NODE_CUSTOM_DATA)
                 ?.let((e) => KdbxMetaCustomData.read(e)) ??
@@ -91,7 +91,7 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
                 .map((e) => MapEntry(e.uuid, e))
                 .let((that) => Map.fromEntries(that)) ??
             {},
-        super.read(node);
+        super.read();
 
   @override
   final KdbxReadWriteContext ctx;
@@ -463,8 +463,8 @@ class KeeVaultEmbeddedConfig {
   int get hashCode {
     return version.hashCode ^
         randomId.hashCode ^
-        addon.hashCode ^
-        vault.hashCode;
+        const MapEquality().hash(addon) ^
+        const MapEquality().hash(vault);
   }
 }
 
@@ -582,7 +582,7 @@ class BrowserDbSettings {
         defaultPlaceholderHandling.hashCode ^
         displayPriorityField.hashCode ^
         displayGlobalPlaceholderOption.hashCode ^
-        matchedURLAccuracyOverrides.hashCode;
+        const MapEquality().hash(matchedURLAccuracyOverrides);
   }
 }
 

@@ -8,14 +8,14 @@ class KdbxObjectCustomData extends KdbxNode {
       : _data = {},
         super.create(KdbxXml.NODE_CUSTOM_DATA);
 
-  KdbxObjectCustomData.read(xml.XmlElement node)
+  KdbxObjectCustomData.read(super.node)
       : _data = Map.fromEntries(
             node.findElements(KdbxXml.NODE_CUSTOM_DATA_ITEM).map((el) {
           final key = el.singleTextNode(KdbxXml.NODE_KEY);
           final value = el.singleTextNode(KdbxXml.NODE_VALUE);
           return MapEntry(key, value);
         })),
-        super.read(node);
+        super.read();
 
   final Map<String, String> _data;
 
@@ -59,7 +59,7 @@ class KdbxMetaCustomData extends KdbxNode {
       : _data = {},
         super.create(KdbxXml.NODE_CUSTOM_DATA);
 
-  KdbxMetaCustomData.read(xml.XmlElement node)
+  KdbxMetaCustomData.read(super.node)
       : _data = Map.fromEntries(
             node.findElements(KdbxXml.NODE_CUSTOM_DATA_ITEM).map((el) {
           final key = el.singleTextNode(KdbxXml.NODE_KEY);
@@ -73,7 +73,7 @@ class KdbxMetaCustomData extends KdbxNode {
                 : null
           ));
         })),
-        super.read(node);
+        super.read();
 
   final Map<String, KdbxMetaCustomDataItem> _data;
 

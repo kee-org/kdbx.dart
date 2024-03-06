@@ -105,12 +105,18 @@ class TestUtil {
       Function proceedSeconds) async {
     final file = TestUtil.createEmptyFile();
     final entry = createEntry(file, file.body.rootGroup, 'test1', 'test1');
-    entry.browserSettings.fields.add(BrowserFieldModel(
-        displayName: 'test name',
-        fieldId: 'id',
-        name: 'form field name',
-        value: 'value1'));
-    // Would be nice to find a way to not have to do this to persist into a custom string entry
+    entry.browserSettings.fields = [
+      Field(
+        name: 'test name',
+        valuePath: '.',
+        matcherConfigs: [
+          FieldMatcherConfig.forSingleClientMatchHtmlType(
+              id: 'id', name: 'form field name')
+        ],
+        value: 'value1',
+      )
+    ];
+    // Would be nice to find a way to not have to do this to persist into a custom data and string entry
     entry.browserSettings = entry.browserSettings;
     await TestUtil.saveAndRead(file);
     proceedSeconds(1);

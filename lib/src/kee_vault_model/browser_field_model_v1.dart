@@ -1,18 +1,8 @@
 import 'dart:convert';
+import 'package:kdbx/src/kee_vault_model/form_field_type.dart';
 
-enum FieldStorage { CUSTOM, JSON, BOTH }
-
-class FormFieldType {
-  static const String USERNAME = 'FFTusername';
-  static const String PASSWORD = 'FFTpassword';
-  static const String TEXT = 'FFTtext';
-  static const String RADIO = 'FFTradio';
-  static const String CHECKBOX = 'FFTcheckbox';
-  static const String SELECT = 'FFTselect';
-}
-
-class BrowserFieldModel {
-  BrowserFieldModel({
+class BrowserFieldModelV1 {
+  BrowserFieldModelV1({
     this.displayName,
     this.name = '',
     this.type = FormFieldType.TEXT,
@@ -22,16 +12,16 @@ class BrowserFieldModel {
     this.value = '',
   });
 
-  factory BrowserFieldModel.fromMap(Map<String, dynamic>? map) {
+  factory BrowserFieldModelV1.fromMap(Map<String, dynamic>? map) {
     if (map == null) {
-      return BrowserFieldModel();
+      return BrowserFieldModelV1();
     }
 
-    return BrowserFieldModel(
+    return BrowserFieldModelV1(
       displayName: map['displayName'] as String?,
       name: map['name'] as String?,
       type: map['type'] as String?,
-      // Should have been persisted as id for KPRPC.plgx compatability but
+      // Should have been persisted as id for KPRPC.plgx compatibility but
       // PWA sometimes or always persists as fieldId by mistake.
       fieldId: map['id'] as String? ?? map['fieldId'] as String?,
       page: map['page'] as int? ?? -1,
@@ -39,8 +29,8 @@ class BrowserFieldModel {
       value: map['value'] as String?,
     );
   }
-  factory BrowserFieldModel.fromJson(String source) =>
-      BrowserFieldModel.fromMap(json.decode(source) as Map<String, dynamic>?);
+  factory BrowserFieldModelV1.fromJson(String source) =>
+      BrowserFieldModelV1.fromMap(json.decode(source) as Map<String, dynamic>?);
 
   String? displayName;
   String? name;
@@ -57,7 +47,7 @@ class BrowserFieldModel {
       return true;
     }
 
-    return o is BrowserFieldModel &&
+    return o is BrowserFieldModelV1 &&
         o.displayName == displayName &&
         o.name == name &&
         o.type == type &&
@@ -78,7 +68,7 @@ class BrowserFieldModel {
         value.hashCode;
   }
 
-  BrowserFieldModel copyWith({
+  BrowserFieldModelV1 copyWith({
     String? displayName,
     String? name,
     String? type,
@@ -87,7 +77,7 @@ class BrowserFieldModel {
     String? placeholderHandling,
     String? value,
   }) {
-    return BrowserFieldModel(
+    return BrowserFieldModelV1(
       displayName: displayName ?? this.displayName,
       name: name ?? this.name,
       type: type ?? this.type,
@@ -117,30 +107,3 @@ class BrowserFieldModel {
     return 'BrowserFieldModel(displayName: $displayName, name: $name, type: $type, fieldId: $fieldId, page: $page, placeholderHandling: $placeholderHandling, value: $value)';
   }
 }
-
-// defaults...
-// class BrowserFieldModel(
-//                 String displayName: this.getBrowserFieldDisplayNameDefault(),
-//                 String name: '',
-//                 String type: this.getBrowserFieldTypeDefault(),
-//                 String fieldId = '';
-//                 int page = -1;
-//                 String placeholderHandling: 'Default'
-
-/*
-
-for when outputting to json (persistence or kepassrpc):
-$Password etc is old way of identifying the user and pass common fields in KeeWeb . probably useless now.
-
-    getBrowserFieldDisplayNameDefault: function() {
-        if (this.model.name === '$Password') return 'KeePass password';
-        else if (this.model.name === '$UserName') return 'KeePass username';
-        else return '';
-    },
-
-    getBrowserFieldTypeDefault: function() {
-        if (this.model.name === '$Password') return 'FFTpassword';
-        else if (this.model.name === '$UserName') return 'FFTusername';
-        else return 'FFTtext';
-    },
-    */

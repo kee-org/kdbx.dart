@@ -203,7 +203,7 @@ void main() {
             await TestUtil.createFileWithJsonFieldHistory(proceedSeconds);
         proceedSeconds(10);
         final entry = file.body.rootGroup.entries.values.toList()[0];
-        expect(entry.browserSettings.fields.length, 0);
+        expect(entry.browserSettings.fields?.length ?? 0, 0);
         entry.revertToHistoryEntry(entry.history.length - 1);
         final history = entry.history;
         proceedSeconds(10);
@@ -215,7 +215,7 @@ void main() {
         expect(
             history_2.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test1');
         expect(entry.getString(KdbxKeyCommon.USER_NAME)!.getText(), 'test1');
-        expect(entry.browserSettings.fields.length, 1);
+        expect(entry.browserSettings.fields?.length ?? 0, 1);
       }),
     );
   }, tags: ['kdbx3']);

@@ -92,7 +92,7 @@ extension on List<XmlNode> {
 }
 
 abstract class KdbxSubTextNode<T> extends KdbxSubNode<T?> {
-  KdbxSubTextNode(KdbxNode node, String name) : super(node, name);
+  KdbxSubTextNode(super.node, super.name);
 
   void Function()? _onModify;
 
@@ -158,7 +158,7 @@ abstract class KdbxSubTextNode<T> extends KdbxSubNode<T?> {
 }
 
 class IntNode extends KdbxSubTextNode<int?> {
-  IntNode(KdbxNode node, String name) : super(node, name);
+  IntNode(super.node, super.name);
 
   @override
   int? decode(String value) => int.tryParse(value);
@@ -168,7 +168,7 @@ class IntNode extends KdbxSubTextNode<int?> {
 }
 
 class StringNode extends KdbxSubTextNode<String> {
-  StringNode(KdbxNode node, String name) : super(node, name);
+  StringNode(super.node, super.name);
 
   @override
   String decode(String value) => value;
@@ -178,7 +178,7 @@ class StringNode extends KdbxSubTextNode<String> {
 }
 
 class StringListNode extends KdbxSubTextNode<List<String>> {
-  StringListNode(KdbxNode node, String name) : super(node, name);
+  StringListNode(super.node, super.name);
 
   @override
   List<String> decode(String value) {
@@ -195,7 +195,7 @@ class StringListNode extends KdbxSubTextNode<List<String>> {
 }
 
 class Base64Node extends KdbxSubTextNode<ByteBuffer> {
-  Base64Node(KdbxNode node, String name) : super(node, name);
+  Base64Node(super.node, super.name);
 
   @override
   ByteBuffer decode(String value) => base64.decode(value).buffer;
@@ -205,7 +205,7 @@ class Base64Node extends KdbxSubTextNode<ByteBuffer> {
 }
 
 class UuidNode extends KdbxSubTextNode<KdbxUuid> {
-  UuidNode(KdbxNode node, String name) : super(node, name);
+  UuidNode(super.node, super.name);
 
   @override
   KdbxUuid decode(String value) => KdbxUuid(value);
@@ -215,7 +215,7 @@ class UuidNode extends KdbxSubTextNode<KdbxUuid> {
 }
 
 class IconNode extends KdbxSubTextNode<KdbxIcon> {
-  IconNode(KdbxNode node, String name) : super(node, name);
+  IconNode(super.node, super.name);
 
   @override
   KdbxIcon decode(String value) => KdbxIcon.values[int.tryParse(value) ?? 0];
@@ -243,7 +243,7 @@ class KdbxColor {
 
 // Tolerates 6 digit hex strings but outputs more-compatible 7 char strings with leading #
 class ColorNode extends KdbxSubTextNode<KdbxColor> {
-  ColorNode(KdbxNode node, String name) : super(node, name);
+  ColorNode(super.node, super.name);
 
   @override
   KdbxColor decode(String value) => KdbxColor.parse(value);
@@ -253,7 +253,7 @@ class ColorNode extends KdbxSubTextNode<KdbxColor> {
 }
 
 class NullableBooleanNode extends KdbxSubTextNode<bool?> {
-  NullableBooleanNode(KdbxNode node, String name) : super(node, name);
+  NullableBooleanNode(super.node, super.name);
 
   @override
   bool? decode(String value) {
@@ -284,7 +284,7 @@ class NullableBooleanNode extends KdbxSubTextNode<bool?> {
 }
 
 class DateTimeUtcNode extends KdbxSubTextNode<DateTime?> {
-  DateTimeUtcNode(KdbxNodeContext node, String name) : super(node, name);
+  DateTimeUtcNode(KdbxNodeContext super.node, super.name);
 
   KdbxReadWriteContext get _ctx => (node as KdbxNodeContext).ctx;
   static final minDate = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);

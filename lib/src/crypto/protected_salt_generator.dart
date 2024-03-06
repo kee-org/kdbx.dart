@@ -42,7 +42,7 @@ class ProtectedSaltGenerator {
 }
 
 class ChachaProtectedSaltGenerator extends ProtectedSaltGenerator {
-  ChachaProtectedSaltGenerator._(StreamCipher state) : super._(state);
+  ChachaProtectedSaltGenerator._(super.state) : super._();
 
   factory ChachaProtectedSaltGenerator.create(Uint8List key) {
     final hash = sha512.convert(key);
