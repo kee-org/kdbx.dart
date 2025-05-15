@@ -1,9 +1,9 @@
 import 'dart:convert';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:argon2_ffi_base/argon2_ffi_base.dart';
 import 'package:crypto/crypto.dart' as crypto;
-import 'package:isolate/isolate_runner.dart';
 import 'package:kdbx/kdbx.dart';
 import 'package:kdbx/src/kdbx_var_dictionary.dart';
 import 'package:kdbx/src/utils/byte_utils.dart';
@@ -145,16 +145,22 @@ class KeyEncrypterKdf {
     if (KdbxFormat.dartWebWorkaround) {
       return _encryptAesSync(args);
     }
-    final runner = await IsolateRunner.spawn();
+    final receivePort = ReceivePort();
+    _logger.finest('Starting encryptAes for ${args.rounds} '
+        'rounds in isolate. ${args.encryptionKey.length} ${args.key.length}');
+
     final s = Stopwatch()..start();
-    try {
-      _logger.finest('Starting encryptAes for ${args.rounds} '
-          'rounds in isolate. ${args.encryptionKey.length} ${args.key.length}');
-      return await runner.run(_encryptAesSync, args);
-    } finally {
-      _logger.finest('Done aes encrypt. ${s.elapsed}');
-      await runner.kill();
-    }
+    await Isolate.spawn(_encryptAesIsolate, [args, receivePort.sendPort]);
+    final result = await receivePort.first;
+    _logger.finest('Done aes encrypt. ${s.elapsed}');
+    return result as Uint8List;
+  }
+
+  static void _encryptAesIsolate(List<dynamic> args) {
+    final argsObject = args[0] as EncryptAesArgs;
+    final sendPort = args[1] as SendPort;
+    final result = _encryptAesSync(argsObject);
+    sendPort.send(result);
   }
 
   static Uint8List _encryptAesSync(EncryptAesArgs args) {
