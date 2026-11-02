@@ -6,7 +6,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: ['ubuntu-latest', 'windows-2019', 'macos-latest']
+        os: ['ubuntu-latest', 'windows-2025', 'macos-latest']
         sdk: ['stable', 'beta']
 
       fail-fast: false
@@ -21,6 +21,18 @@ jobs:
         which dart
         codesign --remove-signature $(which dart)
       if: startsWith(matrix.os, 'macos')
+    # The committed libargon2_ffi.dylib is x86_64 only; macos-latest is arm64.
+    # Build a universal replacement from a pinned argon2_ffi commit.
+    - name: Build argon2 native library (macOS)
+      if: startsWith(matrix.os, 'macos')
+      run: |
+        git clone https://github.com/authpass/argon2_ffi.git "$RUNNER_TEMP/argon2_ffi"
+        git -C "$RUNNER_TEMP/argon2_ffi" checkout 45e4d63f37f4acaa4e4dc381bd3d83abc378744f
+        cmake -S "$RUNNER_TEMP/argon2_ffi/ios/Classes" -B "$RUNNER_TEMP/argon2_build" \
+          -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+        cmake --build "$RUNNER_TEMP/argon2_build"
+        cp "$RUNNER_TEMP/argon2_build/libargon2_ffi.dylib" libargon2_ffi.dylib
+        lipo -info libargon2_ffi.dylib
     - name: Install dependencies
       run: dart pub get
     - name: Run tests
