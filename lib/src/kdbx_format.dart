@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:archive/archive.dart';
 import 'package:argon2_ffi_base/argon2_ffi_base.dart';
 import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
@@ -22,6 +20,7 @@ import 'package:kdbx/src/kdbx_header.dart';
 import 'package:kdbx/src/kdbx_object.dart';
 import 'package:kdbx/src/kdbx_xml.dart';
 import 'package:kdbx/src/utils/byte_utils.dart';
+import 'package:kdbx/src/utils/gzip.dart';
 import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:pointycastle/export.dart';
@@ -1070,17 +1069,7 @@ https://github.com/renggli/dart-xml/blob/main/example/xml_flatten.dart
         encryptCipher, AesHelper.pad(payload, encryptCipher.blockSize));
   }
 
-  static Uint8List _gzipEncode(Uint8List bytes) {
-    if (dartWebWorkaround) {
-      return (GZipEncoder().encode(bytes) ?? []) as Uint8List;
-    }
-    return GZipCodec().encode(bytes) as Uint8List;
-  }
+  static Uint8List _gzipEncode(Uint8List bytes) => gzipEncode(bytes);
 
-  static Uint8List _gzipDecode(Uint8List bytes) {
-    if (dartWebWorkaround) {
-      return GZipDecoder().decodeBytes(bytes) as Uint8List;
-    }
-    return GZipCodec().decode(bytes) as Uint8List;
-  }
+  static Uint8List _gzipDecode(Uint8List bytes) => gzipDecode(bytes);
 }
