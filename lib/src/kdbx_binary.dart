@@ -1,10 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:kdbx/src/kdbx_header.dart';
 import 'package:kdbx/src/kdbx_xml.dart';
 import 'package:kdbx/src/utils/byte_utils.dart';
+import 'package:kdbx/src/utils/gzip.dart';
 import 'package:quiver/core.dart';
 import 'package:xml/xml.dart';
 
@@ -47,7 +47,7 @@ class KdbxBinary {
     final isCompressed = valueNode.getAttributeBool(KdbxXml.ATTR_COMPRESSED);
     var value = base64.decode(valueNode.text.trim());
     if (isCompressed) {
-      value = gzip.decode(value) as Uint8List;
+      value = gzipDecode(value);
     }
     return KdbxBinary(
       isInline: isInline,
@@ -57,7 +57,7 @@ class KdbxBinary {
   }
 
   void saveToXml(XmlElement valueNode) {
-    final content = base64.encode(gzip.encode(value));
+    final content = base64.encode(gzipEncode(value));
     valueNode.addAttributeBool(KdbxXml.ATTR_PROTECTED, isProtected);
     valueNode.addAttributeBool(KdbxXml.ATTR_COMPRESSED, true);
     valueNode.children.add(XmlText(content));

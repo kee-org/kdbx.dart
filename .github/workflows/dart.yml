@@ -25,3 +25,10 @@ jobs:
       run: dart pub get
     - name: Run tests
       run: dart run test
+    # kdbx must work in the browser. These tests use no dart:io.
+    - name: Run browser tests (dart2js)
+      if: matrix.os == 'ubuntu-latest'
+      run: dart test -p chrome test/gzip_test.dart test/web
+    - name: Run browser tests (dart2wasm)
+      if: matrix.os == 'ubuntu-latest' && matrix.sdk == 'stable'
+      run: dart test -p chrome --compiler dart2wasm test/gzip_test.dart test/web
