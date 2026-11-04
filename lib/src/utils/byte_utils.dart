@@ -111,8 +111,9 @@ class ReaderHelperDartWeb extends ReaderHelper {
   int readUint64() {
     final lo = readUint32();
     final hi = readUint32();
-    print('lo: $lo / hi: $hi ---- ');
-    return (hi << 32) + lo;
+    // Not `hi << 32`: shifts and bitwise operators are 32 bit in JavaScript. Multiplication is exact up to 2^53, which
+    // covers every value KDBX stores in practice (dates are about 6.4e10).
+    return hi * 0x100000000 + lo;
   }
 
   @override
@@ -191,8 +192,9 @@ class WriterHelperDartWeb extends WriterHelper {
     lengthWriter?.call(8);
 
     const endian = Endian.little;
-    final highBits = value >> 32;
-    final lowBits = value & mask32;
+    // Not `>>` / `&`: those are 32 bit in JavaScript.
+    final highBits = value ~/ 0x100000000;
+    final lowBits = value % 0x100000000;
     final byteData = ByteData(8);
     if (endian == Endian.big) {
       byteData.setUint32(0, highBits, endian);
