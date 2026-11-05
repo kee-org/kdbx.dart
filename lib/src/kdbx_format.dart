@@ -282,7 +282,7 @@ class KdbxBody extends KdbxNode {
     return mergeContext;
   }
 
-  void import(KdbxBody other) {
+  KdbxGroup import(KdbxBody other, {String? groupName}) {
     // deleted objects from other are now cleared since no merge against them can happen
 
     // import binaries
@@ -295,7 +295,9 @@ class KdbxBody extends KdbxNode {
 
     final importedUuidMap = <KdbxUuid, KdbxUuid>{};
     final destGroup = KdbxGroup.create(
-        ctx: ctx, parent: rootGroup, name: 'Imported at ${clock.now()}');
+        ctx: ctx,
+        parent: rootGroup,
+        name: groupName ?? 'Imported at ${clock.now()}');
     rootGroup.addGroup(destGroup);
     destGroup.import(other.rootGroup, importedUuidMap);
 
@@ -310,6 +312,7 @@ class KdbxBody extends KdbxNode {
     cleanup();
 
     _logger.info('Finished importing');
+    return destGroup;
   }
 
   void cleanup() {

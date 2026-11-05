@@ -213,9 +213,12 @@ class KdbxFile {
     return ctx;
   }
 
-  /// Imports the given file into this file.
-  void import(KdbxFile other) {
-    return body.import(other.body);
+  /// Imports the given file into this file, into a new group under the root.
+  ///
+  /// The group is named [groupName], or `Imported at <timestamp>` when that is
+  /// not given. Returns the new group.
+  KdbxGroup import(KdbxFile other, {String? groupName}) {
+    return body.import(other.body, groupName: groupName);
   }
 
   void invalidateCachedValues() {

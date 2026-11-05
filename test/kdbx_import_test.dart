@@ -33,6 +33,28 @@ void main() {
       }),
     );
     test(
+      'Import with a custom group name returns the new group',
+      () async => await withClock(fakeClock, () async {
+        final file = await TestUtil.createSimpleFile(proceedSeconds);
+        final file2 = await TestUtil.createSimpleFile(proceedSeconds);
+
+        final group = file.import(file2, groupName: 'Imported from Test');
+        expect(group.name.get(), 'Imported from Test');
+        expect(group.parent, file.body.rootGroup);
+        expect(group.getAllEntries(), hasLength(2));
+      }),
+    );
+    test(
+      'Import without a group name keeps the default name',
+      () async => await withClock(fakeClock, () async {
+        final file = await TestUtil.createSimpleFile(proceedSeconds);
+        final file2 = TestUtil.createEmptyFile();
+
+        final group = file.import(file2);
+        expect(group.name.get(), startsWith('Imported at '));
+      }),
+    );
+    test(
       'Simple import',
       () async => await withClock(fakeClock, () async {
         final file = await TestUtil.createSimpleFile(proceedSeconds);
