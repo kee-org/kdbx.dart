@@ -489,7 +489,7 @@ class BrowserDbSettings {
         version: map['version'] as int? ?? 3,
         rootUUID: map['rootUUID'] as String?,
         defaultMatchAccuracy: MatchAccuracy.values.singleWhereOrNull(
-                (val) => val == map['defaultMatchAccuracy']) ??
+                (val) => val.name == map['defaultMatchAccuracy']) ??
             MatchAccuracy.Domain,
         defaultPlaceholderHandling:
             map['defaultPlaceholderHandling'] as String? ?? 'Default',
@@ -541,7 +541,7 @@ class BrowserDbSettings {
     return <String, dynamic>{
       'version': version,
       'rootUUID': rootUUID,
-      'defaultMatchAccuracy': defaultMatchAccuracy,
+      'defaultMatchAccuracy': defaultMatchAccuracy.name,
       'defaultPlaceholderHandling': defaultPlaceholderHandling,
       'displayPriorityField': displayPriorityField,
       'displayGlobalPlaceholderOption': displayGlobalPlaceholderOption,
