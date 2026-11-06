@@ -89,8 +89,9 @@ class EntryMatcherConfig {
     return withExtraMembers({
       'matcherType': matcherType?.name,
       if (customMatcher != null) 'customMatcher': customMatcher?.toMap(),
-      if (urlMatchMethod != null && urlMatchMethod != MatchAccuracy.Domain)
-        'urlMatchMethod': urlMatchMethod?.name,
+      // Domain is written too: an absent method is not the same as Domain (KeePassRPC keeps a stored Domain, and its
+      // stored configurations compare unequal). Only the v1 model leaves Domain out, because v1 has no such member.
+      if (urlMatchMethod != null) 'urlMatchMethod': urlMatchMethod?.name,
       if (weight != null) 'weight': weight,
       if (actionOnMatch != null) 'actionOnMatch': actionOnMatch?.name,
       if (actionOnNoMatch != null) 'actionOnNoMatch': actionOnNoMatch?.name,

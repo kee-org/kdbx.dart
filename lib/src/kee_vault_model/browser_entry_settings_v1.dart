@@ -308,8 +308,15 @@ class BrowserEntrySettingsV1 {
   }
 
   BrowserEntrySettings convertToV2(IGuidService guidService) {
+    // KeePassRPC's GetMatchAccuracyMethod(true): a v1 configuration with no blockHostnameOnlyMatch and no
+    // blockDomainOnlyMatch has no method, and that reads as Domain. v1 has no way to write an explicit Domain, so Domain
+    // here is absent in v2 too (EntryConfigv1.cs:42-48).
     final List<EntryMatcherConfig> mcList = [
-      EntryMatcherConfig.forDefaultUrlMatchBehaviour(minimumMatchAccuracy),
+      EntryMatcherConfig(
+        matcherType: EntryMatcherType.Url,
+        urlMatchMethod:
+            minimumMatchAccuracy == MatchAccuracy.Domain ? null : minimumMatchAccuracy,
+      ),
       if (hide) EntryMatcherConfig(matcherType: EntryMatcherType.Hide)
     ];
 
