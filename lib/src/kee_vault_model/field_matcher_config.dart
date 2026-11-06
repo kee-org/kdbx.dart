@@ -2,8 +2,16 @@ import 'dart:convert';
 
 import 'package:collection/collection.dart';
 import 'package:kdbx/src/kee_vault_model/enums.dart';
+import 'package:kdbx/src/kee_vault_model/extra_members.dart';
 import 'package:kdbx/src/kee_vault_model/field_matcher.dart';
 import 'package:kdbx/src/utils/field_type_utils.dart';
+
+const _knownMembers = {
+  'matcherType',
+  'customMatcher',
+  'weight',
+  'actionOnMatch',
+};
 
 class FieldMatcherConfig {
   FieldMatcherConfig({
@@ -11,22 +19,29 @@ class FieldMatcherConfig {
     this.customMatcher,
     this.weight, // 0 = client decides or ignores locator
     this.actionOnMatch,
-  });
+    Map<String, dynamic>? extraMembers,
+  }) : extraMembers = Map.unmodifiable(extraMembers ?? const {});
 
   factory FieldMatcherConfig.fromMap(Map<String, dynamic>? map) {
     if (map == null) {
       return FieldMatcherConfig();
     }
 
+    final matcherType = FieldMatcherType.values
+        .firstWhereOrNull((v) => v.name == map['matcherType']);
+    final actionOnMatch = MatchAction.values
+        .firstWhereOrNull((v) => v.name == map['actionOnMatch']);
     return FieldMatcherConfig(
-      matcherType: FieldMatcherType.values
-          .firstWhereOrNull((v) => v.name == map['matcherType']),
+      matcherType: matcherType,
       customMatcher: map['customMatcher'] != null
           ? FieldMatcher.fromMap(map['customMatcher'] as Map<String, dynamic>)
           : null,
       weight: map['weight'] as int?,
-      actionOnMatch: MatchAction.values
-          .firstWhereOrNull((v) => v.name == map['actionOnMatch']),
+      actionOnMatch: actionOnMatch,
+      extraMembers: extraMembersOf(map, _knownMembers, unparsedEnums: {
+        'matcherType': matcherType,
+        'actionOnMatch': actionOnMatch,
+      }),
     );
   }
 
@@ -65,23 +80,25 @@ class FieldMatcherConfig {
     FieldMatcher? customMatcher,
     num? weight,
     MatchAction? actionOnMatch,
+    Map<String, dynamic>? extraMembers,
   }) {
     return FieldMatcherConfig(
       matcherType: matcherType ?? this.matcherType,
       customMatcher: customMatcher ?? this.customMatcher,
       weight: weight ?? this.weight,
       actionOnMatch: actionOnMatch ?? this.actionOnMatch,
+      extraMembers: extraMembers ?? this.extraMembers,
     );
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    return withExtraMembers({
       if (matcherType != null && matcherType != FieldMatcherType.Custom)
         'matcherType': matcherType?.name,
       if (customMatcher != null) 'customMatcher': customMatcher?.toMap(),
       if (weight != null) 'weight': weight,
       if (actionOnMatch != null) 'actionOnMatch': actionOnMatch?.name,
-    };
+    }, extraMembers);
   }
 
   String toJson() => json.encode(toMap());
@@ -99,7 +116,8 @@ class FieldMatcherConfig {
         other.matcherType == matcherType &&
         other.customMatcher == customMatcher &&
         other.weight == weight &&
-        other.actionOnMatch == actionOnMatch;
+        other.actionOnMatch == actionOnMatch &&
+        extraMembersEqual(other.extraMembers, extraMembers);
   }
 
   @override
@@ -107,11 +125,16 @@ class FieldMatcherConfig {
     return matcherType.hashCode ^
         customMatcher.hashCode ^
         weight.hashCode ^
-        actionOnMatch.hashCode;
+        actionOnMatch.hashCode ^
+        extraMembersHash(extraMembers);
   }
 
   FieldMatcherType? matcherType;
   FieldMatcher? customMatcher;
   num? weight; // 0 = client decides or ignores locator
   MatchAction? actionOnMatch;
+
+  /// JSON members this version of the model does not know, written back on save.
+  /// See `extra_members.dart`.
+  final Map<String, dynamic> extraMembers;
 }

@@ -236,35 +236,43 @@ class KdbxEntry extends KdbxObject {
 
   BrowserEntrySettings? _browserSettings;
   BrowserEntrySettings get browserSettings {
-    if (_browserSettings == null) {
-      final cdJson = getCustomData('KPRPC JSON');
+    return _browserSettings ??= _readBrowserSettings();
+  }
 
-      if (cdJson != null) {
-        _browserSettings = BrowserEntrySettings.fromJson(cdJson,
-            minimumMatchAccuracy:
-                file!.body.meta.browserSettings.defaultMatchAccuracy);
-      } else {
-        final stringJson = stringEntries
+  /// Reads the entry's configuration from `KPRPC JSON` (v2 custom data, or the
+  /// v1 string). A value that is not valid JSON, or has the wrong types, is
+  /// read as the default configuration. Nothing is written here, so the stored
+  /// value stays as it is until the setter is used.
+  BrowserEntrySettings _readBrowserSettings() {
+    final minimumMatchAccuracy =
+        file!.body.meta.browserSettings.defaultMatchAccuracy;
+    final cdJson = getCustomData('KPRPC JSON');
+    final stringJson = cdJson == null
+        ? stringEntries
             .firstWhereOrNull((s) => s.key.key == 'KPRPC JSON')
             ?.value
-            ?.getText();
-
-        if (stringJson != null) {
-          final v1 = BrowserEntrySettingsV1.fromJson(stringJson,
-              minimumMatchAccuracy:
-                  file!.body.meta.browserSettings.defaultMatchAccuracy);
-          _browserSettings = v1.convertToV2(GuidService());
-        } else {
-          _browserSettings = BrowserEntrySettings(
-            matcherConfigs: [
-              EntryMatcherConfig.forDefaultUrlMatchBehaviour(
-                  file!.body.meta.browserSettings.defaultMatchAccuracy)
-            ],
-          );
-        }
+            ?.getText()
+        : null;
+    try {
+      if (cdJson != null) {
+        return BrowserEntrySettings.fromJson(cdJson,
+            minimumMatchAccuracy: minimumMatchAccuracy);
       }
+      if (stringJson != null) {
+        return BrowserEntrySettingsV1.fromJson(stringJson,
+                minimumMatchAccuracy: minimumMatchAccuracy)
+            .convertToV2(GuidService());
+      }
+    } on Object {
+      // The message is not logged: it would contain part of the stored value.
+      _logger.warning(
+          'KPRPC JSON on an entry is not valid and the default configuration is used.');
     }
-    return _browserSettings!;
+    return BrowserEntrySettings(
+      matcherConfigs: [
+        EntryMatcherConfig.forDefaultUrlMatchBehaviour(minimumMatchAccuracy)
+      ],
+    );
   }
 
   set browserSettings(BrowserEntrySettings settings) {

@@ -173,43 +173,65 @@ class KdbxMeta extends KdbxNode implements KdbxNodeContext {
 
 //  void addCustomIcon
 
+  // The getters cache the parsed value. The setters write the JSON and clear
+  // the cache, so the next read parses what was written (the same as
+  // KdbxEntry.browserSettings and merge()). Keeping the object passed in would
+  // alias a caller's mutable object.
+  //
+  // A stored value that is not valid JSON, or has the wrong types, is read as
+  // the defaults. The getters never write, so the stored value is left as it
+  // is until the setter is used.
   BrowserDbSettings? _browserSettings;
   BrowserDbSettings get browserSettings {
-    if (_browserSettings == null) {
-      final tempJson = customData['KeePassRPC.Config']?.value;
+    return _browserSettings ??= _readBrowserSettings();
+  }
 
-      if (tempJson != null) {
-        _browserSettings = BrowserDbSettings.fromJson(tempJson);
-      } else {
-        _browserSettings = BrowserDbSettings();
-      }
+  BrowserDbSettings _readBrowserSettings() {
+    final tempJson = customData['KeePassRPC.Config']?.value;
+    if (tempJson == null) {
+      return BrowserDbSettings();
     }
-    return _browserSettings!;
+    try {
+      return BrowserDbSettings.fromJson(tempJson);
+    } on Object {
+      // The message is not logged: it would contain part of the stored value.
+      _logger.warning(
+          'KeePassRPC.Config is not valid and the default settings are used.');
+      return BrowserDbSettings();
+    }
   }
 
   set browserSettings(BrowserDbSettings settings) {
     customData['KeePassRPC.Config'] =
         (value: settings.toJson(), lastModified: clock.now().toUtc());
+    _browserSettings = null;
     settingsChanged.setToNow();
   }
 
   KeeVaultEmbeddedConfig? _keeVaultSettings;
   KeeVaultEmbeddedConfig get keeVaultSettings {
-    if (_keeVaultSettings == null) {
-      final tempJson = customData['KeeVault.Config']?.value;
+    return _keeVaultSettings ??= _readKeeVaultSettings();
+  }
 
-      if (tempJson != null) {
-        _keeVaultSettings = KeeVaultEmbeddedConfig.fromJson(tempJson);
-      } else {
-        _keeVaultSettings = KeeVaultEmbeddedConfig();
-      }
+  KeeVaultEmbeddedConfig _readKeeVaultSettings() {
+    final tempJson = customData['KeeVault.Config']?.value;
+    if (tempJson == null) {
+      return KeeVaultEmbeddedConfig();
     }
-    return _keeVaultSettings!;
+    try {
+      return KeeVaultEmbeddedConfig.fromJson(tempJson);
+    } on Object {
+      // The message is not logged: it would contain part of the stored value.
+      _logger.warning(
+          'KeeVault.Config is not valid and the default settings are used.');
+      return KeeVaultEmbeddedConfig();
+    }
   }
 
   set keeVaultSettings(KeeVaultEmbeddedConfig settings) {
     customData['KeeVault.Config'] =
         (value: settings.toJson(), lastModified: clock.now().toUtc());
+    _keeVaultSettings = null;
     settingsChanged.setToNow();
   }
 
