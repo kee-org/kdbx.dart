@@ -1,6 +1,19 @@
 import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:kdbx/src/kee_vault_model/enums.dart';
+import 'package:kdbx/src/kee_vault_model/extra_members.dart';
+
+const _knownMembers = {
+  'matchLogic',
+  'ids',
+  'names',
+  'types',
+  'queries',
+  'labels',
+  'autocompleteValues',
+  'maxLength',
+  'minLength',
+};
 
 class FieldMatcher {
   FieldMatcher({
@@ -13,16 +26,18 @@ class FieldMatcher {
     this.autocompleteValues = const [],
     this.maxLength,
     this.minLength,
-  });
+    Map<String, dynamic>? extraMembers,
+  }) : extraMembers = Map.unmodifiable(extraMembers ?? const {});
 
   factory FieldMatcher.fromMap(Map<String, dynamic>? map) {
     if (map == null) {
       return FieldMatcher();
     }
 
+    final matchLogic = MatcherLogic.values
+        .firstWhereOrNull((v) => v.name == map['matchLogic']);
     return FieldMatcher(
-      matchLogic: MatcherLogic.values
-          .firstWhereOrNull((v) => v.name == map['matchLogic']),
+      matchLogic: matchLogic,
       ids: (map['ids'] as List<dynamic>?)?.cast<String>() ?? [],
       names: (map['names'] as List<dynamic>?)?.cast<String>() ?? [],
       types: (map['types'] as List<dynamic>?)?.cast<String>() ?? [],
@@ -32,6 +47,8 @@ class FieldMatcher {
           (map['autocompleteValues'] as List<dynamic>?)?.cast<String>() ?? [],
       maxLength: map['maxLength'] as int?,
       minLength: map['minLength'] as int?,
+      extraMembers: extraMembersOf(map, _knownMembers,
+          unparsedEnums: {'matchLogic': matchLogic}),
     );
   }
 
@@ -48,6 +65,7 @@ class FieldMatcher {
     List<String>? autocompleteValues,
     int? maxLength,
     int? minLength,
+    Map<String, dynamic>? extraMembers,
   }) {
     return FieldMatcher(
       matchLogic: matchLogic ?? this.matchLogic,
@@ -59,11 +77,12 @@ class FieldMatcher {
       autocompleteValues: autocompleteValues ?? this.autocompleteValues,
       maxLength: maxLength ?? this.maxLength,
       minLength: minLength ?? this.minLength,
+      extraMembers: extraMembers ?? this.extraMembers,
     );
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    return withExtraMembers({
       if (matchLogic != null && matchLogic != MatcherLogic.Client)
         'matchLogic': matchLogic?.name,
       if (ids.isNotEmpty) 'ids': ids,
@@ -75,7 +94,7 @@ class FieldMatcher {
         'autocompleteValues': autocompleteValues,
       if (maxLength != null) 'maxLength': maxLength,
       if (minLength != null) 'minLength': minLength,
-    };
+    }, extraMembers);
   }
 
   String toJson() => json.encode(toMap());
@@ -99,7 +118,8 @@ class FieldMatcher {
         unOrdDeepEq(other.labels, labels) &&
         unOrdDeepEq(other.autocompleteValues, autocompleteValues) &&
         other.maxLength == maxLength &&
-        other.minLength == minLength;
+        other.minLength == minLength &&
+        extraMembersEqual(other.extraMembers, extraMembers);
   }
 
   @override
@@ -112,7 +132,8 @@ class FieldMatcher {
         const ListEquality().hash(labels) ^
         const ListEquality().hash(autocompleteValues) ^
         maxLength.hashCode ^
-        minLength.hashCode;
+        minLength.hashCode ^
+        extraMembersHash(extraMembers);
   }
 
   MatcherLogic? matchLogic; // default to Client initially
@@ -124,4 +145,8 @@ class FieldMatcher {
   List<String> autocompleteValues; // HTML autocomplete attribute values
   int? maxLength; // max chars allowed in a candidate field for this to match
   int? minLength; // min chars allowed in a candidate field for this to match
+
+  /// JSON members this version of the model does not know, written back on save.
+  /// See `extra_members.dart`.
+  final Map<String, dynamic> extraMembers;
 }

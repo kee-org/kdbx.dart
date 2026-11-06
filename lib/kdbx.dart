@@ -37,4 +37,5 @@ export 'src/kee_vault_model/enums.dart';
 export 'src/kee_vault_model/field.dart' show Field;
 export 'src/kee_vault_model/field_matcher.dart' show FieldMatcher;
 export 'src/kee_vault_model/field_matcher_config.dart';
+export 'src/kee_vault_model/unparsable_regexp.dart' show UnparsableRegExp;
 export 'src/utils/byte_utils.dart' show ByteUtils;

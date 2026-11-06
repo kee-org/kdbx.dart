@@ -6,6 +6,7 @@ import 'package:kdbx/src/kee_vault_model/browser_field_model_v1.dart';
 import 'package:kdbx/src/kee_vault_model/entry_matcher_config.dart';
 import 'package:kdbx/src/kee_vault_model/enums.dart';
 import 'package:kdbx/src/kee_vault_model/field.dart';
+import 'package:kdbx/src/kee_vault_model/unparsable_regexp.dart';
 
 import '../utils/field_type_utils.dart';
 import '../utils/guid_service.dart';
@@ -200,12 +201,16 @@ class BrowserEntrySettingsV1 {
     for (final p in includeUrls) {
       if (p is RegExp) {
         regExURLs.add(p.pattern);
+      } else if (p is UnparsableRegExp) {
+        regExURLs.add(p.pattern);
       } else if (p is String) {
         altURLs.add(p);
       }
     }
     for (final p in excludeUrls) {
       if (p is RegExp) {
+        regExBlockedURLs.add(p.pattern);
+      } else if (p is UnparsableRegExp) {
         regExBlockedURLs.add(p.pattern);
       } else if (p is String) {
         blockedURLs.add(p);
@@ -228,7 +233,7 @@ class BrowserEntrySettingsV1 {
     }
     if (regExURLs != null) {
       for (final url in regExURLs) {
-        includeUrls.add(RegExp(url));
+        includeUrls.add(compileUrlPattern(url));
       }
     }
     return includeUrls;
@@ -244,7 +249,7 @@ class BrowserEntrySettingsV1 {
     }
     if (regExBlockedURLs != null) {
       for (final url in regExBlockedURLs) {
-        excludeUrls.add(RegExp(url));
+        excludeUrls.add(compileUrlPattern(url));
       }
     }
     return excludeUrls;

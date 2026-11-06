@@ -3,7 +3,22 @@ import 'package:collection/collection.dart';
 import 'package:kdbx/src/kee_vault_model/browser_entry_settings_v1.dart';
 import 'package:kdbx/src/kee_vault_model/entry_matcher_config.dart';
 import 'package:kdbx/src/kee_vault_model/enums.dart';
+import 'package:kdbx/src/kee_vault_model/extra_members.dart';
 import 'package:kdbx/src/kee_vault_model/field.dart';
+import 'package:kdbx/src/kee_vault_model/unparsable_regexp.dart';
+
+const _knownMembers = {
+  'version',
+  'altUrls',
+  'regExUrls',
+  'blockedUrls',
+  'regExBlockedUrls',
+  'httpRealm',
+  'authenticationMethods',
+  'matcherConfigs',
+  'fields',
+  'behaviour',
+};
 
 class BrowserEntrySettings {
   BrowserEntrySettings({
@@ -15,10 +30,12 @@ class BrowserEntrySettings {
     this.behaviour = BrowserAutoFillBehaviour.Default,
     required this.matcherConfigs,
     List<Field>? fields,
+    Map<String, dynamic>? extraMembers,
   })  : authenticationMethods = authenticationMethods ?? [],
         includeUrls = includeUrls ?? [],
         excludeUrls = excludeUrls ?? [],
-        fields = fields ?? [];
+        fields = fields ?? [],
+        extraMembers = Map.unmodifiable(extraMembers ?? const {});
 
   factory BrowserEntrySettings.fromMap(Map<String, dynamic>? map,
       {required MatchAccuracy minimumMatchAccuracy}) {
@@ -28,6 +45,8 @@ class BrowserEntrySettings {
       ]);
     }
 
+    final behaviour = BrowserAutoFillBehaviour.values
+        .firstWhereOrNull((v) => v.name == map['behaviour']);
     return BrowserEntrySettings(
       version: map['version'] as int? ?? 2,
       includeUrls: getIncludeUrls(map),
@@ -36,8 +55,7 @@ class BrowserEntrySettings {
       authenticationMethods:
           (map['authenticationMethods'] as List<dynamic>?)?.cast<String>() ??
               [],
-      behaviour: BrowserAutoFillBehaviour.values
-          .firstWhereOrNull((v) => v.name == map['behaviour']),
+      behaviour: behaviour,
       matcherConfigs: List<EntryMatcherConfig>.from((map['matcherConfigs']
                   as List<dynamic>?)
               ?.cast<Map<String, dynamic>>()
@@ -47,6 +65,8 @@ class BrowserEntrySettings {
               ?.cast<Map<String, dynamic>>()
               .map<Field>((x) => Field.fromMap(x)) ??
           <Field>[]),
+      extraMembers: extraMembersOf(map, _knownMembers,
+          unparsedEnums: {'behaviour': behaviour}),
     );
   }
 
@@ -65,6 +85,10 @@ class BrowserEntrySettings {
   List<EntryMatcherConfig> matcherConfigs;
   List<Field>? fields;
 
+  /// JSON members this version of the model does not know, written back on save.
+  /// See `extra_members.dart`.
+  final Map<String, dynamic> extraMembers;
+
   BrowserEntrySettings copyWith({
     int? version,
     List<Pattern>? includeUrls,
@@ -74,6 +98,7 @@ class BrowserEntrySettings {
     BrowserAutoFillBehaviour? behaviour,
     List<EntryMatcherConfig>? matcherConfigs,
     List<Field>? fields,
+    Map<String, dynamic>? extraMembers,
   }) {
     return BrowserEntrySettings(
       version: version ?? this.version,
@@ -85,6 +110,7 @@ class BrowserEntrySettings {
       excludeUrls: excludeUrls ?? this.excludeUrls,
       fields: fields ?? this.fields,
       matcherConfigs: matcherConfigs ?? this.matcherConfigs,
+      extraMembers: extraMembers ?? this.extraMembers,
     );
   }
 
@@ -114,12 +140,16 @@ class BrowserEntrySettings {
     for (final p in includeUrls) {
       if (p is RegExp) {
         regExUrls.add(p.pattern);
+      } else if (p is UnparsableRegExp) {
+        regExUrls.add(p.pattern);
       } else if (p is String) {
         altUrls.add(p);
       }
     }
     for (final p in excludeUrls) {
       if (p is RegExp) {
+        regExBlockedUrls.add(p.pattern);
+      } else if (p is UnparsableRegExp) {
         regExBlockedUrls.add(p.pattern);
       } else if (p is String) {
         blockedUrls.add(p);
@@ -142,7 +172,7 @@ class BrowserEntrySettings {
     }
     if (regExURLs != null) {
       for (final url in regExURLs) {
-        includeUrls.add(RegExp(url));
+        includeUrls.add(compileUrlPattern(url));
       }
     }
     return includeUrls;
@@ -158,14 +188,14 @@ class BrowserEntrySettings {
     }
     if (regExBlockedURLs != null) {
       for (final url in regExBlockedURLs) {
-        excludeUrls.add(RegExp(url));
+        excludeUrls.add(compileUrlPattern(url));
       }
     }
     return excludeUrls;
   }
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
+    return withExtraMembers(<String, dynamic>{
       'version': version,
       'authenticationMethods': authenticationMethods,
       if (realm?.isNotEmpty ?? false) 'httpRealm': realm,
@@ -174,7 +204,7 @@ class BrowserEntrySettings {
       if (behaviour != null && behaviour != BrowserAutoFillBehaviour.Default)
         'behaviour': behaviour?.name,
       ...parseUrls(includeUrls, excludeUrls),
-    };
+    }, extraMembers);
   }
 
   String toJson() => json.encode(toMap());
@@ -199,7 +229,8 @@ class BrowserEntrySettings {
         unOrdDeepEq(o.matcherConfigs, matcherConfigs) &&
         unOrdDeepEq(o.includeUrls, includeUrls) &&
         unOrdDeepEq(o.excludeUrls, excludeUrls) &&
-        unOrdDeepEq(o.fields, fields);
+        unOrdDeepEq(o.fields, fields) &&
+        extraMembersEqual(o.extraMembers, extraMembers);
   }
 
   @override
@@ -211,6 +242,7 @@ class BrowserEntrySettings {
         const ListEquality().hash(matcherConfigs) ^
         const ListEquality().hash(includeUrls) ^
         const ListEquality().hash(excludeUrls) ^
-        const ListEquality().hash(fields);
+        const ListEquality().hash(fields) ^
+        extraMembersHash(extraMembers);
   }
 }
